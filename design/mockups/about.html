@@ -1,0 +1,266 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#1C1410;--fog:#7A6E62;--bone:#EAE0D0;--linen:#F2EBD9;--w:#FEF9F2;
+  --gold:#C49A52;--gold-lt:#D4AE6E;--orange:#B85228;--dark:#180E06;--dark2:#241408;
+  --s:'Cormorant Garamond',serif;--b:'Jost',sans-serif;
+}
+body{background:var(--w);color:var(--ink);font-family:var(--b);font-weight:300;overflow-x:hidden}
+nav{display:flex;justify-content:space-between;align-items:center;padding:1.4rem 5rem;background:rgba(24,14,6,0.96);backdrop-filter:blur(14px);border-bottom:0.5px solid rgba(196,154,82,0.15);position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;flex-direction:column;cursor:pointer}
+.nav-logo{font-family:var(--s);font-size:1.4rem;letter-spacing:0.32em;font-weight:300;line-height:1;background:linear-gradient(135deg,#D4AE6E 0%,#C49A52 50%,#E8C882 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-city{font-size:0.4rem;letter-spacing:0.6em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:3px}
+.nav-links{display:flex;gap:2.8rem;list-style:none}
+.nav-links a{font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.4);text-decoration:none;transition:color 0.3s}
+.nav-links a:hover,.nav-links a.active{color:var(--gold-lt)}
+.nbtn{font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.65rem 1.7rem;border:0.5px solid rgba(196,154,82,0.4);color:var(--gold-lt);background:transparent;cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.35s}
+.nbtn:hover{background:var(--gold);color:#fff;border-color:var(--gold)}
+.breadcrumb{padding:1.4rem 5rem;background:var(--dark);border-bottom:0.5px solid rgba(196,154,82,0.08);display:flex;align-items:center;gap:0.8rem}
+.bc-item{font-size:0.5rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.22)}
+.bc-sep{font-size:0.5rem;color:rgba(196,154,82,0.3)}
+.bc-item.current{color:var(--gold)}
+.page-hero{background:var(--dark);padding:7rem 5rem 6rem;position:relative;overflow:hidden}
+.page-hero-weave{position:absolute;inset:0;opacity:0.05;background-image:repeating-linear-gradient(45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px),repeating-linear-gradient(-45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px)}
+.page-hero-glow{position:absolute;top:0;right:15%;width:500px;height:400px;background:radial-gradient(ellipse,rgba(196,154,82,0.07) 0%,transparent 70%);pointer-events:none}
+.page-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:0.5px;background:linear-gradient(to right,transparent,rgba(196,154,82,0.2),transparent)}
+.ph-label{font-size:0.5rem;letter-spacing:0.46em;text-transform:uppercase;color:var(--gold);margin-bottom:1.6rem;display:flex;align-items:center;gap:0.9rem;position:relative;z-index:1}
+.ph-label::before{content:'';width:16px;height:0.5px;background:var(--gold);display:inline-block}
+h1.ph-title{font-family:var(--s);font-size:4.5rem;font-weight:300;line-height:1.02;color:#fff;max-width:640px;letter-spacing:-0.01em;position:relative;z-index:1}
+h1.ph-title em{font-style:italic;color:var(--gold-lt)}
+.ph-sub{font-size:0.74rem;line-height:2.2;color:rgba(255,255,255,0.36);max-width:480px;margin-top:2rem;font-weight:200;letter-spacing:0.03em;position:relative;z-index:1}
+.ph-c{position:absolute;bottom:-4vw;right:3%;font-family:var(--s);font-size:22vw;font-weight:300;color:rgba(196,154,82,0.04);line-height:1;pointer-events:none;z-index:0}
+.story{padding:8rem 5rem;background:var(--w)}
+.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:9rem;align-items:start}
+.lbl{font-size:0.5rem;letter-spacing:0.44em;text-transform:uppercase;color:var(--gold);margin-bottom:1.4rem;display:flex;align-items:center;gap:0.8rem}
+.lbl::before{content:'';width:14px;height:0.5px;background:var(--gold);display:inline-block}
+h2.sec{font-family:var(--s);font-size:2.6rem;font-weight:300;line-height:1.1;color:var(--ink);margin-bottom:2rem}
+h2.sec em{font-style:italic}
+.prose{font-size:0.76rem;line-height:2.3;color:var(--fog);font-weight:200;margin-bottom:1.2rem;letter-spacing:0.02em}
+.story-vis{position:relative;height:540px;margin-top:2rem}
+.sv-main{position:absolute;bottom:0;right:0;width:82%;height:90%;background:linear-gradient(150deg,#C8A87C 0%,#9A7040 50%,#6A3A16 100%)}
+.sv-sm{position:absolute;top:0;left:0;width:40%;height:44%;background:var(--bone);border:3px solid var(--w)}
+.sv-line{position:absolute;top:4rem;left:2.5rem;width:1px;height:70px;background:linear-gradient(to bottom,var(--gold),transparent)}
+.sv-tag{position:absolute;bottom:2.5rem;left:-2rem;background:var(--dark);padding:1.6rem 2rem}
+.sv-n{font-family:var(--s);font-size:1.8rem;color:#fff;display:block;font-weight:300;line-height:1}
+.sv-l{font-size:0.46rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.26);margin-top:0.3rem;display:block}
+.sv-year{position:absolute;top:1.5rem;right:1.5rem;font-family:var(--s);font-size:3.5rem;font-weight:300;color:rgba(196,154,82,0.1);line-height:1}
+.pull{padding:6rem 5rem;background:var(--dark);position:relative;overflow:hidden;text-align:center}
+.pull-weave{position:absolute;inset:0;opacity:0.055;background-image:repeating-linear-gradient(45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px),repeating-linear-gradient(-45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px)}
+.pull-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(196,154,82,0.07) 0%,transparent 70%);pointer-events:none}
+.pull::before{content:'';position:absolute;top:0;left:0;right:0;height:0.5px;background:linear-gradient(to right,transparent,rgba(196,154,82,0.25),transparent)}
+.pull::after{content:'';position:absolute;bottom:0;left:0;right:0;height:0.5px;background:linear-gradient(to right,transparent,rgba(196,154,82,0.25),transparent)}
+.pull-q{font-family:var(--s);font-style:italic;font-size:2rem;font-weight:300;color:rgba(255,255,255,0.78);line-height:1.35;max-width:680px;margin:0 auto;position:relative;z-index:1}
+.pull-attr{font-size:0.5rem;letter-spacing:0.32em;text-transform:uppercase;color:rgba(196,154,82,0.55);margin-top:1.8rem;position:relative;z-index:1}
+.people{padding:8rem 5rem;background:var(--linen)}
+.people-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:4.5rem}
+.person{background:var(--w);padding:3rem 2.5rem;cursor:pointer;transition:background 0.35s}
+.person:hover{background:var(--bone)}
+.person-img{width:100%;aspect-ratio:3/4;margin-bottom:2rem;position:relative;overflow:hidden}
+.pi-1{background:linear-gradient(150deg,#C4B09A 0%,#8A6840 100%)}
+.pi-2{background:linear-gradient(150deg,#B8C0C4 0%,#7A9098 100%)}
+.pi-3{background:linear-gradient(150deg,#C8B898 0%,#9A8460 100%)}
+.person-img-inner{position:absolute;inset:0;display:grid;place-items:center;opacity:0.12}
+.person-role{font-size:0.48rem;letter-spacing:0.34em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem}
+.person-name{font-family:var(--s);font-size:1.25rem;font-weight:300;color:var(--ink);margin-bottom:0.8rem}
+.person-bio{font-size:0.7rem;line-height:2.1;color:var(--fog);font-weight:200}
+.philosophy{padding:8rem 5rem;background:var(--w);display:grid;grid-template-columns:1fr 1fr;gap:9rem;align-items:center}
+.phi-cols{display:flex;flex-direction:column;gap:0;border-top:0.5px solid rgba(28,20,16,0.08)}
+.phi-row{padding:1.4rem 0;border-bottom:0.5px solid rgba(28,20,16,0.08);display:grid;grid-template-columns:1fr 2fr;gap:2rem;align-items:baseline}
+.phi-k{font-size:0.5rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold)}
+.phi-v{font-size:0.74rem;line-height:1.9;color:var(--fog);font-weight:200}
+.phi-vis{position:relative}
+.phi-big{font-family:var(--s);font-style:italic;font-size:7rem;font-weight:300;color:rgba(196,154,82,0.08);line-height:0.9;margin-bottom:2rem}
+.phi-img{width:100%;aspect-ratio:4/5;background:linear-gradient(150deg,#3A2010 0%,#180A02 100%);position:relative;overflow:hidden}
+.phi-img-inner{position:absolute;inset:0;display:grid;place-items:center;opacity:0.1}
+.phi-caption{margin-top:1.5rem;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--fog)}
+.building{padding:8rem 5rem;background:var(--linen);display:grid;grid-template-columns:1fr 1fr;gap:9rem;align-items:center}
+.build-mosaic{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.bm-a{grid-row:span 2;background:linear-gradient(160deg,#C8A87C 0%,#8A6438 100%);aspect-ratio:3/5}
+.bm-b{background:linear-gradient(135deg,#D0C4B0 0%,#A89878 100%);aspect-ratio:1}
+.bm-c{background:linear-gradient(135deg,#B8C0BC 0%,#8A9C98 100%);aspect-ratio:1}
+.build-specs{display:flex;flex-direction:column;gap:0;border-top:0.5px solid rgba(28,20,16,0.08);margin-top:2rem}
+.bs-row{padding:1.1rem 0;border-bottom:0.5px solid rgba(28,20,16,0.08);display:flex;justify-content:space-between;align-items:baseline}
+.bs-k{font-size:0.5rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--fog)}
+.bs-v{font-size:0.76rem;color:var(--ink);font-weight:300}
+.about-cta{padding:7rem 5rem;background:var(--dark);position:relative;overflow:hidden;text-align:center}
+.about-cta-weave{position:absolute;inset:0;opacity:0.05;background-image:repeating-linear-gradient(45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px),repeating-linear-gradient(-45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px)}
+.about-cta::before{content:'';position:absolute;top:0;left:0;right:0;height:0.5px;background:linear-gradient(to right,transparent,rgba(196,154,82,0.2),transparent)}
+.cta-title{font-family:var(--s);font-size:2.6rem;font-weight:300;color:#fff;margin-bottom:1rem;line-height:1.1;position:relative;z-index:1}
+.cta-title em{font-style:italic;color:var(--gold-lt)}
+.cta-sub{font-size:0.72rem;color:rgba(255,255,255,0.3);line-height:2;margin-bottom:2.5rem;font-weight:200;position:relative;z-index:1}
+.cta-btns{display:flex;justify-content:center;gap:1.5rem;position:relative;z-index:1}
+.btn-fill{font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;padding:1rem 2.6rem;background:var(--gold);color:#fff;border:none;cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.35s}
+.btn-fill:hover{background:var(--gold-lt);color:var(--ink)}
+.btn-outline{font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;padding:1rem 2.6rem;background:transparent;color:rgba(255,255,255,0.5);border:0.5px solid rgba(255,255,255,0.2);cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.35s}
+.btn-outline:hover{border-color:rgba(196,154,82,0.5);color:var(--gold-lt)}
+.foot-strip{background:var(--dark);border-top:0.5px solid rgba(196,154,82,0.1);padding:2rem 5rem;display:flex;justify-content:space-between;align-items:center}
+.fs-logo{font-family:var(--s);font-size:1.1rem;letter-spacing:0.3em;font-weight:300;background:linear-gradient(135deg,#D4AE6E,#C49A52,#E8C882);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.fs-links{display:flex;gap:2rem;list-style:none}
+.fs-links a{font-size:0.52rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.22);text-decoration:none;transition:color 0.3s}
+.fs-links a:hover{color:var(--gold)}
+.fs-copy{font-size:0.5rem;letter-spacing:0.14em;color:rgba(255,255,255,0.14)}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity 0.95s cubic-bezier(0.16,1,0.3,1),transform 0.95s cubic-bezier(0.16,1,0.3,1)}
+.reveal.in{opacity:1;transform:none}
+.d1{transition-delay:0.13s}.d2{transition-delay:0.26s}
+</style>
+
+<nav>
+  <div class="nav-brand"><span class="nav-logo">COVE</span><span class="nav-city">Dubai</span></div>
+  <ul class="nav-links">
+    <li><a href="#" class="active">About</a></li>
+    <li><a href="#">Rooms</a></li>
+    <li><a href="#">Dining</a></li>
+    <li><a href="#">Wellness</a></li>
+    <li><a href="#">Experiences</a></li>
+    <li><a href="#">Members</a></li>
+  </ul>
+  <button class="nbtn">Reserve</button>
+</nav>
+
+<div class="breadcrumb">
+  <span class="bc-item">Cove Dubai</span>
+  <span class="bc-sep">·</span>
+  <span class="bc-item current">About</span>
+</div>
+
+<div class="page-hero">
+  <div class="page-hero-weave"></div>
+  <div class="page-hero-glow"></div>
+  <div class="ph-c">C</div>
+  <p class="ph-label">About Cove</p>
+  <h1 class="ph-title">A hotel built<br>around one<br><em>clear intention.</em></h1>
+  <p class="ph-sub">The story behind the address, the people who made it, and the thinking that runs through every room, every material, every detail.</p>
+</div>
+
+<section class="story">
+  <div class="story-grid">
+    <div class="reveal">
+      <p class="lbl">The story</p>
+      <h2 class="sec">Why Cove<br><em>exists.</em></h2>
+      <p class="prose">Dubai has no shortage of hotels. What it had fewer of was a place built around restraint — where the decision to do less was made deliberately, and where the resulting space allowed guests to simply be present without effort.</p>
+      <p class="prose">Cove was conceived not as a reaction to anything, but as a position. Forty-eight rooms, chosen for quality rather than quantity. A kitchen guided by season rather than spectacle. Interiors where the materials were selected for how they age, not how they photograph.</p>
+      <p class="prose">The hotel sits in Al Rigga — a part of Dubai that holds its own character. That, too, was a choice.</p>
+    </div>
+    <div class="story-vis reveal d1">
+      <div class="sv-main"></div>
+      <div class="sv-sm"></div>
+      <div class="sv-line"></div>
+      <div class="sv-tag"><span class="sv-n">2026</span><span class="sv-l">Year of opening</span></div>
+      <div class="sv-year">I</div>
+    </div>
+  </div>
+</section>
+
+<div class="pull reveal">
+  <div class="pull-weave"></div>
+  <div class="pull-glow"></div>
+  <p class="pull-q">"We were not interested in building something impressive. We were interested in building something right."</p>
+  <p class="pull-attr">The founders · Cove Dubai</p>
+</div>
+
+<section class="people">
+  <div class="reveal">
+    <p class="lbl">The people</p>
+    <h2 class="sec">Those who<br><em>made it.</em></h2>
+  </div>
+  <div class="people-grid reveal">
+    <div class="person">
+      <div class="person-img pi-1">
+        <div class="person-img-inner"><svg width="50" height="50" viewBox="0 0 50 50" fill="none"><circle cx="25" cy="25" r="18" stroke="rgba(196,154,82,0.6)" stroke-width="0.5"/></svg></div>
+      </div>
+      <div class="person-role">Founder & Managing Director</div>
+      <div class="person-name">— — — —</div>
+      <div class="person-bio">The vision behind Cove. Spent years in hospitality across the Middle East before deciding to build something on entirely different terms.</div>
+    </div>
+    <div class="person">
+      <div class="person-img pi-2">
+        <div class="person-img-inner"><svg width="50" height="50" viewBox="0 0 50 50" fill="none"><circle cx="25" cy="25" r="18" stroke="rgba(196,154,82,0.6)" stroke-width="0.5"/></svg></div>
+      </div>
+      <div class="person-role">Head of Design</div>
+      <div class="person-name">— — — —</div>
+      <div class="person-bio">Led the interior architecture of Cove from the first sketch to the final material selection. Every surface carries a decision, and she made most of them.</div>
+    </div>
+    <div class="person">
+      <div class="person-img pi-3">
+        <div class="person-img-inner"><svg width="50" height="50" viewBox="0 0 50 50" fill="none"><circle cx="25" cy="25" r="18" stroke="rgba(196,154,82,0.6)" stroke-width="0.5"/></svg></div>
+      </div>
+      <div class="person-role">Executive Chef</div>
+      <div class="person-name">Amara Suliman</div>
+      <div class="person-bio">Three continents, two Michelin-recommended kitchens, one clear point of view. Chef Suliman's menu changes constantly. His standards do not.</div>
+    </div>
+  </div>
+</section>
+
+<section class="philosophy">
+  <div class="reveal">
+    <p class="lbl">The philosophy</p>
+    <h2 class="sec">How every<br>decision was<br><em>made.</em></h2>
+    <p class="prose" style="margin-top:1.5rem">There is no single rule behind Cove except this: nothing here arrived without being considered. Not the thread count of the linen. Not the distance between the bed and the window. Not the hour the kitchen closes.</p>
+    <div class="phi-cols" style="margin-top:2.5rem">
+      <div class="phi-row"><span class="phi-k">Materials</span><span class="phi-v">Natural stone, hand-loomed textiles, timber that ages visibly. Nothing that hides what it is.</span></div>
+      <div class="phi-row"><span class="phi-k">Scale</span><span class="phi-v">Forty-eight rooms. The decision to stay small was made first, not last.</span></div>
+      <div class="phi-row"><span class="phi-k">Service</span><span class="phi-v">No script. Staff are hired for judgement, not compliance.</span></div>
+      <div class="phi-row"><span class="phi-k">Kitchen</span><span class="phi-v">The menu follows the season. The standard never changes.</span></div>
+      <div class="phi-row"><span class="phi-k">Light</span><span class="phi-v">Every room was positioned around how light moves through it across the day.</span></div>
+    </div>
+  </div>
+  <div class="phi-vis reveal d1">
+    <div class="phi-big">C</div>
+    <div class="phi-img">
+      <div class="phi-img-inner"><svg width="80" height="80" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="28" stroke="rgba(196,154,82,0.5)" stroke-width="0.5"/><path d="M16 40 Q40 14 64 40 Q40 66 16 40Z" stroke="rgba(196,154,82,0.4)" stroke-width="0.5" fill="none"/></svg></div>
+    </div>
+    <p class="phi-caption">Al Rigga · Dubai · 2026</p>
+  </div>
+</section>
+
+<section class="building">
+  <div class="reveal">
+    <p class="lbl">The building</p>
+    <h2 class="sec">Location &<br><em>architecture.</em></h2>
+    <p class="prose" style="margin-top:1.5rem">Cove is located in Al Rigga, Deira — one of Dubai's most established and characterful neighbourhoods, close to the Creek, minutes from the city's original pulse. The building was designed by Al Hilal architects, with interiors developed around a single brief: nothing decorative, everything considered.</p>
+    <p class="prose">The lobby does not announce itself. There is no atrium, no moment of spectacle. There is instead a desk, a chair, and someone who knows your name.</p>
+    <div class="build-specs">
+      <div class="bs-row"><span class="bs-k">Location</span><span class="bs-v">Al Rigga, Dubai, UAE</span></div>
+      <div class="bs-row"><span class="bs-k">Rooms</span><span class="bs-v">48 rooms & suites</span></div>
+      <div class="bs-row"><span class="bs-k">Opening</span><span class="bs-v">2026</span></div>
+      <div class="bs-row"><span class="bs-k">Airport</span><span class="bs-v">20 minutes from DXB</span></div>
+      <div class="bs-row"><span class="bs-k">Architects</span><span class="bs-v">Al Hilal</span></div>
+      <div class="bs-row"><span class="bs-k">Interior design</span><span class="bs-v">— — — —</span></div>
+    </div>
+  </div>
+  <div class="build-mosaic reveal d1">
+    <div class="bm-a"></div>
+    <div class="bm-b"></div>
+    <div class="bm-c"></div>
+  </div>
+</section>
+
+<div class="about-cta reveal">
+  <div class="about-cta-weave"></div>
+  <h2 class="cta-title">The best way<br>to understand Cove<br>is to <em>stay.</em></h2>
+  <p class="cta-sub">Forty-eight rooms. Opening 2026.</p>
+  <div class="cta-btns">
+    <button class="btn-fill">Reserve a room</button>
+    <button class="btn-outline">View rooms & suites</button>
+  </div>
+</div>
+
+<div class="foot-strip">
+  <span class="fs-logo">COVE</span>
+  <ul class="fs-links">
+    <li><a href="#">Stay</a></li>
+    <li><a href="#">Dining</a></li>
+    <li><a href="#">Wellness</a></li>
+    <li><a href="#">Experiences</a></li>
+    <li><a href="#">Members</a></li>
+    <li><a href="#">Press</a></li>
+  </ul>
+  <span class="fs-copy">© 2026 Cove Dubai</span>
+</div>
+
+<script>
+const io=new IntersectionObserver(e=>{e.forEach(n=>{if(n.isIntersecting){n.target.classList.add('in');io.unobserve(n.target)}})},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>

@@ -1,0 +1,33 @@
+{
+  "name": "cove-dubai-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cove Dubai front-end — marketing site, guest booking flow, and admin panel (EN/AR)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts,tsx,css,json}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.1",
+    "prettier": "^3.4.2",
+    "typescript": "^5",
+    "vitest": "^4"
+  }
+}

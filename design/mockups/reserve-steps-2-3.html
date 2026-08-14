@@ -1,0 +1,412 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#1C1410;--fog:#7A6E62;--bone:#EAE0D0;--linen:#F2EBD9;--w:#FEF9F2;
+  --gold:#C49A52;--gold-lt:#D4AE6E;--dark:#180E06;
+  --s:'Cormorant Garamond',serif;--b:'Jost',sans-serif;
+}
+body{background:var(--w);font-family:var(--b);font-weight:300;overflow-x:hidden}
+
+nav{display:flex;justify-content:space-between;align-items:center;padding:1.4rem 5rem;background:rgba(24,14,6,0.97);backdrop-filter:blur(14px);border-bottom:0.5px solid rgba(196,154,82,0.15);position:sticky;top:0;z-index:200}
+.nav-brand{display:flex;flex-direction:column;cursor:pointer}
+.nav-logo{font-family:var(--s);font-size:1.4rem;letter-spacing:0.32em;font-weight:300;line-height:1;background:linear-gradient(135deg,#D4AE6E 0%,#C49A52 50%,#E8C882 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-city{font-size:0.4rem;letter-spacing:0.6em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:3px}
+.nav-links{display:flex;gap:2.8rem;list-style:none}
+.nav-links a{font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.4);text-decoration:none;transition:color 0.3s}
+.nav-links a:hover{color:var(--gold-lt)}
+.nbtn{font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.65rem 1.7rem;border:0.5px solid rgba(196,154,82,0.4);color:var(--gold-lt);background:transparent;cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.35s}
+.nbtn:hover{background:var(--gold);color:#fff}
+
+.breadcrumb{padding:1.2rem 5rem;background:var(--dark);border-bottom:0.5px solid rgba(196,154,82,0.08);display:flex;align-items:center;gap:0.8rem}
+.bc{font-size:0.48rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.22);text-decoration:none;cursor:pointer;transition:color 0.3s}
+.bc:hover{color:rgba(255,255,255,0.5)}
+.bc-sep{color:rgba(196,154,82,0.3);font-size:0.48rem}
+.bc.cur{color:var(--gold)}
+
+.page{display:grid;grid-template-columns:1fr 380px;min-height:calc(100vh - 100px)}
+
+/* LEFT */
+.form-side{padding:5rem;border-right:0.5px solid rgba(28,20,16,0.07)}
+.page-lbl{font-size:0.5rem;letter-spacing:0.44em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;display:flex;align-items:center;gap:0.8rem}
+.page-lbl::before{content:'';width:14px;height:0.5px;background:var(--gold);display:inline-block}
+h1.page-h{font-family:var(--s);font-size:2.8rem;font-weight:300;color:var(--ink);margin-bottom:0.5rem;line-height:1.05}
+h1.page-h em{font-style:italic}
+.page-sub{font-size:0.7rem;color:var(--fog);font-weight:200;margin-bottom:3.5rem}
+
+/* STEPS */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:3.5rem;border-bottom:0.5px solid rgba(28,20,16,0.07);padding-bottom:0}
+.si{padding:0 0 1.2rem;margin-right:3rem;font-size:0.52rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(28,20,16,0.25);border-bottom:1.5px solid transparent;transition:all 0.3s;display:flex;align-items:center;gap:0.6rem;cursor:pointer}
+.si.active{color:var(--ink);border-bottom-color:var(--gold)}
+.si.done{color:var(--fog)}
+.si-num{width:18px;height:18px;border-radius:50%;border:0.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:0.46rem;flex-shrink:0;transition:all 0.3s}
+.si.done .si-num{background:var(--gold);border-color:var(--gold);color:#fff}
+.si.active .si-num{border-color:var(--gold);color:var(--gold)}
+
+/* STEP BLOCKS */
+.step-block{display:none}
+.step-block.show{display:block}
+
+/* FIELDS */
+.field{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.2rem}
+.field label{font-size:0.48rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--fog)}
+.finput input,.finput select{border:0.5px solid rgba(28,20,16,0.12);padding:0.9rem 1.1rem;font-family:var(--b);font-size:0.76rem;font-weight:300;color:var(--ink);background:var(--w);outline:none;width:100%;transition:border-color 0.25s;-webkit-appearance:none}
+.finput input:focus,.finput select:focus{border-color:var(--gold)}
+.finput input::placeholder{color:rgba(28,20,16,0.26)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.form-row.full{grid-template-columns:1fr}
+
+/* SECTION LABEL */
+.sec-label{font-size:0.48rem;letter-spacing:0.34em;text-transform:uppercase;color:var(--gold);margin-bottom:1.4rem;margin-top:2.5rem;display:flex;align-items:center;gap:0.8rem}
+.sec-label::before{content:'';width:12px;height:0.5px;background:var(--gold);display:inline-block}
+.sec-div{width:100%;height:0.5px;background:rgba(28,20,16,0.07);margin:2rem 0}
+
+/* SPECIAL REQUESTS TEXTAREA STYLE */
+.finput textarea{border:0.5px solid rgba(28,20,16,0.12);padding:0.9rem 1.1rem;font-family:var(--b);font-size:0.76rem;font-weight:300;color:var(--ink);background:var(--w);outline:none;width:100%;transition:border-color 0.25s;resize:none;height:90px;line-height:1.7}
+.finput textarea:focus{border-color:var(--gold)}
+.finput textarea::placeholder{color:rgba(28,20,16,0.26)}
+
+.form-note{font-size:0.62rem;color:var(--fog);line-height:1.9;font-weight:200;margin-top:1.5rem;padding:1.2rem;border:0.5px solid rgba(28,20,16,0.07);background:var(--linen)}
+
+/* CTA */
+.form-cta{display:flex;gap:1rem;align-items:center;margin-top:2rem}
+.btn-p{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;padding:1rem 2.8rem;background:var(--gold);color:#fff;border:none;cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.3s}
+.btn-p:hover{background:var(--dark)}
+.btn-b{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--fog);background:none;border:none;cursor:pointer;font-family:var(--b);font-weight:200;transition:color 0.3s;display:flex;align-items:center;gap:0.5rem}
+.btn-b:hover{color:var(--ink)}
+
+/* REVIEW */
+.rb{background:var(--linen);padding:2.2rem 2.5rem;margin-bottom:1.8rem}
+.rb-title{font-size:0.48rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:1.4rem;display:block}
+.rb-row{display:flex;justify-content:space-between;align-items:baseline;padding:0.8rem 0;border-bottom:0.5px solid rgba(28,20,16,0.07)}
+.rb-row:last-child{border-bottom:none}
+.rbk{font-size:0.66rem;color:var(--fog)}
+.rbv{font-size:0.74rem;color:var(--ink);font-weight:300;text-align:right}
+.rb-total-row{display:flex;justify-content:space-between;align-items:baseline;padding:1.2rem 0;margin-top:0.5rem;border-top:0.5px solid rgba(28,20,16,0.12)}
+.rb-total-row .rbk{font-size:0.7rem;color:var(--ink);font-weight:300}
+.rb-total-row .rbv{font-family:var(--s);font-size:1.6rem;font-weight:300;color:var(--ink)}
+
+.policy-box{padding:1.5rem;border:0.5px solid rgba(28,20,16,0.08);margin-bottom:2rem}
+.policy-title{font-size:0.48rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--ink);margin-bottom:0.8rem;display:block}
+.policy-row{display:flex;align-items:baseline;gap:0.8rem;margin-bottom:0.5rem}
+.policy-dot{width:3px;height:3px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
+.policy-text{font-size:0.64rem;color:var(--fog);line-height:1.8;font-weight:200}
+
+/* GUEST SUMMARY CARD */
+.guest-card{background:var(--w);border:0.5px solid rgba(28,20,16,0.08);padding:1.8rem 2rem;margin-bottom:1.8rem}
+.gc-title{font-size:0.48rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;display:block}
+.gc-row{display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:0.5px solid rgba(28,20,16,0.06)}
+.gc-row:last-child{border-bottom:none}
+.gck{font-size:0.64rem;color:var(--fog)}
+.gcv{font-size:0.7rem;color:var(--ink);font-weight:300}
+
+/* CHECKBOX */
+.check-row{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.2rem;cursor:pointer}
+.check-box{width:16px;height:16px;border:0.5px solid rgba(28,20,16,0.2);flex-shrink:0;margin-top:2px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.check-box.checked{background:var(--gold);border-color:var(--gold)}
+.chk-mark{width:7px;height:4px;border-left:1px solid #fff;border-bottom:1px solid #fff;transform:rotate(-45deg) translateY(-1px);opacity:0;transition:opacity 0.2s}
+.check-box.checked .chk-mark{opacity:1}
+.check-label{font-size:0.64rem;color:var(--fog);line-height:1.85;font-weight:200}
+.check-label a{color:var(--gold);text-decoration:none}
+
+/* SUCCESS */
+.success-wrap{padding:3rem 0}
+.success-top{background:var(--dark);padding:4rem;text-align:center;position:relative;overflow:hidden;margin-bottom:2px}
+.success-top-weave{position:absolute;inset:0;opacity:0.05;background-image:repeating-linear-gradient(45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px),repeating-linear-gradient(-45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px)}
+.success-top-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:400px;height:300px;background:radial-gradient(ellipse,rgba(196,154,82,0.08) 0%,transparent 70%);pointer-events:none}
+.smark{width:52px;height:52px;border:0.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 2rem;position:relative;z-index:1}
+.schk{width:18px;height:11px;border-left:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);transform:rotate(-45deg) translateY(-2px)}
+.s-title{font-family:var(--s);font-size:2.4rem;font-weight:300;color:#fff;margin-bottom:0.8rem;position:relative;z-index:1}
+.s-title em{font-style:italic;color:var(--gold-lt)}
+.s-sub{font-size:0.72rem;color:rgba(255,255,255,0.36);line-height:2;font-weight:200;max-width:380px;margin:0 auto 2rem;position:relative;z-index:1}
+.s-ref{font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);padding:0.7rem 1.5rem;border:0.5px solid rgba(196,154,82,0.3);display:inline-block;position:relative;z-index:1}
+.success-details{background:var(--linen);padding:2.5rem}
+.sd-title{font-size:0.48rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--gold);margin-bottom:1.4rem;display:block}
+.sd-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:0.5px solid rgba(28,20,16,0.08)}
+.sd-item{padding:1.2rem 1.5rem;border-right:0.5px solid rgba(28,20,16,0.08);border-bottom:0.5px solid rgba(28,20,16,0.08)}
+.sd-item:nth-child(2n){border-right:none}
+.sd-item:nth-last-child(-n+2){border-bottom:none}
+.sd-k{font-size:0.46rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--fog);display:block;margin-bottom:0.3rem}
+.sd-v{font-size:0.76rem;color:var(--ink);font-weight:300}
+.success-actions{display:flex;gap:1rem;margin-top:2rem}
+.btn-outline{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;padding:1rem 2rem;background:transparent;color:var(--ink);border:0.5px solid rgba(28,20,16,0.2);cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.3s}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.success-contact{margin-top:1.5rem;font-size:0.62rem;color:var(--fog);font-weight:200;line-height:1.9}
+.success-contact a{color:var(--gold);text-decoration:none}
+
+/* RIGHT SIDEBAR */
+.summary-side{background:var(--dark);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.ss-weave{position:absolute;inset:0;opacity:0.05;background-image:repeating-linear-gradient(45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px),repeating-linear-gradient(-45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px)}
+.ss-glow{position:absolute;bottom:0;left:0;width:320px;height:320px;background:radial-gradient(ellipse,rgba(196,154,82,0.07) 0%,transparent 70%);pointer-events:none}
+.ss-inner{position:relative;z-index:1;padding:5rem 3rem;flex:1;display:flex;flex-direction:column}
+.ss-head{font-family:var(--s);font-size:1.3rem;font-weight:300;color:#fff;margin-bottom:2.5rem;line-height:1.2}
+.ss-head em{font-style:italic;color:var(--gold-lt)}
+.ss-rows{display:flex;flex-direction:column;border-top:0.5px solid rgba(255,255,255,0.07);margin-bottom:0}
+.sr{padding:0.9rem 0;border-bottom:0.5px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:baseline}
+.srk{font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.24)}
+.srv{font-size:0.7rem;color:rgba(255,255,255,0.6);text-align:right;font-weight:200;max-width:160px}
+.ss-total{margin-top:2rem;padding-top:1.8rem;border-top:0.5px solid rgba(196,154,82,0.18)}
+.ss-total-lbl{font-size:0.46rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.24);display:block;margin-bottom:0.35rem}
+.ss-total-amt{font-family:var(--s);font-size:2rem;font-weight:300;color:#fff;line-height:1;display:block}
+.ss-total-note{font-size:0.56rem;color:rgba(255,255,255,0.2);margin-top:0.4rem}
+.ss-incl{margin-top:2.5rem}
+.ss-incl-title{font-size:0.44rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.18);display:block;margin-bottom:0.9rem}
+.ss-item{display:flex;align-items:baseline;gap:0.7rem;font-size:0.62rem;color:rgba(255,255,255,0.28);font-weight:200;margin-bottom:0.55rem}
+.ss-dot{width:3px;height:3px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
+.ss-room-img{width:100%;height:140px;margin-top:3rem;background:linear-gradient(150deg,#C8A87C,#6A3A16)}
+
+/* STEP TOGGLE BUTTONS */
+.step-nav{display:flex;gap:0;margin-bottom:3rem;background:var(--linen);padding:0.4rem}
+.sn-btn{flex:1;padding:0.8rem;font-size:0.52rem;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;font-family:var(--b);font-weight:300;background:transparent;border:none;color:var(--fog);transition:all 0.25s;text-align:center}
+.sn-btn.active{background:var(--w);color:var(--ink);border-bottom:1.5px solid var(--gold)}
+.sn-btn:hover:not(.active){color:var(--ink)}
+</style>
+
+<nav>
+  <div class="nav-brand"><span class="nav-logo">COVE</span><span class="nav-city">Dubai</span></div>
+  <ul class="nav-links">
+    <li><a href="#">About</a></li>
+    <li><a href="#">Rooms</a></li>
+    <li><a href="#">Dining</a></li>
+    <li><a href="#">Wellness</a></li>
+    <li><a href="#">Experiences</a></li>
+    <li><a href="#">Members</a></li>
+  </ul>
+  <button class="nbtn">Reserve</button>
+</nav>
+
+<div class="breadcrumb">
+  <span class="bc">Cove Dubai</span>
+  <span class="bc-sep">·</span>
+  <span class="bc">Reserve</span>
+  <span class="bc-sep">·</span>
+  <span class="bc cur" id="bc-cur">Your details</span>
+</div>
+
+<div class="page">
+  <div class="form-side">
+    <p class="page-lbl">Reservation</p>
+    <h1 class="page-h" id="page-title">Your <em>details</em></h1>
+    <p class="page-sub">Al Rigga, Dubai · Opening 2026</p>
+
+    <!-- STEPS -->
+    <div class="steps">
+      <div class="si done" id="si1" onclick="goStep(1)"><div class="si-num">✓</div>Dates & room</div>
+      <div class="si active" id="si2"><div class="si-num">2</div>Your details</div>
+      <div class="si" id="si3"><div class="si-num">3</div>Confirm</div>
+    </div>
+
+    <!-- PREVIEW TOGGLE -->
+    <div class="step-nav">
+      <button class="sn-btn" onclick="goStep(1)">← Back to dates</button>
+      <button class="sn-btn active">Your details</button>
+      <button class="sn-btn" onclick="goStep(3)">Review →</button>
+    </div>
+
+    <!-- STEP 2 — DETAILS -->
+    <div class="step-block show" id="step2">
+      <p class="sec-label">Personal information</p>
+
+      <div class="form-row">
+        <div class="field finput"><label>First name</label><input type="text" placeholder="" id="fname"></div>
+        <div class="field finput"><label>Last name</label><input type="text" placeholder="" id="lname"></div>
+      </div>
+      <div class="form-row">
+        <div class="field finput"><label>Email address</label><input type="email" placeholder="" id="email"></div>
+        <div class="field finput"><label>Phone number</label><input type="tel" placeholder="+971" id="phone"></div>
+      </div>
+      <div class="form-row">
+        <div class="field finput"><label>Nationality</label><input type="text" placeholder="" id="nationality"></div>
+        <div class="field finput"><label>Estimated arrival</label>
+          <select id="arrival">
+            <option>Before 12:00</option>
+            <option>12:00 – 15:00</option>
+            <option selected>15:00 – 18:00</option>
+            <option>18:00 – 21:00</option>
+            <option>After 21:00</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sec-div"></div>
+      <p class="sec-label">Special requests</p>
+
+      <div class="field finput form-row full">
+        <label>Anything we should know before you arrive</label>
+        <textarea placeholder="Dietary requirements, accessibility needs, occasion, room preferences…" id="requests"></textarea>
+      </div>
+
+      <div class="sec-div"></div>
+      <p class="sec-label">Preferences</p>
+
+      <div class="check-row" onclick="toggleCheck('c1')">
+        <div class="check-box checked" id="c1"><div class="chk-mark"></div></div>
+        <span class="check-label">I would like to receive updates about Cove, including dining events and special offers.</span>
+      </div>
+      <div class="check-row" onclick="toggleCheck('c2')">
+        <div class="check-box" id="c2"><div class="chk-mark"></div></div>
+        <span class="check-label">I am a Cove Circle member. Apply my member rate to this reservation.</span>
+      </div>
+
+      <div class="form-note">
+        No payment is taken at this stage. Your reservation will be held pending confirmation. Cancellation is free up to 48 hours before your arrival date. Full terms apply at check-in.
+      </div>
+
+      <div class="form-cta">
+        <button class="btn-p" onclick="goStep(3)">Review reservation</button>
+        <button class="btn-b" onclick="goStep(1)">← Back</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 — CONFIRM -->
+    <div class="step-block" id="step3">
+
+      <div class="rb">
+        <span class="rb-title">Stay summary</span>
+        <div class="rb-row"><span class="rbk">Hotel</span><span class="rbv">Cove Dubai · Al Rigga</span></div>
+        <div class="rb-row"><span class="rbk">Room</span><span class="rbv">The Cove Suite · Signature</span></div>
+        <div class="rb-row"><span class="rbk">Check in</span><span class="rbv">15 Aug 2026</span></div>
+        <div class="rb-row"><span class="rbk">Check out</span><span class="rbv">18 Aug 2026</span></div>
+        <div class="rb-row"><span class="rbk">Duration</span><span class="rbv">3 nights</span></div>
+        <div class="rb-row"><span class="rbk">Guests</span><span class="rbv">2 adults</span></div>
+        <div class="rb-total-row"><span class="rbk">Total estimate</span><span class="rbv">AED 7,200</span></div>
+      </div>
+
+      <div class="guest-card">
+        <span class="gc-title">Your details</span>
+        <div class="gc-row"><span class="gck">Name</span><span class="gcv" id="gc-name">— — — —</span></div>
+        <div class="gc-row"><span class="gck">Email</span><span class="gcv" id="gc-email">— — — —</span></div>
+        <div class="gc-row"><span class="gck">Phone</span><span class="gcv" id="gc-phone">— — — —</span></div>
+        <div class="gc-row"><span class="gck">Arrival</span><span class="gcv">15:00 – 18:00</span></div>
+        <div class="gc-row"><span class="gck">Requests</span><span class="gcv">None</span></div>
+      </div>
+
+      <div class="policy-box">
+        <span class="policy-title">Cancellation & payment policy</span>
+        <div class="policy-row"><div class="policy-dot"></div><div class="policy-text">Cancellation is free up to 48 hours before arrival.</div></div>
+        <div class="policy-row"><div class="policy-dot"></div><div class="policy-text">No payment is required today. The full amount is due at check-in.</div></div>
+        <div class="policy-row"><div class="policy-dot"></div><div class="policy-text">For early departure, one night's rate applies.</div></div>
+        <div class="policy-row"><div class="policy-dot"></div><div class="policy-text">By confirming, you agree to Cove Dubai's guest reservation terms.</div></div>
+      </div>
+
+      <div class="form-cta">
+        <button class="btn-p" onclick="goSuccess()">Confirm reservation</button>
+        <button class="btn-b" onclick="goStep(2)">← Back to details</button>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="step-block" id="success">
+      <div class="success-wrap">
+        <div class="success-top">
+          <div class="success-top-weave"></div>
+          <div class="success-top-glow"></div>
+          <div class="smark"><div class="schk"></div></div>
+          <h2 class="s-title">Reservation <em>confirmed.</em></h2>
+          <p class="s-sub">A confirmation has been sent to your email. We look forward to welcoming you to Cove.</p>
+          <div class="s-ref" id="s-ref">Ref: CV-2026-0001</div>
+        </div>
+        <div class="success-details">
+          <span class="sd-title">Your reservation at a glance</span>
+          <div class="sd-grid">
+            <div class="sd-item"><span class="sd-k">Room</span><span class="sd-v">The Cove Suite</span></div>
+            <div class="sd-item"><span class="sd-k">Guests</span><span class="sd-v">2 adults</span></div>
+            <div class="sd-item"><span class="sd-k">Check in</span><span class="sd-v">15 Aug 2026</span></div>
+            <div class="sd-item"><span class="sd-k">Check out</span><span class="sd-v">18 Aug 2026</span></div>
+            <div class="sd-item"><span class="sd-k">Duration</span><span class="sd-v">3 nights</span></div>
+            <div class="sd-item"><span class="sd-k">Total</span><span class="sd-v">AED 7,200</span></div>
+          </div>
+          <div class="success-actions">
+            <button class="btn-p">Back to Cove</button>
+            <button class="btn-outline">Add dining reservation</button>
+          </div>
+          <p class="success-contact">Questions? <a href="mailto:reservations@cove.com">reservations@cove.com</a> · <a href="tel:+97140000000">+971 4 000 0000</a></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="summary-side">
+    <div class="ss-weave"></div>
+    <div class="ss-glow"></div>
+    <div class="ss-inner">
+      <div class="ss-head">Your stay<br>at <em>Cove.</em></div>
+      <div class="ss-rows">
+        <div class="sr"><span class="srk">Room</span><span class="srv">The Cove Suite</span></div>
+        <div class="sr"><span class="srk">Check in</span><span class="srv">15 Aug 2026</span></div>
+        <div class="sr"><span class="srk">Check out</span><span class="srv">18 Aug 2026</span></div>
+        <div class="sr"><span class="srk">Nights</span><span class="srv">3 nights</span></div>
+        <div class="sr"><span class="srk">Guests</span><span class="srv">2 adults</span></div>
+      </div>
+      <div class="ss-total">
+        <span class="ss-total-lbl">Total estimate</span>
+        <span class="ss-total-amt">AED 7,200</span>
+        <div class="ss-total-note">Taxes and service not included</div>
+      </div>
+      <div class="ss-incl">
+        <span class="ss-incl-title">Included with every stay</span>
+        <div class="ss-item"><div class="ss-dot"></div>Daily breakfast for two</div>
+        <div class="ss-item"><div class="ss-dot"></div>Complimentary valet parking</div>
+        <div class="ss-item"><div class="ss-dot"></div>Pool & fitness floor access</div>
+        <div class="ss-item"><div class="ss-dot"></div>Late checkout until 2 pm</div>
+        <div class="ss-item"><div class="ss-dot"></div>High-speed wifi</div>
+      </div>
+      <div class="ss-room-img"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function goStep(n){
+  document.querySelectorAll('.step-block').forEach(b=>b.classList.remove('show'));
+  const map={1:'step1_hidden',2:'step2',3:'step3',4:'success'};
+  if(n===2)document.getElementById('step2').classList.add('show');
+  if(n===3){document.getElementById('step3').classList.add('show');updConfirm();}
+  if(n===4)document.getElementById('success').classList.add('show');
+
+  ['si1','si2','si3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.classList.remove('active','done');
+    if(i+1===n)el.classList.add('active');
+    else if(i+1<n)el.classList.add('done');
+    const nm=el.querySelector('.si-num');
+    nm.textContent=i+1<n?'✓':(i+1);
+  });
+
+  const titles={2:'Your <em>details</em>',3:'<em>Confirm</em> reservation'};
+  const bcs={2:'Your details',3:'Confirm'};
+  if(titles[n]){document.getElementById('page-title').innerHTML=titles[n];document.getElementById('bc-cur').textContent=bcs[n];}
+  window.scrollTo(0,0);
+}
+
+function goSuccess(){
+  document.querySelectorAll('.step-block').forEach(b=>b.classList.remove('show'));
+  document.getElementById('success').classList.add('show');
+  ['si1','si2','si3'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove('active');el.classList.add('done');
+    el.querySelector('.si-num').textContent='✓';
+  });
+  document.getElementById('s-ref').textContent='Ref: CV-2026-'+String(Math.floor(Math.random()*9000)+1000);
+  document.getElementById('page-title').innerHTML='Reservation <em>confirmed.</em>';
+  document.getElementById('bc-cur').textContent='Confirmed';
+  window.scrollTo(0,0);
+}
+
+function updConfirm(){
+  const fn=document.getElementById('fname')?.value||'—';
+  const ln=document.getElementById('lname')?.value||'—';
+  const em=document.getElementById('email')?.value||'—';
+  const ph=document.getElementById('phone')?.value||'—';
+  if(document.getElementById('gc-name'))document.getElementById('gc-name').textContent=(fn+' '+ln).trim()||'—';
+  if(document.getElementById('gc-email'))document.getElementById('gc-email').textContent=em;
+  if(document.getElementById('gc-phone'))document.getElementById('gc-phone').textContent=ph;
+}
+
+function toggleCheck(id){
+  document.getElementById(id).classList.toggle('checked');
+}
+</script>

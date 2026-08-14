@@ -1,0 +1,520 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#1C1410;--fog:#7A6E62;--bone:#EAE0D0;--linen:#F2EBD9;--w:#FEF9F2;
+  --gold:#C49A52;--gold-lt:#D4AE6E;--dark:#180E06;
+  --s:'Cormorant Garamond',serif;--b:'Jost',sans-serif;
+}
+body{background:var(--w);font-family:var(--b);font-weight:300;overflow-x:hidden}
+
+nav{display:flex;justify-content:space-between;align-items:center;padding:1.4rem 5rem;background:rgba(24,14,6,0.97);backdrop-filter:blur(14px);border-bottom:0.5px solid rgba(196,154,82,0.15);position:sticky;top:0;z-index:200}
+.nav-brand{display:flex;flex-direction:column;cursor:pointer}
+.nav-logo{font-family:var(--s);font-size:1.4rem;letter-spacing:0.32em;font-weight:300;line-height:1;background:linear-gradient(135deg,#D4AE6E 0%,#C49A52 50%,#E8C882 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-city{font-size:0.4rem;letter-spacing:0.6em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:3px}
+.nav-links{display:flex;gap:2.8rem;list-style:none}
+.nav-links a{font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.4);text-decoration:none;transition:color 0.3s}
+.nav-links a:hover{color:var(--gold-lt)}
+.nbtn{font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.65rem 1.7rem;border:0.5px solid rgba(196,154,82,0.55);color:var(--gold-lt);background:transparent;cursor:pointer;font-family:var(--b);font-weight:300}
+
+.breadcrumb{padding:1.2rem 5rem;background:var(--dark);border-bottom:0.5px solid rgba(196,154,82,0.08);display:flex;align-items:center;gap:0.8rem}
+.bc{font-size:0.48rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.22);text-decoration:none}
+.bc:hover{color:rgba(255,255,255,0.5)}
+.bc-sep{color:rgba(196,154,82,0.3);font-size:0.48rem}
+.bc.cur{color:var(--gold)}
+
+/* LAYOUT — full page two column */
+.page{display:grid;grid-template-columns:1fr 380px;min-height:calc(100vh - 100px)}
+
+/* LEFT — main form area */
+.form-side{padding:5rem;border-right:0.5px solid rgba(28,20,16,0.07)}
+
+.page-lbl{font-size:0.5rem;letter-spacing:0.44em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;display:flex;align-items:center;gap:0.8rem}
+.page-lbl::before{content:'';width:14px;height:0.5px;background:var(--gold);display:inline-block}
+h1.page-h{font-family:var(--s);font-size:2.8rem;font-weight:300;color:var(--ink);margin-bottom:0.5rem;line-height:1.05}
+h1.page-h em{font-style:italic}
+.page-sub{font-size:0.7rem;color:var(--fog);font-weight:200;margin-bottom:3.5rem;line-height:1.8}
+
+/* STEPS */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:3.5rem;border-bottom:0.5px solid rgba(28,20,16,0.07);padding-bottom:0}
+.si{padding:0 0 1.2rem;margin-right:3rem;font-size:0.52rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(28,20,16,0.25);border-bottom:1.5px solid transparent;transition:all 0.3s;cursor:default;display:flex;align-items:center;gap:0.6rem}
+.si.active{color:var(--ink);border-bottom-color:var(--gold)}
+.si.done{color:var(--fog)}
+.si-num{width:18px;height:18px;border-radius:50%;border:0.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:0.46rem;flex-shrink:0}
+.si.done .si-num{background:var(--gold);border-color:var(--gold);color:#fff}
+.si.active .si-num{border-color:var(--gold);color:var(--gold)}
+
+/* STEP CONTENT */
+.step-block{display:none}
+.step-block.show{display:block}
+
+/* DATE ROW */
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.5rem}
+.field{display:flex;flex-direction:column;gap:0.5rem;position:relative}
+.field label{font-size:0.48rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--fog)}
+.fbox{border:0.5px solid rgba(28,20,16,0.12);padding:0.9rem 1.1rem;font-family:var(--b);font-size:0.76rem;font-weight:300;color:var(--ink);background:var(--w);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color 0.25s}
+.fbox:hover{border-color:rgba(28,20,16,0.28)}
+.fbox.act{border-color:var(--gold)}
+.fbox svg{flex-shrink:0;opacity:0.22}
+.finput select,.finput input{border:0.5px solid rgba(28,20,16,0.12);padding:0.9rem 1.1rem;font-family:var(--b);font-size:0.76rem;font-weight:300;color:var(--ink);background:var(--w);outline:none;width:100%;transition:border-color 0.25s;-webkit-appearance:none}
+.finput select:focus,.finput input:focus{border-color:var(--gold)}
+.finput input::placeholder{color:rgba(28,20,16,0.26)}
+
+/* CALENDAR */
+.cal-pop{display:none;position:absolute;top:calc(100% + 6px);left:0;width:272px;background:var(--w);border:0.5px solid rgba(28,20,16,0.12);z-index:50;padding:1.2rem;box-shadow:0 8px 28px rgba(28,20,16,0.08)}
+.cal-pop.open{display:block}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem}
+.cal-mo{font-family:var(--s);font-size:0.95rem;font-weight:300;color:var(--ink)}
+.cnav{background:none;border:none;cursor:pointer;color:var(--fog);font-size:1rem;padding:0.2rem 0.5rem;transition:color 0.2s}
+.cnav:hover{color:var(--ink)}
+.cdow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:0.3rem}
+.cdow span{font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--fog);text-align:center;padding:0.22rem 0}
+.cdays{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.cd{font-size:0.7rem;color:var(--ink);text-align:center;padding:0.38rem 0.1rem;cursor:pointer;transition:background 0.15s;border-radius:2px}
+.cd:hover{background:var(--linen)}
+.cd.sel{background:var(--gold);color:#fff}
+.cd.range{background:rgba(196,154,82,0.1)}
+.cd.today{color:var(--gold);font-weight:400}
+.cd.past{color:rgba(28,20,16,0.16);cursor:default}
+.cd.empty{cursor:default}
+
+/* GUEST */
+.g-counter{display:flex;align-items:center;gap:0.8rem}
+.g-btn{width:26px;height:26px;border:0.5px solid rgba(28,20,16,0.14);background:none;cursor:pointer;font-size:1rem;color:var(--fog);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.g-btn:hover{border-color:var(--ink);color:var(--ink)}
+.g-n{font-size:0.78rem;color:var(--ink);min-width:14px;text-align:center}
+
+.sec-div{width:100%;height:0.5px;background:rgba(28,20,16,0.07);margin:2rem 0}
+
+/* ROOMS */
+.rooms-label{font-size:0.48rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--fog);margin-bottom:1.2rem;display:block}
+.room-list{display:flex;flex-direction:column;gap:2px;margin-bottom:2rem}
+.rc{display:grid;grid-template-columns:56px 1fr auto 20px;align-items:center;gap:1.2rem;padding:1.2rem;border:0.5px solid rgba(28,20,16,0.08);cursor:pointer;transition:all 0.25s}
+.rc:hover{border-color:rgba(28,20,16,0.18);background:var(--linen)}
+.rc.sel{border-color:var(--gold);background:rgba(196,154,82,0.03)}
+.rc-sw{width:56px;height:56px;flex-shrink:0}
+.sw1{background:linear-gradient(135deg,#C8A87C,#6A3A16)}
+.sw2{background:linear-gradient(135deg,#D0C0A4,#A49070)}
+.sw3{background:linear-gradient(135deg,#B8C0BC,#7A9898)}
+.sw4{background:linear-gradient(135deg,#C4B8A4,#9A9080)}
+.rc-cat{font-size:0.48rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);margin-bottom:0.2rem}
+.rc-name{font-family:var(--s);font-size:1rem;font-weight:300;color:var(--ink);margin-bottom:0.12rem}
+.rc-meta{font-size:0.62rem;color:var(--fog)}
+.rc-amt{font-family:var(--s);font-size:1rem;font-weight:300;color:var(--ink);white-space:nowrap;display:block;text-align:right}
+.rc-per{font-size:0.46rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--fog);display:block;margin-top:0.1rem;text-align:right}
+.rc-chk{width:18px;height:18px;border:0.5px solid rgba(28,20,16,0.14);display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.rc.sel .rc-chk{background:var(--gold);border-color:var(--gold)}
+.chkm{width:8px;height:5px;border-left:1px solid #fff;border-bottom:1px solid #fff;transform:rotate(-45deg) translateY(-1px);opacity:0;transition:opacity 0.2s}
+.rc.sel .chkm{opacity:1}
+
+/* FORM FIELDS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem}
+.form-row.full{grid-template-columns:1fr}
+.form-note{font-size:0.64rem;color:var(--fog);line-height:1.9;font-weight:200;margin-top:1rem}
+
+/* REVIEW */
+.rb{background:var(--linen);padding:2rem;margin-bottom:1.5rem}
+.rb-lbl{font-size:0.46rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem}
+.rb-row{display:flex;justify-content:space-between;align-items:baseline;padding:0.7rem 0;border-bottom:0.5px solid rgba(28,20,16,0.07)}
+.rb-row:last-child{border-bottom:none}
+.rbk{font-size:0.66rem;color:var(--fog)}
+.rbv{font-size:0.72rem;color:var(--ink);font-weight:300}
+.rb-total .rbk{color:var(--ink);font-size:0.72rem;font-weight:300}
+.rb-total .rbv{font-family:var(--s);font-size:1.4rem;font-weight:300;color:var(--ink)}
+.review-note{font-size:0.64rem;color:var(--fog);line-height:1.9;font-weight:200;padding:1.4rem;border:0.5px solid rgba(28,20,16,0.07);margin-bottom:2rem}
+
+/* SUCCESS */
+.success-block{display:flex;flex-direction:column;align-items:center;text-align:center;padding:4rem 2rem;gap:1.8rem}
+.smark{width:52px;height:52px;border:0.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.schk{width:17px;height:11px;border-left:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);transform:rotate(-45deg) translateY(-2px)}
+.success-block h2{font-family:var(--s);font-size:2.2rem;font-weight:300;color:var(--ink)}
+.success-block h2 em{font-style:italic}
+.success-block p{font-size:0.74rem;color:var(--fog);line-height:2;max-width:380px;font-weight:200}
+.s-ref{font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);padding:0.65rem 1.4rem;border:0.5px solid rgba(196,154,82,0.3)}
+.s-actions{display:flex;gap:1rem;margin-top:0.5rem}
+
+/* CTA */
+.form-cta{display:flex;gap:1rem;align-items:center;margin-top:1.5rem}
+.btn-p{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;padding:1rem 2.6rem;background:var(--gold);color:#fff;border:none;cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.3s}
+.btn-p:hover{background:var(--dark)}
+.btn-b{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--fog);background:none;border:none;cursor:pointer;font-family:var(--b);font-weight:200;transition:color 0.3s}
+.btn-b:hover{color:var(--ink)}
+.btn-rooms{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;padding:1rem 2rem;background:transparent;color:var(--ink);border:0.5px solid rgba(28,20,16,0.2);cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.3s}
+.btn-rooms:hover{border-color:var(--gold);color:var(--gold)}
+
+/* RIGHT — SUMMARY SIDEBAR */
+.summary-side{background:var(--dark);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.ss-weave{position:absolute;inset:0;opacity:0.05;background-image:repeating-linear-gradient(45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px),repeating-linear-gradient(-45deg,transparent,transparent 22px,rgba(196,154,82,1) 22px,rgba(196,154,82,1) 22.5px)}
+.ss-glow{position:absolute;bottom:0;left:0;width:320px;height:320px;background:radial-gradient(ellipse,rgba(196,154,82,0.07) 0%,transparent 70%);pointer-events:none}
+.ss-inner{position:relative;z-index:1;padding:5rem 3rem;flex:1;display:flex;flex-direction:column}
+.ss-head{font-family:var(--s);font-size:1.3rem;font-weight:300;color:#fff;margin-bottom:2.5rem;line-height:1.2}
+.ss-head em{font-style:italic;color:var(--gold-lt)}
+.ss-rows{display:flex;flex-direction:column;border-top:0.5px solid rgba(255,255,255,0.07);margin-bottom:auto}
+.sr{padding:0.9rem 0;border-bottom:0.5px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:baseline}
+.srk{font-size:0.5rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.24)}
+.srv{font-size:0.7rem;color:rgba(255,255,255,0.6);text-align:right;max-width:160px;font-weight:200}
+.ss-total{margin-top:2rem;padding-top:1.8rem;border-top:0.5px solid rgba(196,154,82,0.18)}
+.ss-total-lbl{font-size:0.46rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.24);display:block;margin-bottom:0.35rem}
+.ss-total-amt{font-family:var(--s);font-size:2rem;font-weight:300;color:#fff;line-height:1;display:block}
+.ss-total-note{font-size:0.58rem;color:rgba(255,255,255,0.2);margin-top:0.4rem}
+.ss-incl{margin-top:2rem}
+.ss-incl-title{font-size:0.44rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.18);display:block;margin-bottom:0.8rem}
+.ss-item{display:flex;align-items:baseline;gap:0.7rem;font-size:0.64rem;color:rgba(255,255,255,0.28);font-weight:200;margin-bottom:0.5rem}
+.ss-dot{width:3px;height:3px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
+.ss-img{width:100%;aspect-ratio:16/9;margin-top:auto;padding-top:3rem;transition:all 0.5s}
+.ss-img-inner{width:100%;height:100%;transition:background 0.5s}
+.img-suite{background:linear-gradient(150deg,#C8A87C,#6A3A16)}
+.img-terrace{background:linear-gradient(150deg,#D0C0A4,#A49070)}
+.img-corner{background:linear-gradient(150deg,#B8C4C0,#7A9898)}
+.img-studio{background:linear-gradient(150deg,#C4B8A4,#9A9080)}
+</style>
+
+<nav>
+  <div class="nav-brand"><span class="nav-logo">COVE</span><span class="nav-city">Dubai</span></div>
+  <ul class="nav-links">
+    <li><a href="#">About</a></li>
+    <li><a href="#">Rooms</a></li>
+    <li><a href="#">Dining</a></li>
+    <li><a href="#">Wellness</a></li>
+    <li><a href="#">Experiences</a></li>
+    <li><a href="#">Members</a></li>
+  </ul>
+  <button class="nbtn">Reserve</button>
+</nav>
+
+<div class="breadcrumb">
+  <a href="#" class="bc">Cove Dubai</a>
+  <span class="bc-sep">·</span>
+  <span class="bc cur">Reserve</span>
+</div>
+
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="form-side">
+    <p class="page-lbl">Reservation</p>
+    <h1 class="page-h">Reserve your<br><em>room at Cove</em></h1>
+    <p class="page-sub">Al Rigga, Dubai · Opening 2026</p>
+
+    <div class="steps">
+      <div class="si active" id="si1"><div class="si-num">1</div>Dates & room</div>
+      <div class="si" id="si2"><div class="si-num">2</div>Your details</div>
+      <div class="si" id="si3"><div class="si-num">3</div>Confirm</div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step-block show" id="step1">
+      <div class="date-row">
+        <div class="field">
+          <label>Check in</label>
+          <div style="position:relative">
+            <div class="fbox act" id="ci-box" onclick="toggleCal('in')">
+              <span id="ci-txt">Select date</span>
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="0.5" stroke="#1A1714" stroke-width="0.6"/><line x1="4" y1="1" x2="4" y2="3.5" stroke="#1A1714" stroke-width="0.6"/><line x1="10" y1="1" x2="10" y2="3.5" stroke="#1A1714" stroke-width="0.6"/><line x1="1" y1="5.5" x2="13" y2="5.5" stroke="#1A1714" stroke-width="0.6"/></svg>
+            </div>
+            <div class="cal-pop" id="cal">
+              <div class="cal-head">
+                <button class="cnav" onclick="pMo(event)">‹</button>
+                <span class="cal-mo" id="cal-mo"></span>
+                <button class="cnav" onclick="nMo(event)">›</button>
+              </div>
+              <div class="cdow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+              <div class="cdays" id="cal-grid"></div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Check out</label>
+          <div style="position:relative">
+            <div class="fbox" id="co-box" onclick="toggleCal('out')">
+              <span id="co-txt">Select date</span>
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="0.5" stroke="#1A1714" stroke-width="0.6"/><line x1="4" y1="1" x2="4" y2="3.5" stroke="#1A1714" stroke-width="0.6"/><line x1="10" y1="1" x2="10" y2="3.5" stroke="#1A1714" stroke-width="0.6"/><line x1="1" y1="5.5" x2="13" y2="5.5" stroke="#1A1714" stroke-width="0.6"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:1.5rem">
+        <label>Guests</label>
+        <div class="fbox" style="cursor:default">
+          <span id="g-disp" style="font-size:0.76rem;color:var(--ink)">2 adults</span>
+          <div class="g-counter">
+            <button class="g-btn" onclick="chG(-1)">−</button>
+            <span class="g-n" id="g-n">2</span>
+            <button class="g-btn" onclick="chG(1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-div"></div>
+
+      <span class="rooms-label">Select your room</span>
+      <div class="room-list">
+        <div class="rc sel" onclick="selRoom(this,'The Cove Suite','Signature',2400,'img-suite')">
+          <div class="rc-sw sw1"></div>
+          <div><div class="rc-cat">Signature</div><div class="rc-name">The Cove Suite</div><div class="rc-meta">96 m² · King · Private terrace</div></div>
+          <div><span class="rc-amt">AED 2,400</span><span class="rc-per">per night</span></div>
+          <div class="rc-chk"><div class="chkm"></div></div>
+        </div>
+        <div class="rc" onclick="selRoom(this,'Terrace Room','Deluxe',1400,'img-terrace')">
+          <div class="rc-sw sw2"></div>
+          <div><div class="rc-cat">Deluxe</div><div class="rc-name">Terrace Room</div><div class="rc-meta">58 m² · King or twin</div></div>
+          <div><span class="rc-amt">AED 1,400</span><span class="rc-per">per night</span></div>
+          <div class="rc-chk"><div class="chkm"></div></div>
+        </div>
+        <div class="rc" onclick="selRoom(this,'Corner Suite','Premium',1800,'img-corner')">
+          <div class="rc-sw sw3"></div>
+          <div><div class="rc-cat">Premium</div><div class="rc-name">Corner Suite</div><div class="rc-meta">72 m² · King · City view</div></div>
+          <div><span class="rc-amt">AED 1,800</span><span class="rc-per">per night</span></div>
+          <div class="rc-chk"><div class="chkm"></div></div>
+        </div>
+        <div class="rc" onclick="selRoom(this,'Studio Room','Classic',980,'img-studio')">
+          <div class="rc-sw sw4"></div>
+          <div><div class="rc-cat">Classic</div><div class="rc-name">Studio Room</div><div class="rc-meta">42 m² · Queen bed</div></div>
+          <div><span class="rc-amt">AED 980</span><span class="rc-per">per night</span></div>
+          <div class="rc-chk"><div class="chkm"></div></div>
+        </div>
+      </div>
+
+      <div class="form-cta">
+        <button class="btn-p" onclick="goStep(2)">Continue</button>
+        <button class="btn-rooms">View all rooms</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-block" id="step2">
+      <div class="form-row">
+        <div class="field finput"><label>First name</label><input type="text" placeholder=""></div>
+        <div class="field finput"><label>Last name</label><input type="text" placeholder=""></div>
+      </div>
+      <div class="form-row">
+        <div class="field finput"><label>Email</label><input type="email" placeholder=""></div>
+        <div class="field finput"><label>Phone</label><input type="tel" placeholder="+971"></div>
+      </div>
+      <div class="form-row">
+        <div class="field finput"><label>Nationality</label><input type="text" placeholder=""></div>
+        <div class="field finput"><label>Estimated arrival</label>
+          <select>
+            <option>Before 12:00</option>
+            <option>12:00 – 15:00</option>
+            <option selected>15:00 – 18:00</option>
+            <option>18:00 – 21:00</option>
+            <option>After 21:00</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="field finput"><label>Special requests</label><input type="text" placeholder="Dietary requirements, occasion, preferences…"></div>
+      </div>
+      <p class="form-note">No payment is taken at this stage. A confirmation will be sent to your email. Cancellation is free up to 48 hours before arrival.</p>
+      <div class="form-cta">
+        <button class="btn-p" onclick="goStep(3)">Review reservation</button>
+        <button class="btn-b" onclick="goStep(1)">← Back</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-block" id="step3">
+      <div class="rb">
+        <div class="rb-lbl">Reservation summary</div>
+        <div class="rb-row"><span class="rbk">Hotel</span><span class="rbv">Cove Dubai · Al Rigga</span></div>
+        <div class="rb-row"><span class="rbk">Room</span><span class="rbv" id="conf-room">The Cove Suite</span></div>
+        <div class="rb-row"><span class="rbk">Check in</span><span class="rbv" id="conf-ci">—</span></div>
+        <div class="rb-row"><span class="rbk">Check out</span><span class="rbv" id="conf-co">—</span></div>
+        <div class="rb-row"><span class="rbk">Duration</span><span class="rbv" id="conf-nights">1 night</span></div>
+        <div class="rb-row"><span class="rbk">Guests</span><span class="rbv" id="conf-guests">2 adults</span></div>
+        <div class="rb-row rb-total"><span class="rbk">Total estimate</span><span class="rbv" id="conf-total">AED 2,400</span></div>
+      </div>
+      <div class="review-note">Cancellation is free up to 48 hours before arrival. No payment is required today. The full amount is due at check-in.</div>
+      <div class="form-cta">
+        <button class="btn-p" onclick="confirm()">Confirm reservation</button>
+        <button class="btn-b" onclick="goStep(2)">← Back</button>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="step-block" id="success">
+      <div class="success-block">
+        <div class="smark"><div class="schk"></div></div>
+        <h2>Reservation <em>confirmed.</em></h2>
+        <p>We have your details. A confirmation has been sent to your email. We look forward to welcoming you to Cove.</p>
+        <div class="s-ref" id="s-ref">Ref: CV-2026-0001</div>
+        <p style="font-size:0.62rem;color:var(--fog)">reservations@cove.com · +971 4 000 0000</p>
+        <div class="s-actions">
+          <button class="btn-p">Back to Cove</button>
+          <button class="btn-rooms">View your booking</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="summary-side">
+    <div class="ss-weave"></div>
+    <div class="ss-glow"></div>
+    <div class="ss-inner">
+      <div class="ss-head">Your stay<br>at <em>Cove.</em></div>
+      <div class="ss-rows">
+        <div class="sr"><span class="srk">Room</span><span class="srv" id="sb-room">The Cove Suite</span></div>
+        <div class="sr"><span class="srk">Check in</span><span class="srv" id="sb-ci">—</span></div>
+        <div class="sr"><span class="srk">Check out</span><span class="srv" id="sb-co">—</span></div>
+        <div class="sr"><span class="srk">Nights</span><span class="srv" id="sb-nights">—</span></div>
+        <div class="sr"><span class="srk">Guests</span><span class="srv" id="sb-guests">2 adults</span></div>
+      </div>
+      <div class="ss-total">
+        <span class="ss-total-lbl">Total estimate</span>
+        <span class="ss-total-amt" id="sb-total">AED 2,400</span>
+        <div class="ss-total-note">Taxes and service not included</div>
+      </div>
+      <div class="ss-incl">
+        <span class="ss-incl-title">Included with every stay</span>
+        <div class="ss-item"><div class="ss-dot"></div>Daily breakfast for two</div>
+        <div class="ss-item"><div class="ss-dot"></div>Complimentary valet parking</div>
+        <div class="ss-item"><div class="ss-dot"></div>Pool & fitness floor access</div>
+        <div class="ss-item"><div class="ss-dot"></div>Late checkout until 2 pm</div>
+        <div class="ss-item"><div class="ss-dot"></div>High-speed wifi</div>
+      </div>
+      <div class="ss-img">
+        <div class="ss-img-inner img-suite" id="sb-img"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const today=new Date();
+let cy=today.getFullYear(),cm=today.getMonth();
+let ciDate=null,coDate=null,calMode=null;
+let guests=2,selPrice=2400,selRoomName='The Cove Suite',selNights=1;
+
+function pad(n){return n<10?'0'+n:n}
+function fmt(d){return d?`${pad(d.getDate())} ${MO[d.getMonth()].slice(0,3)} ${d.getFullYear()}`:'—'}
+
+function renderCal(){
+  document.getElementById('cal-mo').textContent=MO[cm]+' '+cy;
+  const g=document.getElementById('cal-grid');g.innerHTML='';
+  const first=new Date(cy,cm,1).getDay();
+  const days=new Date(cy,cm+1,0).getDate();
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cd empty';g.appendChild(e)}
+  for(let d=1;d<=days;d++){
+    const e=document.createElement('div');e.className='cd';e.textContent=d;
+    const dt=new Date(cy,cm,d);
+    const tod=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    if(dt<tod){e.classList.add('past')}
+    else{
+      if(ciDate&&dt.toDateString()===ciDate.toDateString())e.classList.add('sel');
+      else if(coDate&&dt.toDateString()===coDate.toDateString())e.classList.add('sel');
+      else if(ciDate&&coDate&&dt>ciDate&&dt<coDate)e.classList.add('range');
+      else if(dt.toDateString()===tod.toDateString())e.classList.add('today');
+      e.onclick=()=>pickDate(dt);
+    }
+    g.appendChild(e);
+  }
+}
+
+function pickDate(d){
+  if(calMode==='in'){
+    ciDate=d;
+    if(coDate&&coDate<=d)coDate=null;
+    document.getElementById('ci-txt').textContent=fmt(d);
+    document.getElementById('ci-box').classList.remove('act');
+    document.getElementById('co-box').classList.add('act');
+    document.getElementById('cal').classList.remove('open');
+    calMode='out';cy=d.getFullYear();cm=d.getMonth();
+    setTimeout(()=>{document.getElementById('cal').classList.add('open');renderCal()},10);
+  } else {
+    if(ciDate&&d<=ciDate)return;
+    coDate=d;
+    document.getElementById('co-txt').textContent=fmt(d);
+    document.getElementById('co-box').classList.remove('act');
+    document.getElementById('cal').classList.remove('open');
+    calMode=null;
+  }
+  updSide();renderCal();
+}
+
+function toggleCal(mode){
+  const c=document.getElementById('cal');
+  if(calMode===mode&&c.classList.contains('open')){c.classList.remove('open');calMode=null;return}
+  calMode=mode;
+  document.getElementById('ci-box').classList.toggle('act',mode==='in');
+  document.getElementById('co-box').classList.toggle('act',mode==='out');
+  c.classList.add('open');
+  if(mode==='out'&&ciDate){cy=ciDate.getFullYear();cm=ciDate.getMonth();}
+  renderCal();
+}
+
+function pMo(e){e.stopPropagation();cm--;if(cm<0){cm=11;cy--}renderCal()}
+function nMo(e){e.stopPropagation();cm++;if(cm>11){cm=0;cy++}renderCal()}
+
+function chG(d){
+  guests=Math.max(1,Math.min(6,guests+d));
+  document.getElementById('g-n').textContent=guests;
+  document.getElementById('g-disp').textContent=guests+(guests===1?' adult':' adults');
+  updSide();
+}
+
+function selRoom(el,name,cat,price,img){
+  document.querySelectorAll('.rc').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel');
+  selPrice=price;selRoomName=name;
+  document.getElementById('sb-img').className='ss-img-inner '+img;
+  updSide();
+}
+
+function updSide(){
+  if(ciDate&&coDate)selNights=Math.max(1,Math.round((coDate-ciDate)/(864e5)));
+  else selNights=1;
+  const total=selPrice*selNights;
+  document.getElementById('sb-room').textContent=selRoomName;
+  document.getElementById('sb-ci').textContent=fmt(ciDate);
+  document.getElementById('sb-co').textContent=fmt(coDate);
+  document.getElementById('sb-nights').textContent=ciDate&&coDate?selNights+(selNights===1?' night':' nights'):'—';
+  document.getElementById('sb-guests').textContent=guests+(guests===1?' adult':' adults');
+  document.getElementById('sb-total').textContent='AED '+total.toLocaleString();
+  document.getElementById('conf-room').textContent=selRoomName;
+  document.getElementById('conf-ci').textContent=fmt(ciDate);
+  document.getElementById('conf-co').textContent=fmt(coDate);
+  document.getElementById('conf-nights').textContent=selNights+(selNights===1?' night':' nights');
+  document.getElementById('conf-guests').textContent=guests+(guests===1?' adult':' adults');
+  document.getElementById('conf-total').textContent='AED '+total.toLocaleString();
+}
+
+function goStep(n){
+  document.querySelectorAll('.step-block').forEach(b=>b.classList.remove('show'));
+  const blocks=['step1','step2','step3','success'];
+  if(n<=3)document.getElementById(blocks[n-1]).classList.add('show');
+  ['si1','si2','si3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.classList.remove('active','done');
+    if(i+1===n)el.classList.add('active');
+    else if(i+1<n)el.classList.add('done');
+    const numEl=el.querySelector('.si-num');
+    numEl.textContent=i+1<n?'✓':(i+1);
+  });
+  updSide();window.scrollTo(0,0);
+}
+
+function confirm(){
+  document.querySelectorAll('.step-block').forEach(b=>b.classList.remove('show'));
+  document.getElementById('success').classList.add('show');
+  ['si1','si2','si3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.classList.remove('active');el.classList.add('done');
+    el.querySelector('.si-num').textContent='✓';
+  });
+  document.getElementById('s-ref').textContent='Ref: CV-2026-'+String(Math.floor(Math.random()*9000)+1000);
+}
+
+document.addEventListener('click',e=>{
+  const c=document.getElementById('cal');
+  if(!e.target.closest('[onclick*="toggleCal"]')&&!e.target.closest('.cal-pop')&&c.classList.contains('open')){
+    c.classList.remove('open');calMode=null;
+  }
+});
+
+renderCal();updSide();
+</script>

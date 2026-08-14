@@ -1,0 +1,328 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#1C1410;--fog:#7A6E62;--bone:#EAE0D0;--linen:#F2EBD9;--w:#FEF9F2;
+  --gold:#C49A52;--gold-lt:#D4AE6E;--dark:#180E06;
+  --s:'Cormorant Garamond',serif;--b:'Jost',sans-serif;
+}
+body{background:var(--w);color:var(--ink);font-family:var(--b);font-weight:300;overflow-x:hidden}
+
+nav{display:flex;justify-content:space-between;align-items:center;padding:1.4rem 5rem;background:rgba(24,14,6,0.97);backdrop-filter:blur(14px);border-bottom:0.5px solid rgba(196,154,82,0.15);position:sticky;top:0;z-index:200}
+.nav-brand{display:flex;flex-direction:column;cursor:pointer}
+.nav-logo{font-family:var(--s);font-size:1.4rem;letter-spacing:0.32em;font-weight:300;line-height:1;background:linear-gradient(135deg,#D4AE6E 0%,#C49A52 50%,#E8C882 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-city{font-size:0.4rem;letter-spacing:0.6em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:3px}
+.nav-links{display:flex;gap:2.8rem;list-style:none}
+.nav-links a{font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.4);text-decoration:none;transition:color 0.3s}
+.nav-links a.active{color:var(--gold-lt)}
+.nav-links a:hover{color:var(--gold-lt)}
+.nbtn{font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.65rem 1.7rem;border:0.5px solid rgba(196,154,82,0.4);color:var(--gold-lt);background:transparent;cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.35s}
+.nbtn:hover{background:var(--gold);color:#fff;border-color:var(--gold)}
+
+.breadcrumb{padding:1.2rem 5rem;background:var(--dark);border-bottom:0.5px solid rgba(196,154,82,0.08);display:flex;align-items:center;gap:0.8rem}
+.bc{font-size:0.48rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.22)}
+.bc-sep{font-size:0.48rem;color:rgba(196,154,82,0.3)}
+.bc.cur{color:var(--gold)}
+
+/* PAGE HEADER */
+.page-header{padding:5rem 5rem 4rem;background:var(--w);border-bottom:0.5px solid rgba(28,20,16,0.07);display:flex;justify-content:space-between;align-items:flex-end}
+.ph-left{}
+.ph-lbl{font-size:0.5rem;letter-spacing:0.44em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;display:flex;align-items:center;gap:0.8rem}
+.ph-lbl::before{content:'';width:14px;height:0.5px;background:var(--gold);display:inline-block}
+h1.ph-h{font-family:var(--s);font-size:3.2rem;font-weight:300;line-height:1.05;color:var(--ink)}
+h1.ph-h em{font-style:italic}
+.ph-right{text-align:right}
+.ph-note{font-size:0.68rem;color:var(--fog);font-weight:200;line-height:1.9;max-width:300px}
+
+/* FILTER BAR */
+.filter-bar{padding:1.4rem 5rem;background:var(--linen);border-bottom:0.5px solid rgba(28,20,16,0.07);display:flex;align-items:center;gap:0;overflow-x:auto}
+.filter-item{font-size:0.54rem;letter-spacing:0.26em;text-transform:uppercase;padding:0.6rem 2rem;cursor:pointer;color:var(--fog);transition:all 0.25s;white-space:nowrap;border-bottom:1.5px solid transparent;font-weight:300}
+.filter-item:hover{color:var(--ink)}
+.filter-item.active{color:var(--ink);border-bottom-color:var(--gold)}
+.filter-divider{width:0.5px;height:16px;background:rgba(28,20,16,0.12);flex-shrink:0}
+
+/* ROOMS LIST */
+.rooms-list{padding:0 5rem 8rem;background:var(--w)}
+
+/* FULL-WIDTH ROOM CARD */
+.room-card{display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid rgba(28,20,16,0.07);transition:background 0.4s;cursor:pointer}
+.room-card:first-child{border-top:0.5px solid rgba(28,20,16,0.07);margin-top:0}
+.room-card:hover{background:var(--linen)}
+.room-card.reversed .rc-img-wrap{order:2}
+.room-card.reversed .rc-content{order:1}
+
+.rc-img-wrap{position:relative;overflow:hidden;aspect-ratio:16/10}
+.rc-img{width:100%;height:100%;transition:transform 1.1s cubic-bezier(0.16,1,0.3,1)}
+.room-card:hover .rc-img{transform:scale(1.04)}
+.rc-img-badge{position:absolute;top:2rem;left:2rem;font-size:0.46rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--gold);background:rgba(24,14,6,0.75);backdrop-filter:blur(8px);padding:0.45rem 1rem;border:0.5px solid rgba(196,154,82,0.3)}
+
+.rc-content{padding:4rem;display:flex;flex-direction:column;justify-content:center}
+.rc-cat{font-size:0.48rem;letter-spacing:0.36em;text-transform:uppercase;color:var(--gold);margin-bottom:0.9rem}
+.rc-name{font-family:var(--s);font-size:2.2rem;font-weight:300;color:var(--ink);margin-bottom:0.5rem;line-height:1.05}
+.rc-name em{font-style:italic}
+.rc-tagline{font-size:0.72rem;color:var(--fog);font-weight:200;margin-bottom:2.2rem;line-height:1.8;font-style:italic;font-family:var(--s)}
+.rc-specs{display:flex;flex-wrap:wrap;gap:0;margin-bottom:2.5rem;border-top:0.5px solid rgba(28,20,16,0.08)}
+.rc-spec{padding:0.85rem 0;border-bottom:0.5px solid rgba(28,20,16,0.06);display:flex;justify-content:space-between;width:100%}
+.rc-spec-k{font-size:0.48rem;letter-spacing:0.26em;text-transform:uppercase;color:var(--fog)}
+.rc-spec-v{font-size:0.72rem;color:var(--ink);font-weight:300}
+.rc-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+.rc-price-block{}
+.rc-price-from{font-size:0.46rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--fog);display:block;margin-bottom:0.2rem}
+.rc-price-amt{font-family:var(--s);font-size:1.6rem;font-weight:300;color:var(--ink);line-height:1}
+.rc-price-per{font-size:0.46rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--fog);margin-left:0.3rem}
+.rc-actions{display:flex;gap:1rem;align-items:center}
+.btn-reserve{font-size:0.54rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.85rem 2rem;background:var(--gold);color:#fff;border:none;cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.3s}
+.btn-reserve:hover{background:var(--dark)}
+.btn-view{font-size:0.54rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.85rem 1.6rem;background:transparent;color:var(--ink);border:0.5px solid rgba(28,20,16,0.2);cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.3s}
+.btn-view:hover{border-color:var(--gold);color:var(--gold)}
+
+/* IMAGE COLOURS */
+.img-suite{background:linear-gradient(150deg,#C8A87C 0%,#9A7040 50%,#6A3A16 100%)}
+.img-terrace{background:linear-gradient(150deg,#D0C0A4 0%,#A49070 100%)}
+.img-corner{background:linear-gradient(150deg,#B8C4C0 0%,#7A9898 100%)}
+.img-studio{background:linear-gradient(150deg,#C4B8A4 0%,#9A9080 100%)}
+
+/* NEED HELP STRIP */
+.help-strip{background:var(--linen);padding:3rem 5rem;display:flex;justify-content:space-between;align-items:center;border-top:0.5px solid rgba(28,20,16,0.07)}
+.hs-left{}
+.hs-title{font-family:var(--s);font-size:1.3rem;font-weight:300;color:var(--ink);margin-bottom:0.3rem}
+.hs-title em{font-style:italic}
+.hs-sub{font-size:0.68rem;color:var(--fog);font-weight:200}
+.hs-right{display:flex;gap:1.2rem}
+.hs-btn{font-size:0.54rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.85rem 1.8rem;cursor:pointer;font-family:var(--b);font-weight:300;transition:all 0.3s}
+.hs-btn.solid{background:var(--gold);color:#fff;border:none}
+.hs-btn.solid:hover{background:var(--dark)}
+.hs-btn.ghost{background:transparent;color:var(--ink);border:0.5px solid rgba(28,20,16,0.2)}
+.hs-btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+/* BOOKING BAR */
+.book-bar{background:var(--gold);padding:2.2rem 5rem;display:flex;align-items:center;position:sticky;bottom:0;z-index:100;border-top:0.5px solid rgba(196,154,82,0.3)}
+.bf{flex:1;padding:0 2.5rem;border-right:0.5px solid rgba(28,20,16,0.16)}
+.bf:first-child{padding-left:0}
+.bl{font-size:0.46rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(28,20,16,0.42);display:block;margin-bottom:0.25rem}
+.bv{font-size:0.74rem;color:var(--ink);font-weight:300}
+.book-btn{padding:0.9rem 2.6rem;background:var(--dark);color:#fff;border:none;cursor:pointer;font-family:var(--b);font-size:0.56rem;font-weight:300;letter-spacing:0.2em;text-transform:uppercase;margin-left:2.5rem;transition:background 0.3s;white-space:nowrap;flex-shrink:0}
+.book-btn:hover{background:#3A2010}
+
+.foot-strip{background:var(--dark);border-top:0.5px solid rgba(196,154,82,0.1);padding:2rem 5rem;display:flex;justify-content:space-between;align-items:center}
+.fs-logo{font-family:var(--s);font-size:1.1rem;letter-spacing:0.3em;font-weight:300;background:linear-gradient(135deg,#D4AE6E,#C49A52,#E8C882);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.fs-links{display:flex;gap:2rem;list-style:none}
+.fs-links a{font-size:0.5rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.22);text-decoration:none;transition:color 0.3s}
+.fs-links a:hover{color:var(--gold)}
+.fs-copy{font-size:0.48rem;letter-spacing:0.14em;color:rgba(255,255,255,0.14)}
+
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.9s cubic-bezier(0.16,1,0.3,1),transform 0.9s cubic-bezier(0.16,1,0.3,1)}
+.reveal.in{opacity:1;transform:none}
+.d1{transition-delay:0.12s}
+</style>
+
+<nav>
+  <div class="nav-brand"><span class="nav-logo">COVE</span><span class="nav-city">Dubai</span></div>
+  <ul class="nav-links">
+    <li><a href="#">About</a></li>
+    <li><a href="#" class="active">Rooms</a></li>
+    <li><a href="#">Dining</a></li>
+    <li><a href="#">Wellness</a></li>
+    <li><a href="#">Experiences</a></li>
+    <li><a href="#">Members</a></li>
+  </ul>
+  <button class="nbtn">Reserve</button>
+</nav>
+
+<div class="breadcrumb">
+  <span class="bc">Cove Dubai</span>
+  <span class="bc-sep">·</span>
+  <span class="bc cur">Rooms & Suites</span>
+</div>
+
+<div class="page-header reveal">
+  <div class="ph-left">
+    <p class="ph-lbl">Accommodation</p>
+    <h1 class="ph-h">Rooms &<br><em>Suites</em></h1>
+  </div>
+  <div class="ph-right">
+    <p class="ph-note">Forty-eight rooms. Each one different. All of them considered in the same way — around light, proportion, and how a room makes you feel when you walk into it.</p>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-item active" onclick="filter(this,'all')">All rooms</div>
+  <div class="filter-divider"></div>
+  <div class="filter-item" onclick="filter(this,'suite')">Suites</div>
+  <div class="filter-divider"></div>
+  <div class="filter-item" onclick="filter(this,'deluxe')">Deluxe</div>
+  <div class="filter-divider"></div>
+  <div class="filter-item" onclick="filter(this,'classic')">Classic</div>
+</div>
+
+<div class="rooms-list">
+
+  <div class="room-card reveal" data-cat="suite">
+    <div class="rc-img-wrap">
+      <div class="rc-img img-suite"></div>
+      <div class="rc-img-badge">Signature Suite</div>
+    </div>
+    <div class="rc-content">
+      <div class="rc-cat">Signature</div>
+      <div class="rc-name">The Cove <em>Suite</em></div>
+      <div class="rc-tagline">The largest room in the hotel. Two aspects, one terrace, and enough space to forget you are in a city.</div>
+      <div class="rc-specs">
+        <div class="rc-spec"><span class="rc-spec-k">Size</span><span class="rc-spec-v">96 m²</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Bed</span><span class="rc-spec-v">King</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">View</span><span class="rc-spec-v">City & private terrace</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Bathroom</span><span class="rc-spec-v">Soaking tub & rain shower</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Floor</span><span class="rc-spec-v">8 – 10</span></div>
+      </div>
+      <div class="rc-bottom">
+        <div class="rc-price-block">
+          <span class="rc-price-from">From</span>
+          <span class="rc-price-amt">AED 2,400<span class="rc-price-per">/ night</span></span>
+        </div>
+        <div class="rc-actions">
+          <button class="btn-view">View room</button>
+          <button class="btn-reserve">Reserve</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="room-card reversed reveal d1" data-cat="deluxe">
+    <div class="rc-img-wrap">
+      <div class="rc-img img-terrace"></div>
+      <div class="rc-img-badge">Deluxe</div>
+    </div>
+    <div class="rc-content">
+      <div class="rc-cat">Deluxe</div>
+      <div class="rc-name">Terrace <em>Room</em></div>
+      <div class="rc-tagline">A private terrace where the morning coffee tastes different. The room itself is generous without being excessive.</div>
+      <div class="rc-specs">
+        <div class="rc-spec"><span class="rc-spec-k">Size</span><span class="rc-spec-v">58 m²</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Bed</span><span class="rc-spec-v">King or twin</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">View</span><span class="rc-spec-v">Garden & terrace</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Bathroom</span><span class="rc-spec-v">Walk-in shower</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Floor</span><span class="rc-spec-v">3 – 7</span></div>
+      </div>
+      <div class="rc-bottom">
+        <div class="rc-price-block">
+          <span class="rc-price-from">From</span>
+          <span class="rc-price-amt">AED 1,400<span class="rc-price-per">/ night</span></span>
+        </div>
+        <div class="rc-actions">
+          <button class="btn-view">View room</button>
+          <button class="btn-reserve">Reserve</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="room-card reveal" data-cat="suite">
+    <div class="rc-img-wrap">
+      <div class="rc-img img-corner"></div>
+      <div class="rc-img-badge">Premium</div>
+    </div>
+    <div class="rc-content">
+      <div class="rc-cat">Premium</div>
+      <div class="rc-name">Corner <em>Suite</em></div>
+      <div class="rc-tagline">Two walls of glass. The city on one side, stillness on the other. A room that earns its corner.</div>
+      <div class="rc-specs">
+        <div class="rc-spec"><span class="rc-spec-k">Size</span><span class="rc-spec-v">72 m²</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Bed</span><span class="rc-spec-v">King</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">View</span><span class="rc-spec-v">Dual aspect · City</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Bathroom</span><span class="rc-spec-v">Soaking tub & shower</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Floor</span><span class="rc-spec-v">5 – 9</span></div>
+      </div>
+      <div class="rc-bottom">
+        <div class="rc-price-block">
+          <span class="rc-price-from">From</span>
+          <span class="rc-price-amt">AED 1,800<span class="rc-price-per">/ night</span></span>
+        </div>
+        <div class="rc-actions">
+          <button class="btn-view">View room</button>
+          <button class="btn-reserve">Reserve</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="room-card reversed reveal d1" data-cat="classic">
+    <div class="rc-img-wrap">
+      <div class="rc-img img-studio"></div>
+      <div class="rc-img-badge">Classic</div>
+    </div>
+    <div class="rc-content">
+      <div class="rc-cat">Classic</div>
+      <div class="rc-name">Studio <em>Room</em></div>
+      <div class="rc-tagline">The smallest room in the hotel. Also the most considered. Nothing was left in that did not need to be there.</div>
+      <div class="rc-specs">
+        <div class="rc-spec"><span class="rc-spec-k">Size</span><span class="rc-spec-v">42 m²</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Bed</span><span class="rc-spec-v">Queen</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">View</span><span class="rc-spec-v">City</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Bathroom</span><span class="rc-spec-v">Walk-in shower</span></div>
+        <div class="rc-spec"><span class="rc-spec-k">Floor</span><span class="rc-spec-v">2 – 6</span></div>
+      </div>
+      <div class="rc-bottom">
+        <div class="rc-price-block">
+          <span class="rc-price-from">From</span>
+          <span class="rc-price-amt">AED 980<span class="rc-price-per">/ night</span></span>
+        </div>
+        <div class="rc-actions">
+          <button class="btn-view">View room</button>
+          <button class="btn-reserve">Reserve</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="help-strip reveal">
+  <div class="hs-left">
+    <div class="hs-title">Not sure which room is <em>right?</em></div>
+    <div class="hs-sub">Our team will help you choose. No obligation, no script.</div>
+  </div>
+  <div class="hs-right">
+    <button class="hs-btn ghost">Send an enquiry</button>
+    <button class="hs-btn solid">Call us</button>
+  </div>
+</div>
+
+<div class="book-bar">
+  <div class="bf"><span class="bl">Check in</span><span class="bv">Select date</span></div>
+  <div class="bf"><span class="bl">Check out</span><span class="bv">Select date</span></div>
+  <div class="bf"><span class="bl">Guests</span><span class="bv">2 adults</span></div>
+  <div class="bf" style="border-right:none"><span class="bl">Room type</span><span class="bv">Any preference</span></div>
+  <button class="book-btn">Check availability</button>
+</div>
+
+<div class="foot-strip">
+  <span class="fs-logo">COVE</span>
+  <ul class="fs-links">
+    <li><a href="#">About</a></li>
+    <li><a href="#">Dining</a></li>
+    <li><a href="#">Wellness</a></li>
+    <li><a href="#">Experiences</a></li>
+    <li><a href="#">Members</a></li>
+    <li><a href="#">Press</a></li>
+  </ul>
+  <span class="fs-copy">© 2026 Cove Dubai</span>
+</div>
+
+<script>
+function filter(el, cat){
+  document.querySelectorAll('.filter-item').forEach(f=>f.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.room-card').forEach(card=>{
+    if(cat==='all'||card.dataset.cat===cat){
+      card.style.display='grid';
+      setTimeout(()=>card.classList.add('in'),10);
+    } else {
+      card.style.display='none';
+    }
+  });
+}
+const io=new IntersectionObserver(e=>{
+  e.forEach(n=>{if(n.isIntersecting){n.target.classList.add('in');io.unobserve(n.target)}});
+},{threshold:0.06});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>

@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment — never commit real values (see .env.example in web/ and server/)
+.env
+.env.local
+.env.*.local
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# Test / tooling artefacts
+coverage/
+playwright-report/
+test-results/
+.playwright/
+
+# Editor / OS
+.DS_Store
+*.log
+npm-debug.log*
+.vscode/
+.idea/
