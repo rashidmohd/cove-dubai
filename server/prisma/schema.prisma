@@ -1,0 +1,327 @@
+// Cove Dubai — Phase 1 reservation schema.
+//
+// This models the domain the way the hospitality industry does — room types,
+// rate plans, reservations, guests — rather than the way our current screens
+// happen to look. That is what makes it portable to whichever PMS the client
+// eventually chooses (see the `pms-readiness` skill). No vendor is named
+// anywhere in here, because no vendor has been chosen.
+//
+// Two conventions that matter:
+//
+//   * Localized text is stored as paired columns (`nameEn` / `nameAr`), not as
+//     a translation table, so the admin can edit both languages on one screen
+//     and neither language can silently go missing.
+//   * `externalRef` exists on the entities a PMS would own. It is unused in
+//     Phase 1 and deliberately nullable, so Phase 2 can record the PMS's own
+//     identifiers without a schema migration.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Inventory
+// ---------------------------------------------------------------------------
+
+/// A bookable category of room. PMS platforms sell by type and count rather
+/// than by individual room, so the room type — not a physical room — is the
+/// booking unit here. Physical room allocation is a housekeeping concern and
+/// is deliberately out of scope for Phase 1.
+model RoomType {
+  id String @id @default(cuid())
+
+  /// Stable, human-readable identifier used in URLs and the API instead of the
+  /// database id (`studio-room`, `cove-suite`). Internal ids are never exposed.
+  code String @unique
+
+  nameEn String
+  nameAr String
+
+  /// Marketing category shown above the room name ("Classic", "Signature").
+  categoryEn String
+  categoryAr String
+
+  descriptionEn String
+  descriptionAr String
+
+  /// Nightly rate in AED before fees and tax. This is the fallback used when no
+  /// RatePlan covers a given date.
+  baseRateAed Decimal @db.Decimal(10, 2)
+
+  maxOccupancy Int
+  /// Rooms of this type the hotel owns. Seeds RoomTypeInventory.totalRooms; the
+  /// per-date rows are authoritative once created, so a closure or maintenance
+  /// block on one date does not require changing this.
+  totalRooms   Int
+
+  /// Identifies the CSS treatment in the mockups (`img-suite`, `img-terrace`).
+  /// The mockups are image-free and render rooms with CSS, so this is a style
+  /// key rather than an asset path. Becomes a real image when the client
+  /// supplies photography.
+  imageKey String
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ratePlans    RatePlan[]
+  inventory    RoomTypeInventory[]
+  reservations Reservation[]
+
+  @@index([isActive, sortOrder])
+  @@map("room_types")
+}
+
+/// A nightly rate for a room type, optionally limited to a date window so
+/// seasonal pricing is data rather than code. Where windows overlap, the
+/// narrower (higher `priority`) plan wins.
+model RatePlan {
+  id String @id @default(cuid())
+
+  roomTypeId String
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  nameEn String
+  nameAr String
+
+  nightlyRateAed Decimal @db.Decimal(10, 2)
+
+  /// Null on both sides means "the default plan, always applicable".
+  startDate DateTime? @db.Date
+  endDate   DateTime? @db.Date
+
+  minimumStayNights Int @default(1)
+
+  /// Higher wins when several plans cover the same night.
+  priority Int     @default(0)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roomTypeId, isActive, startDate, endDate])
+  @@map("rate_plans")
+}
+
+/// The per-date inventory ledger — the heart of the double-booking guard.
+///
+/// One row per room type per night, tracking how many of that type exist and
+/// how many are already sold. Creating a reservation increments `bookedRooms`
+/// for every night of the stay inside a single transaction; a CHECK constraint
+/// (added by hand in the migration, since Prisma's schema language cannot
+/// express one) enforces `0 <= bookedRooms <= totalRooms`.
+///
+/// That constraint is the actual guarantee against overselling. Application
+/// level availability checks are user experience only — two guests racing for
+/// the last room are separated by the database, not by our code.
+///
+/// A Postgres EXCLUDE constraint over overlapping date ranges would be the
+/// usual instinct here, but it can only express "this one room is taken"; it
+/// cannot express "at most 12 of this type on this night". Hence the ledger.
+model RoomTypeInventory {
+  id String @id @default(cuid())
+
+  roomTypeId String
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  /// The night being sold. A stay of 3 nights touches 3 rows.
+  date DateTime @db.Date
+
+  totalRooms  Int
+  bookedRooms Int @default(0)
+
+  /// Lets the hotel close a date for maintenance without deleting the row or
+  /// losing its booking count.
+  isClosed Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roomTypeId, date])
+  @@index([date])
+  @@map("room_type_inventory")
+}
+
+// ---------------------------------------------------------------------------
+// Guests and reservations
+// ---------------------------------------------------------------------------
+
+/// A guest profile, carrying the fields any PMS expects. Nationality and
+/// identity-document fields are captured as optional now because compliance
+/// reporting will require them under whatever PMS is chosen — adding them later
+/// would mean migrating live guest data.
+model Guest {
+  id String @id @default(cuid())
+
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+
+  nationality      String?
+  idDocumentType   String?
+  idDocumentNumber String?
+
+  /// Language the guest booked in — drives which email template they receive.
+  preferredLocale Locale @default(EN)
+
+  /// Reserved for a future PMS's own guest identifier. Unused in Phase 1.
+  externalRef String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservations Reservation[]
+
+  @@index([email])
+  @@index([lastName, firstName])
+  @@map("guests")
+}
+
+model Reservation {
+  id String @id @default(cuid())
+
+  /// The public identity of this booking — human-friendly and non-sequential
+  /// (`CV-2026-4821`). Used in URLs, emails, and the admin UI. Uniqueness is
+  /// guaranteed here by the database, never by the process that generates it.
+  bookingReference String @unique
+
+  guestId String
+  guest   Guest  @relation(fields: [guestId], references: [id])
+
+  roomTypeId String
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id])
+
+  /// First night. Inclusive.
+  checkIn  DateTime @db.Date
+  /// Departure day. Exclusive — a 12th-to-14th booking occupies 2 nights.
+  checkOut DateTime @db.Date
+
+  adults     Int @default(1)
+  children   Int @default(0)
+  roomsCount Int @default(1)
+
+  status ReservationStatus @default(CONFIRMED)
+
+  specialRequests String?
+  /// Staff-only notes, never shown to the guest.
+  internalNotes   String?
+
+  /// The full price breakdown as computed at the moment of booking — room
+  /// total, Tourism Dirham, VAT, grand total. Snapshotted rather than
+  /// recomputed so that a later rate or tax change can never rewrite a total
+  /// the guest has already been quoted and emailed.
+  priceBreakdown Json
+  /// Grand total from that snapshot, denormalised for reporting and sorting.
+  totalAmountAed Decimal @db.Decimal(10, 2)
+  currency       String  @default("AED")
+
+  /// Single-use secret behind the guest's cancellation link. The link is keyed
+  /// to this, never to an internal id.
+  cancellationToken String? @unique
+
+  /// Reserved for a future PMS's own reservation identifier. Unused in Phase 1.
+  externalRef String?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  cancelledAt  DateTime?
+  checkedInAt  DateTime?
+  checkedOutAt DateTime?
+
+  @@index([checkIn, checkOut])
+  @@index([status, checkIn])
+  @@index([roomTypeId, checkIn])
+  @@map("reservations")
+}
+
+enum ReservationStatus {
+  /// Held during an in-progress booking; inventory is committed but the guest
+  /// has not finished. Phase 1 confirms immediately, so this is rare.
+  HELD
+  CONFIRMED
+  CANCELLED
+  CHECKED_IN
+  CHECKED_OUT
+}
+
+enum Locale {
+  EN
+  AR
+}
+
+// ---------------------------------------------------------------------------
+// Administration
+// ---------------------------------------------------------------------------
+
+model AdminUser {
+  id String @id @default(cuid())
+
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(STAFF)
+  isActive     Boolean   @default(true)
+
+  lastLoginAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@map("admin_users")
+}
+
+enum AdminRole {
+  /// Full access, including managing other admin users.
+  ADMIN
+  /// Day-to-day reservation handling.
+  STAFF
+}
+
+/// Append-only record of every administrative action, required by the
+/// non-negotiable baseline in CLAUDE.md. Never updated or deleted.
+model AuditLog {
+  id String @id @default(cuid())
+
+  /// Null for system-initiated actions (e.g. a guest self-cancelling).
+  adminUserId String?
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
+
+  action     String
+  entityType String
+  /// The affected record's identifier — a booking reference where one exists.
+  entityId   String
+
+  /// Before/after values, or whatever context makes the entry meaningful.
+  details Json?
+
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// Operational values that must be changeable without a deploy — the Tourism
+/// Dirham amount and the VAT rate in particular. The booking-engine skill is
+/// explicit that these are configuration, not magic numbers in code.
+model Setting {
+  key         String @id
+  value       String
+  description String
+
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

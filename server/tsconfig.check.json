@@ -1,0 +1,15 @@
+// Type-checking config.
+//
+// tsconfig.json builds only `src/` (its rootDir), so scripts that live outside
+// it — the Prisma seed, tests — would otherwise never be type-checked. This
+// config checks everything without emitting, and is what `npm run typecheck`
+// uses.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*.ts", "prisma/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
