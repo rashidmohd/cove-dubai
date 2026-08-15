@@ -1,0 +1,284 @@
+/**
+ * Shared marketing page patterns, ported from design/mockups/.
+ *
+ * The mockups repeat one visual system across every page: a gold eyebrow
+ * label, a serif heading with one italic phrase, light body copy at generous
+ * line-height, and sections alternating between --w and --linen at 9rem
+ * padding. These are those pieces, defined once.
+ *
+ * Directional values are logical throughout, so every page mirrors under RTL.
+ */
+
+.section {
+  padding: 9rem 5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.sectionLight {
+  background: var(--w);
+}
+
+.sectionLinen {
+  background: var(--linen);
+}
+
+.sectionDark {
+  background: var(--dark);
+  color: var(--bone);
+}
+
+.inner {
+  max-width: var(--container);
+  margin-inline: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Eyebrow label ------------------------------------------------------- */
+
+.label {
+  font-size: 0.52rem;
+  letter-spacing: 0.44em;
+  text-indent: 0.44em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.label::before {
+  content: '';
+  width: 16px;
+  height: 0.5px;
+  background: var(--gold);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* --- Headings ------------------------------------------------------------ */
+
+.heading {
+  font-family: var(--s);
+  font-size: clamp(2rem, 4.4vw, 3.4rem);
+  font-weight: 300;
+  line-height: 1.12;
+  color: var(--ink);
+}
+
+.headingOnDark {
+  color: var(--w);
+}
+
+/* The design system's signature: one italic phrase inside a heading. */
+.headingAccent {
+  font-style: italic;
+  color: var(--gold);
+  display: block;
+}
+
+.headingAccentOnDark {
+  color: var(--gold-lt);
+}
+
+/* --- Body copy ----------------------------------------------------------- */
+
+.body {
+  font-size: 0.75rem;
+  line-height: 2.3;
+  color: var(--fog);
+  font-weight: 200;
+  letter-spacing: 0.02em;
+  max-width: 54ch;
+}
+
+.bodyOnDark {
+  color: var(--text-on-dark);
+}
+
+.kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-top: 0.9rem;
+  font-weight: 200;
+}
+
+/* --- Quiet text link ----------------------------------------------------- */
+
+.textLink {
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  border-bottom: 0.5px solid rgba(28, 20, 16, 0.22);
+  padding-bottom: 0.5rem;
+  margin-top: 2.4rem;
+  transition: all var(--transition);
+}
+
+.textLink:hover,
+.textLink:focus-visible {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.textLinkOnDark {
+  color: var(--bone);
+  border-bottom-color: rgba(234, 224, 208, 0.28);
+}
+
+.textLinkOnDark:hover,
+.textLinkOnDark:focus-visible {
+  color: var(--gold-lt);
+  border-bottom-color: var(--gold-lt);
+}
+
+/* --- Stats --------------------------------------------------------------- */
+
+.stats {
+  display: flex;
+  gap: 3.5rem;
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+  list-style: none;
+  padding-inline: 0;
+  flex-wrap: wrap;
+}
+
+.statNumber {
+  font-family: var(--s);
+  font-size: 2.2rem;
+  font-weight: 300;
+  color: var(--ink);
+  display: block;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.48rem;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-top: 0.4rem;
+  display: block;
+}
+
+/* --- Quote band ---------------------------------------------------------- */
+
+.band {
+  padding: 5.5rem 5rem;
+  background: var(--dark);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.bandQuote {
+  font-family: var(--s);
+  font-style: italic;
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  font-weight: 300;
+  /* Mockup uses rgba(255,255,255,0.82); kept bright, it already passes. */
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.28;
+  max-width: 640px;
+  margin-inline: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.bandQuote::before {
+  content: '\201C';
+  font-size: 7rem;
+  color: rgba(196, 154, 82, 0.16);
+  position: absolute;
+  top: -3rem;
+  inset-inline-start: -3.5rem;
+  font-style: normal;
+  line-height: 1;
+  font-family: var(--s);
+}
+
+.bandAttribution {
+  position: relative;
+  z-index: 1;
+  margin-top: 2rem;
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: var(--label-on-dark);
+}
+
+/* --- Scroll reveal -------------------------------------------------------
+ * Content is visible by default and only animates once JavaScript has marked
+ * it. Starting hidden would leave the whole page blank if the script fails —
+ * and these are the SEO pages, so their content must never depend on JS.
+ */
+
+.reveal[data-reveal='pending'] {
+  opacity: 0;
+  transform: translateY(26px);
+}
+
+.reveal[data-reveal='shown'] {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal[data-reveal='pending'],
+  .reveal[data-reveal='shown'] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .label,
+:global([lang='ar']) .statLabel,
+:global([lang='ar']) .textLink,
+:global([lang='ar']) .kicker,
+:global([lang='ar']) .bandAttribution {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .label,
+:global([lang='ar']) .statLabel {
+  font-size: 0.8rem;
+}
+
+:global([lang='ar']) .body {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .section {
+    padding: 5rem 1.5rem;
+  }
+
+  .band {
+    padding: 4rem 1.5rem;
+  }
+
+  .stats {
+    gap: 2rem;
+  }
+}

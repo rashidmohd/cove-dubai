@@ -1,0 +1,132 @@
+/**
+ * Dining — ported from design/mockups/dining.html.
+ */
+
+.intro {
+  margin-top: var(--space-8);
+  max-width: 56ch;
+}
+
+.spaced {
+  margin-top: var(--space-6);
+}
+
+.venue {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+/* The grid's children are the Reveal wrappers, not the visual inside one, so
+   the order has to be set on the first child rather than on .venueVisual —
+   ordering a non-grid-item does nothing. `order` is flow-relative, so this
+   still mirrors correctly under RTL. */
+.venueReversed > *:first-child {
+  order: 2;
+}
+
+.venueVisual {
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+
+.venueVisual[data-venue='atelier'] {
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+
+.venueKind {
+  font-size: 0.48rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.venueName {
+  font-family: var(--s);
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: var(--fog);
+  margin: 0.5rem 0 var(--space-6);
+}
+
+.facts {
+  margin: var(--space-8) 0 0;
+  padding-top: var(--space-6);
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.fact {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-6);
+  align-items: baseline;
+  padding-bottom: var(--space-3);
+  border-bottom: 0.5px solid rgba(28, 20, 16, 0.06);
+}
+
+.factLabel {
+  font-size: 0.46rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.factValue {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink);
+  text-align: end;
+}
+
+/* --- Chef's Table -------------------------------------------------------- */
+
+.private {
+  text-align: center;
+}
+
+.privateName {
+  font-family: var(--s);
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--ink);
+  margin-top: var(--space-8);
+}
+
+.privateBody {
+  margin-inline: auto;
+  margin-top: var(--space-4);
+  text-align: center;
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .venueKind,
+:global([lang='ar']) .factLabel,
+:global([lang='ar']) .venueName {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .venueKind,
+:global([lang='ar']) .factLabel {
+  font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .venue {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  /* On one column the image always leads, whichever side it took on desktop. */
+  .venueReversed > *:first-child {
+    order: 0;
+  }
+}

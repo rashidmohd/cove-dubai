@@ -1,8 +1,8 @@
 {
   "meta": {
     "siteName": "Cove Dubai",
-    "defaultTitle": "Cove Dubai — A boutique hotel in Al Quoz",
-    "description": "A boutique luxury hotel in Al Quoz, Dubai. Rooms and suites considered around light, proportion, and how a room makes you feel when you walk into it."
+    "defaultTitle": "Cove Dubai — A boutique hotel in Al Rigga",
+    "description": "A boutique luxury hotel in Al Rigga, Deira, Dubai. Rooms and suites considered around light, proportion, and how a room makes you feel when you walk into it."
   },
   "common": {
     "skipToContent": "Skip to content",
@@ -152,10 +152,257 @@
     "legal": "Privacy · Terms · Cookies"
   },
   "home": {
-    "heroEyebrow": "Al Quoz, Dubai",
-    "heroTitle": "A quiet address",
-    "heroTitleAccent": "in a loud city",
-    "heroBody": "Rooms considered around light, proportion, and how a room makes you feel when you walk into it.",
-    "heroCta": "Reserve a room"
+    "heroEyebrow": "Al Rigga, Dubai",
+    "heroTitle": "One address.",
+    "heroTitleAccent": "No distractions.",
+    "heroBody": "A hotel in Dubai where the design is quiet, the service has no script, and the only thing competing for your attention is the view.",
+    "heroCta": "Discover Cove",
+    "heroCtaSecondary": "Our rooms",
+    "stats": {
+      "roomsValue": "106",
+      "roomsLabel": "Rooms & suites",
+      "diningValue": "3",
+      "diningLabel": "Dining spaces",
+      "ratingValue": "5★",
+      "ratingLabel": "Dubai"
+    },
+    "about": {
+      "label": "About Cove",
+      "title": "106 rooms.",
+      "titleAccent": "One address.",
+      "kicker": "In the quieter part of a city that rarely slows down.",
+      "body1": "One hundred and six rooms. Three dining spaces. A spa, a salon, a fitness floor — and a kitchen that earns its place at the centre of it all. Cove is not a large hotel made to feel intimate. It was always meant to be this size.",
+      "body2": "Dubai is outside. Inside, time moves differently.",
+      "link": "Read our story"
+    },
+    "rooms": {
+      "label": "Where you'll sleep",
+      "title": "Rooms &",
+      "titleAccent": "Suites",
+      "viewAll": "All rooms",
+      "from": "From"
+    },
+    "band": {
+      "quote": "The menu changes. The standard doesn't.",
+      "attribution": "Chef Amara Suliman · Executive Chef"
+    },
+    "experiences": {
+      "label": "Beyond the hotel",
+      "title": "The city.",
+      "titleAccent": "And further.",
+      "items": {
+        "desertTitle": "Desert & Safari",
+        "desertBody": "Into the dunes at dusk. Private driver, no fixed itinerary. A fire where the road ends and the sky gets very large.",
+        "desertLink": "Arrange",
+        "cityTitle": "Dubai, Off the Map",
+        "cityBody": "Our concierge knows which parts of the city most visitors never find. Ask them. They will tell you.",
+        "cityLink": "Plan your days",
+        "carTitle": "Private Car & Driver",
+        "carBody": "A car, a driver who knows the city, no need to explain where you want to go twice. By the hour or the day.",
+        "carLink": "Reserve"
+      }
+    },
+    "press": {
+      "label": "In print",
+      "title": "What has been",
+      "titleAccent": "written",
+      "items": {
+        "oneSource": "Condé Nast Traveller",
+        "oneQuote": "The kind of hotel that makes you reconsider how little you actually need.",
+        "oneAward": "Best New Hotels 2025",
+        "twoSource": "Wallpaper*",
+        "twoQuote": "In a city of tall gestures, Cove is a quiet sentence. It lands harder.",
+        "twoAward": "Hotels of the Year",
+        "threeSource": "Financial Times — HTSI",
+        "threeQuote": "In a city built for arrival, Cove is designed for the stay itself.",
+        "threeAward": "Best Hotels in Dubai 2025"
+      }
+    },
+    "guests": {
+      "title": "What guests",
+      "titleAccent": "say",
+      "items": {
+        "oneQuote": "I’ve stayed in many places that try too hard. Cove doesn’t try at all — it just gets things right, consistently and quietly.",
+        "oneName": "L. Fontaine",
+        "oneCity": "Paris",
+        "twoQuote": "The light in my room at 7 in the morning. I kept thinking about it for weeks after I left. I’m going back in March.",
+        "twoName": "M. Al Rashid",
+        "twoCity": "Dubai",
+        "threeQuote": "Breakfast alone is worth the stay. Someone asked how I wanted my eggs and then made them exactly that way.",
+        "threeName": "T. Nakamura",
+        "threeCity": "Tokyo"
+      }
+    }
+  },
+  "rooms": {
+    "label": "Accommodation",
+    "title": "Rooms &",
+    "titleAccent": "Suites",
+    "intro": "One hundred and six rooms. Each one different. All of them considered in the same way — around light, proportion, and how a room makes you feel when you walk into it.",
+    "from": "From",
+    "viewRoom": "View room",
+    "reserve": "Reserve",
+    "sleeps": "Sleeps {count}",
+    "specLabels": {
+      "size": "Size",
+      "bed": "Bed",
+      "view": "View",
+      "bathroom": "Bathroom",
+      "floor": "Floor"
+    },
+    "specs": {
+      "cove-suite": {
+        "size": "96 m²",
+        "bed": "King",
+        "view": "City & private terrace",
+        "bathroom": "Soaking tub & rain shower",
+        "floor": "8 – 10"
+      },
+      "corner-suite": {
+        "size": "72 m²",
+        "bed": "King",
+        "view": "Dual aspect · City",
+        "bathroom": "Soaking tub & shower",
+        "floor": "5 – 9"
+      },
+      "terrace-room": {
+        "size": "58 m²",
+        "bed": "King or twin",
+        "view": "Garden & terrace",
+        "bathroom": "Walk-in shower",
+        "floor": "3 – 7"
+      },
+      "studio-room": {
+        "size": "42 m²",
+        "bed": "Queen",
+        "view": "City",
+        "bathroom": "Walk-in shower",
+        "floor": "2 – 6"
+      }
+    },
+    "help": {
+      "title": "Not sure which room is",
+      "titleAccent": "right?",
+      "body": "Our team will help you choose. No obligation, no script.",
+      "cta": "Send an enquiry"
+    }
+  },
+  "dining": {
+    "label": "Dining",
+    "title": "The menu changes.",
+    "titleAccent": "The standard doesn't.",
+    "intro": "Open kitchen. A chef with a clear point of view. Breakfast through dinner, seven days.",
+    "loom": {
+      "name": "The Loom",
+      "kind": "All-day dining",
+      "title": "A kitchen that",
+      "titleAccent": "earns its place daily.",
+      "body1": "Chef Suliman's menu is written around what arrives that week. It changes constantly. The care behind it does not. The space is open, the kitchen is visible, and the food is the point.",
+      "body2": "Breakfast is unhurried. Lunch is honest. Dinner is worth staying in for.",
+      "hoursLabel": "Open daily",
+      "hours": "7 am – 11 pm",
+      "cuisineLabel": "Cuisine",
+      "cuisine": "Regional & seasonal",
+      "dressLabel": "Dress",
+      "dress": "Smart casual",
+      "cta": "View the full menu"
+    },
+    "atelier": {
+      "name": "The Atelier",
+      "kind": "Bar & café",
+      "title": "No occasion",
+      "titleAccent": "required.",
+      "body1": "Single origin coffee in the morning. Natural wine from six. A bar that does not rush you and a room that does not try too hard. The Atelier is for guests and non-guests alike.",
+      "body2": "Come for an hour. Stay longer. Nobody is counting.",
+      "hoursLabel": "Open daily",
+      "hours": "9 am – 1 am",
+      "offersLabel": "Offers",
+      "offers": "Coffee · Wine · Cocktails",
+      "reservationsLabel": "Reservations",
+      "reservations": "Walk-ins welcome",
+      "cta": "View drinks list"
+    },
+    "chef": {
+      "role": "Executive Chef",
+      "name": "Amara Suliman",
+      "quote": "I am not trying to surprise you. I am trying to feed you very well."
+    },
+    "private": {
+      "label": "Private & special",
+      "title": "The table is",
+      "titleAccent": "always set.",
+      "name": "Chef's Table",
+      "body": "Six seats. No printed menu. What arrives is what was best that morning. Selected evenings only.",
+      "cta": "Enquire"
+    }
+  },
+  "about": {
+    "label": "About Cove",
+    "title": "A hotel built around one",
+    "titleAccent": "clear intention.",
+    "intro": "The story behind the address, the people who made it, and the thinking that runs through every room, every material, every detail.",
+    "story": {
+      "label": "The story",
+      "title": "Why Cove",
+      "titleAccent": "exists.",
+      "body1": "Dubai has no shortage of hotels. What it had fewer of was a place built around restraint — where the decision to do less was made deliberately, and where the resulting space allowed guests to simply be present without effort.",
+      "body2": "Cove was conceived not as a reaction to anything, but as a position. One hundred and six rooms, chosen for quality rather than quantity. A kitchen guided by season rather than spectacle. Interiors where the materials were selected for how they age, not how they photograph.",
+      "body3": "The hotel sits in Al Rigga — a part of Dubai that holds its own character. That, too, was a choice.",
+      "statValue": "2027",
+      "statLabel": "Year of opening"
+    },
+    "band": {
+      "quote": "We were not interested in building something impressive. We were interested in building something right.",
+      "attribution": "The founders · Cove Dubai"
+    },
+    "people": {
+      "label": "The people",
+      "title": "Those who",
+      "titleAccent": "made it.",
+      "items": {
+        "founderRole": "Founder & Managing Director",
+        "founderName": "—",
+        "founderBody": "The vision behind Cove. Spent years in hospitality across the Middle East before deciding to build something on entirely different terms.",
+        "designRole": "Head of Design",
+        "designName": "—",
+        "designBody": "Led the interior architecture of Cove from the first sketch to the final material selection. Every surface carries a decision, and she made most of them.",
+        "chefRole": "Executive Chef",
+        "chefName": "Amara Suliman",
+        "chefBody": "Three continents, two Michelin-recommended kitchens, one clear point of view. Chef Suliman's menu changes constantly. His standards do not."
+      }
+    },
+    "philosophy": {
+      "label": "The philosophy",
+      "title": "How every decision",
+      "titleAccent": "was made.",
+      "intro": "There is no single rule behind Cove except this: nothing here arrived without being considered. Not the thread count of the linen. Not the distance between the bed and the window. Not the hour the kitchen closes.",
+      "items": {
+        "materialsTitle": "Materials",
+        "materialsBody": "Natural stone, hand-loomed textiles, timber that ages visibly. Nothing that hides what it is.",
+        "scaleTitle": "Scale",
+        "scaleBody": "One hundred and six rooms. The decision to stay this size was made first, not last.",
+        "serviceTitle": "Service",
+        "serviceBody": "No script. Staff are hired for judgement, not compliance.",
+        "kitchenTitle": "Kitchen",
+        "kitchenBody": "The menu follows the season. The standard never changes.",
+        "lightTitle": "Light",
+        "lightBody": "Every room was positioned around how light moves through it across the day."
+      }
+    },
+    "building": {
+      "label": "The building",
+      "title": "Location &",
+      "titleAccent": "architecture.",
+      "body1": "Cove is located in Al Rigga, Deira — one of Dubai's most established and characterful neighbourhoods, close to the Creek, minutes from the city's original pulse. The building was designed by Al Hilal architects, with interiors developed around a single brief: nothing decorative, everything considered.",
+      "body2": "The lobby does not announce itself. There is no atrium, no moment of spectacle. There is instead a desk, a chair, and someone who knows your name.",
+      "facts": {
+        "locationLabel": "Location",
+        "locationValue": "Al Rigga, Dubai, UAE",
+        "roomsLabel": "Rooms",
+        "roomsValue": "106 rooms & suites",
+        "openingLabel": "Opening",
+        "openingValue": "2027"
+      }
+    }
   }
 }

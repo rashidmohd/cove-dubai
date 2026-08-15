@@ -1,0 +1,229 @@
+/**
+ * Rooms & Suites — ported from design/mockups/rooms.html.
+ *
+ * Logical properties throughout: the room cards alternate their image side, and
+ * that alternation has to mirror under RTL along with everything else.
+ */
+
+.intro {
+  margin-top: var(--space-8);
+  max-width: 56ch;
+}
+
+.roomList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.room {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  /* Stretch, not center: the image fills the row's height. With `center` it
+     would size from its own aspect ratio and overflow the column. */
+  align-items: stretch;
+  background: var(--w);
+  border: 0.5px solid rgba(28, 20, 16, 0.08);
+}
+
+/* Alternate which side the image sits on, as the mockup does. `order` is
+   flow-relative, so this mirrors correctly under RTL without a second rule. */
+.roomList > li:nth-child(even) .roomVisual {
+  order: 2;
+}
+
+.roomVisual {
+  /* Width-constrained by the grid column and height-driven by the row. An
+     `aspect-ratio` here would compute width from height instead, pushing the
+     image over the text beside it. */
+  width: 100%;
+  min-height: 340px;
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.roomVisual[data-swatch='img-suite'] {
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+.roomVisual[data-swatch='img-terrace'] {
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+}
+.roomVisual[data-swatch='img-corner'] {
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+.roomVisual[data-swatch='img-studio'] {
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.roomBody {
+  padding-block: var(--space-12);
+  padding-inline: 0 var(--space-12);
+  min-width: 0;
+}
+
+.roomList > li:nth-child(even) .roomBody {
+  padding-inline: var(--space-12) 0;
+}
+
+.roomCategory {
+  font-size: 0.48rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+}
+
+.roomName {
+  font-family: var(--s);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.roomDescription {
+  margin-top: var(--space-4);
+}
+
+/* --- Specifications ------------------------------------------------------ */
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin: var(--space-8) 0 0;
+  padding-top: var(--space-6);
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+}
+
+.spec {
+  min-width: 0;
+}
+
+.specLabel {
+  font-size: 0.44rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.specValue {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink);
+  font-weight: 300;
+}
+
+/* --- Price and action ---------------------------------------------------- */
+
+.roomFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.priceLabel {
+  font-size: 0.46rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.priceAmount {
+  font-family: var(--s);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.pricePer {
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  color: var(--fog);
+}
+
+.reserve {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  padding: 0.9rem 2.2rem;
+  background: var(--gold);
+  color: #fff;
+  transition: all var(--transition);
+}
+
+.reserve:hover,
+.reserve:focus-visible {
+  background: var(--dark);
+}
+
+/* --- Help block ---------------------------------------------------------- */
+
+.help {
+  text-align: center;
+}
+
+.helpBody {
+  margin-inline: auto;
+  margin-top: var(--space-6);
+  text-align: center;
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .roomCategory,
+:global([lang='ar']) .specLabel,
+:global([lang='ar']) .priceLabel,
+:global([lang='ar']) .pricePer,
+:global([lang='ar']) .reserve {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .roomCategory,
+:global([lang='ar']) .specLabel {
+  font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .room {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* On one column the image must always come first, whichever side it took on
+     desktop. */
+  .roomList > li:nth-child(even) .roomVisual {
+    order: 0;
+  }
+
+  .roomVisual {
+    min-height: 220px;
+    aspect-ratio: 16 / 10;
+  }
+
+  .roomBody,
+  .roomList > li:nth-child(even) .roomBody {
+    padding: var(--space-8) var(--space-6);
+  }
+}

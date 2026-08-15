@@ -1,3 +1,13 @@
+/**
+ * Home page — ported from design/mockups/home.html.
+ *
+ * Section chrome (labels, headings, body, stats, quote band) lives in the
+ * shared marketing module; this file holds only what is specific to the home
+ * page. Directional values are logical so the page mirrors under RTL.
+ */
+
+/* --- Hero ---------------------------------------------------------------- */
+
 .hero {
   position: relative;
   overflow: hidden;
@@ -36,7 +46,6 @@
   max-width: 16ch;
 }
 
-/* The design system's signature: a single italic phrase inside a heading. */
 .titleAccent {
   font-style: italic;
   color: var(--gold-lt);
@@ -50,9 +59,16 @@
   line-height: 1.8;
 }
 
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  flex-wrap: wrap;
+}
+
 .cta {
   display: inline-block;
-  margin-top: var(--space-12);
   font-size: 0.62rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
@@ -66,12 +82,280 @@
 .cta:hover,
 .cta:focus-visible {
   background: var(--gold-lt);
-  /* A 2–3px nudge, never a heavy shadow. Logical so it lifts, not sideways. */
+  /* A 2–3px lift, never a heavy shadow. */
   transform: translateY(-3px);
 }
 
+.ctaQuiet {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  color: var(--bone);
+  border-bottom: 0.5px solid rgba(234, 224, 208, 0.3);
+  padding-bottom: 0.4rem;
+  transition: all var(--transition);
+}
+
+.ctaQuiet:hover,
+.ctaQuiet:focus-visible {
+  color: var(--gold-lt);
+  border-bottom-color: var(--gold-lt);
+}
+
+/* --- About --------------------------------------------------------------- */
+
+.aboutGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9rem;
+  align-items: center;
+}
+
+.spaced {
+  margin-top: 1.8rem;
+}
+
+.spacedTight {
+  margin-top: 1rem;
+}
+
+.aboutVisual {
+  position: relative;
+  aspect-ratio: 4 / 5;
+}
+
+.aboutVisualMain {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+
+.aboutVisualSmall {
+  position: absolute;
+  bottom: -2.5rem;
+  inset-inline-start: -2.5rem;
+  width: 45%;
+  aspect-ratio: 1;
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+  border: 8px solid var(--w);
+}
+
+/* --- Section head with a trailing link ----------------------------------- */
+
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-16);
+}
+
+/* --- Room cards ---------------------------------------------------------- */
+
+.roomGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.roomCard {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  aspect-ratio: 3 / 4;
+}
+
+.roomFill {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.roomCard:hover .roomFill,
+.roomCard:focus-visible .roomFill {
+  transform: scale(1.05);
+}
+
+.roomInfo {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  padding: 2rem;
+  /* A scrim, so the label stays legible over any part of the image once real
+     photography replaces these gradients. */
+  background: linear-gradient(
+    to top,
+    rgba(24, 14, 6, 0.85) 0%,
+    rgba(24, 14, 6, 0) 100%
+  );
+}
+
+.roomCategory {
+  display: block;
+  font-size: 0.5rem;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-transform: uppercase;
+  color: var(--gold-lt);
+  margin-bottom: 0.4rem;
+}
+
+.roomName {
+  display: block;
+  font-family: var(--s);
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: var(--w);
+}
+
+.roomPrice {
+  display: block;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  color: var(--gold-lt);
+  margin-top: 0.5rem;
+}
+
+.roomFill[data-swatch='img-suite'] {
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+.roomFill[data-swatch='img-terrace'] {
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+}
+.roomFill[data-swatch='img-corner'] {
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+.roomFill[data-swatch='img-studio'] {
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+/* --- Experiences --------------------------------------------------------- */
+
+.experienceList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-12);
+  list-style: none;
+  margin: var(--space-16) 0 0;
+  padding: 0;
+  counter-reset: experience;
+}
+
+.experience {
+  border-top: 0.5px solid rgba(28, 20, 16, 0.14);
+  padding-top: var(--space-6);
+}
+
+.experienceNumber {
+  font-family: var(--s);
+  font-size: 0.8rem;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+}
+
+.experienceTitle {
+  font-family: var(--s);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--ink);
+  margin: var(--space-3) 0 var(--space-4);
+}
+
+/* --- Press --------------------------------------------------------------- */
+
+.pressList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-12);
+  list-style: none;
+  margin: var(--space-16) 0 0;
+  padding: 0;
+}
+
+.press {
+  margin: 0;
+  border-top: 0.5px solid rgba(28, 20, 16, 0.14);
+  padding-top: var(--space-6);
+}
+
+.pressSource {
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: var(--space-4);
+}
+
+.pressQuote {
+  font-family: var(--s);
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pressAward {
+  margin-top: var(--space-4);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: var(--fog);
+}
+
+/* --- Guest voices -------------------------------------------------------- */
+
+.guests {
+  text-align: center;
+}
+
+.guestList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-12);
+  list-style: none;
+  margin: var(--space-16) 0 0;
+  padding: 0;
+}
+
+.guest {
+  margin: 0;
+}
+
+.guestQuote {
+  font-family: var(--s);
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.8;
+  margin: 0;
+}
+
+.guestAttribution {
+  margin-top: var(--space-6);
+  font-size: 0.52rem;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
 :global([lang='ar']) .eyebrow,
-:global([lang='ar']) .cta {
+:global([lang='ar']) .cta,
+:global([lang='ar']) .ctaQuiet,
+:global([lang='ar']) .roomCategory,
+:global([lang='ar']) .pressSource,
+:global([lang='ar']) .guestAttribution {
   text-transform: none;
   letter-spacing: 0;
   text-indent: 0;
@@ -80,6 +364,16 @@
 
 @media (max-width: 900px) {
   .hero {
-    padding: var(--space-24) 2rem;
+    padding: var(--space-24) 1.5rem;
+  }
+
+  .aboutGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+  }
+
+  .aboutVisualSmall {
+    inset-inline-start: 0;
+    bottom: -1.5rem;
   }
 }

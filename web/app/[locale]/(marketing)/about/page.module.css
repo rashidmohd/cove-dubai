@@ -1,0 +1,145 @@
+/**
+ * About — ported from design/mockups/about.html.
+ */
+
+.intro {
+  margin-top: var(--space-8);
+  max-width: 60ch;
+}
+
+.spaced {
+  margin-top: var(--space-6);
+}
+
+.storyGrid,
+.buildingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+/* --- People -------------------------------------------------------------- */
+
+.peopleList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-12);
+  list-style: none;
+  margin: var(--space-16) 0 0;
+  padding: 0;
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Stands in for the portraits the client still owes us. */
+.personPortrait {
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+  margin-bottom: var(--space-6);
+}
+
+.personRole {
+  font-size: 0.48rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.personName {
+  font-family: var(--s);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--ink);
+  margin: 0.4rem 0 var(--space-4);
+}
+
+/* --- Philosophy ---------------------------------------------------------- */
+
+.principles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-8);
+  margin: var(--space-16) 0 0;
+}
+
+.principle {
+  border-top: 0.5px solid rgba(28, 20, 16, 0.14);
+  padding-top: var(--space-6);
+}
+
+.principleTitle {
+  font-family: var(--s);
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.principleBody {
+  margin: var(--space-3) 0 0;
+  font-size: 0.75rem;
+  line-height: 2.1;
+  color: var(--fog);
+  font-weight: 200;
+}
+
+/* --- Building ------------------------------------------------------------ */
+
+.buildingVisual {
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+
+.facts {
+  margin: var(--space-8) 0 0;
+  padding-top: var(--space-6);
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.fact {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-6);
+  align-items: baseline;
+  padding-bottom: var(--space-3);
+  border-bottom: 0.5px solid rgba(28, 20, 16, 0.06);
+}
+
+.factLabel {
+  font-size: 0.46rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.factValue {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink);
+  text-align: end;
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .personRole,
+:global([lang='ar']) .factLabel {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .storyGrid,
+  .buildingGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+}
