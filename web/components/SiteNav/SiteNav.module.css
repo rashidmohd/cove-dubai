@@ -19,6 +19,24 @@
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/**
+ * Interior pages.
+ *
+ * The home mockup fixes the nav so its full-bleed hero shows through; every
+ * interior mockup makes it sticky instead. Sticky occupies layout space, so
+ * page content cannot slide underneath — applying the home page's fixed nav
+ * everywhere put the reserve form's controls under the bar, where they were
+ * unclickable.
+ */
+.navSolid {
+  position: sticky;
+  padding: 1.4rem 5rem;
+  background: rgba(24, 14, 6, 0.97);
+  backdrop-filter: blur(14px);
+  border-bottom: 0.5px solid rgba(196, 154, 82, 0.15);
+  z-index: 200;
+}
+
 /* Applied once the page has scrolled. */
 .scrolled {
   background: rgba(24, 14, 6, 0.92);

@@ -24,3 +24,7 @@ test-results/
 npm-debug.log*
 .vscode/
 .idea/
+
+# Playwright
+/web/test-results/
+/web/playwright-report/

@@ -1,0 +1,860 @@
+/**
+ * Reserve flow — ported from design/mockups/reserve.html and
+ * reserve-steps-2-3.html.
+ *
+ * Two systematic changes from the mockup CSS:
+ *
+ * 1. Every directional value is logical. The mockup uses `border-right`,
+ *    `left: 0`, `margin-right` and `text-align: right`; those become
+ *    `border-inline-end`, `inset-inline-start`, `margin-inline-end` and
+ *    `text-align: end`, so the entire flow mirrors under `dir="rtl"` with no
+ *    second stylesheet (`arabic-rtl`).
+ *
+ * 2. The summary sidebar's text colours are raised to the contrast tokens. The
+ *    mockup sets them between rgba(255,255,255,0.18) and 0.28 — roughly 1.9:1
+ *    to 2.4:1 on the dark panel, far below the WCAG 2.1 AA floor CLAUDE.md
+ *    requires. This is the panel showing the guest what they will pay, so it is
+ *    the last place to have unreadable text.
+ */
+
+.breadcrumb {
+  padding: 1.2rem 5rem;
+  background: var(--dark);
+  border-bottom: 0.5px solid rgba(196, 154, 82, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.crumb {
+  font-size: 0.48rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  /* Mockup: rgba(255,255,255,0.22) — 2.3:1. Unreadable. */
+  color: var(--link-on-dark);
+  text-decoration: none;
+}
+
+.crumbCurrent {
+  color: var(--gold);
+}
+
+.page {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  min-height: calc(100vh - 100px);
+}
+
+.formSide {
+  padding: 5rem;
+  border-inline-end: 0.5px solid rgba(28, 20, 16, 0.07);
+}
+
+.pageLabel {
+  font-size: 0.5rem;
+  letter-spacing: 0.44em;
+  text-indent: 0.44em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.pageLabel::before {
+  content: '';
+  width: 14px;
+  height: 0.5px;
+  background: var(--gold);
+  display: inline-block;
+}
+
+.pageHeading {
+  font-family: var(--s);
+  font-size: 2.6rem;
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.pageHeading em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.pageSub {
+  font-size: 0.7rem;
+  color: var(--fog);
+  font-weight: 200;
+  margin: 1rem 0 3.5rem;
+  line-height: 1.8;
+}
+
+/* --- Step indicator ------------------------------------------------------ */
+
+.steps {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3.5rem;
+  border-bottom: 0.5px solid rgba(28, 20, 16, 0.07);
+  list-style: none;
+  padding: 0;
+}
+
+.step {
+  padding: 0 0 1.2rem;
+  margin-inline-end: 3rem;
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-transform: uppercase;
+  color: rgba(28, 20, 16, 0.45);
+  border-bottom: 1.5px solid transparent;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.stepActive {
+  color: var(--ink);
+  border-bottom-color: var(--gold);
+}
+
+.stepDone {
+  color: var(--gold);
+}
+
+.stepNum {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 0.5px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.46rem;
+  flex-shrink: 0;
+  text-indent: 0;
+}
+
+/* --- Fields -------------------------------------------------------------- */
+
+.dateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.fieldLabel {
+  font-size: 0.48rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.fbox {
+  border: 0.5px solid rgba(28, 20, 16, 0.12);
+  padding: 0.9rem 1.1rem;
+  font-family: var(--b);
+  font-size: 0.76rem;
+  font-weight: 300;
+  color: var(--ink);
+  background: var(--w);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  transition: border-color 0.25s;
+  text-align: start;
+}
+
+.fbox:hover {
+  border-color: rgba(28, 20, 16, 0.28);
+}
+
+.fboxActive {
+  border-color: var(--gold);
+}
+
+.fbox svg {
+  flex-shrink: 0;
+  opacity: 0.42;
+}
+
+.placeholder {
+  color: rgba(28, 20, 16, 0.4);
+}
+
+/* --- Calendar ------------------------------------------------------------ */
+
+.calendar {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  width: 272px;
+  background: var(--w);
+  border: 0.5px solid rgba(28, 20, 16, 0.12);
+  z-index: 50;
+  padding: 1.2rem;
+  box-shadow: 0 8px 28px rgba(28, 20, 16, 0.08);
+}
+
+.calHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.calMonth {
+  font-size: 0.7rem;
+  color: var(--ink);
+}
+
+.calNav {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fog);
+  padding: 0.2rem 0.5rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.calNav:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.calNav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.calWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 0.3rem;
+}
+
+.calWeekdays span {
+  font-size: 0.48rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fog);
+  text-align: center;
+  padding: 0.22rem 0;
+}
+
+.calDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.calDay {
+  font-size: 0.7rem;
+  color: var(--ink);
+  text-align: center;
+  padding: 0.38rem 0.1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 2px;
+  border: none;
+  background: none;
+  font-family: var(--b);
+}
+
+.calDay:hover:not(:disabled) {
+  background: var(--linen);
+}
+
+.calDayEmpty {
+  visibility: hidden;
+}
+
+.calDayPast {
+  color: rgba(28, 20, 16, 0.28);
+  cursor: not-allowed;
+}
+
+.calDaySelected {
+  background: var(--gold);
+  color: #fff;
+}
+
+.calDayInRange {
+  background: var(--linen);
+}
+
+.calDayToday {
+  outline: 0.5px solid var(--gold);
+}
+
+/* --- Guest counter ------------------------------------------------------- */
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.counterBtn {
+  width: 26px;
+  height: 26px;
+  border: 0.5px solid rgba(28, 20, 16, 0.14);
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--fog);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.counterBtn:hover:not(:disabled) {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.counterBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.counterValue {
+  font-size: 0.78rem;
+  color: var(--ink);
+  min-width: 14px;
+  text-align: center;
+}
+
+.divider {
+  width: 100%;
+  height: 0.5px;
+  background: rgba(28, 20, 16, 0.07);
+  margin: 2rem 0;
+}
+
+/* --- Room list ----------------------------------------------------------- */
+
+.roomsLabel {
+  font-size: 0.48rem;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-bottom: 1.2rem;
+  display: block;
+}
+
+.roomList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 2rem;
+  list-style: none;
+  padding: 0;
+}
+
+.room {
+  display: grid;
+  grid-template-columns: 56px 1fr auto 20px;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem;
+  border: 0.5px solid rgba(28, 20, 16, 0.08);
+  cursor: pointer;
+  transition: all 0.25s;
+  width: 100%;
+  background: none;
+  text-align: start;
+  font-family: var(--b);
+}
+
+.room:hover {
+  border-color: rgba(28, 20, 16, 0.18);
+  background: var(--linen);
+}
+
+.roomSelected {
+  border-color: var(--gold);
+  background: var(--linen);
+}
+
+.roomSwatch {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.roomCategory {
+  font-size: 0.48rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+
+.roomName {
+  font-family: var(--s);
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--ink);
+  margin-bottom: 0.12rem;
+}
+
+.roomMeta {
+  font-size: 0.62rem;
+  color: var(--fog);
+}
+
+.roomAmount {
+  font-family: var(--s);
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--ink);
+  white-space: nowrap;
+  display: block;
+  text-align: end;
+}
+
+.roomPer {
+  font-size: 0.46rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fog);
+  display: block;
+  margin-top: 0.1rem;
+  text-align: end;
+}
+
+.roomCheck {
+  width: 18px;
+  height: 18px;
+  border: 0.5px solid rgba(28, 20, 16, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.roomSelected .roomCheck {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.checkMark {
+  width: 8px;
+  height: 5px;
+  border-inline-start: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+  /* A tick, not a layout mirror: it reads the same in both directions. */
+  transform: rotate(-45deg) translateY(-1px);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.roomSelected .checkMark {
+  opacity: 1;
+}
+
+/* --- Guest form ---------------------------------------------------------- */
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.formRowFull {
+  grid-template-columns: 1fr;
+}
+
+.input,
+.textarea {
+  border: 0.5px solid rgba(28, 20, 16, 0.12);
+  padding: 0.9rem 1.1rem;
+  font-family: var(--b);
+  font-size: 0.76rem;
+  font-weight: 300;
+  color: var(--ink);
+  background: var(--w);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.25s;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--gold);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  /* Mockup: rgba(28,20,16,0.26). Placeholders still need to be readable. */
+  color: rgba(28, 20, 16, 0.45);
+}
+
+.inputInvalid {
+  border-color: var(--orange);
+}
+
+.textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.fieldError {
+  font-size: 0.62rem;
+  color: var(--orange);
+  margin-top: 0.35rem;
+}
+
+.hint {
+  font-size: 0.6rem;
+  color: var(--fog);
+  margin-top: 0.35rem;
+}
+
+/* --- Buttons ------------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+.btnPrimary {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  padding: 1rem 2.6rem;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-family: var(--b);
+  font-weight: 300;
+  transition: all 0.3s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--dark);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnBack {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  color: var(--fog);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--b);
+  font-weight: 200;
+  transition: color 0.3s;
+}
+
+.btnBack:hover {
+  color: var(--ink);
+}
+
+/* --- Feedback ------------------------------------------------------------ */
+
+.alert {
+  border: 0.5px solid var(--orange);
+  background: rgba(184, 82, 40, 0.06);
+  color: var(--ink);
+  padding: 1rem 1.2rem;
+  font-size: 0.72rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.empty {
+  padding: 2.5rem 0;
+  color: var(--fog);
+  font-size: 0.78rem;
+  line-height: 1.9;
+}
+
+.loading {
+  padding: 2.5rem 0;
+  color: var(--fog);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+}
+
+/* --- Summary sidebar ----------------------------------------------------- */
+
+.side {
+  position: relative;
+  overflow: hidden;
+  background: var(--dark);
+  display: flex;
+  flex-direction: column;
+}
+
+.sideInner {
+  position: relative;
+  z-index: 1;
+  padding: 5rem 3rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sideHead {
+  font-family: var(--s);
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: #fff;
+  margin-bottom: 2.5rem;
+  line-height: 1.2;
+}
+
+.sideRows {
+  display: flex;
+  flex-direction: column;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.07);
+}
+
+.sideRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.68rem;
+}
+
+.sideKey {
+  color: var(--link-on-dark);
+  font-weight: 200;
+}
+
+.sideValue {
+  color: var(--text-on-dark);
+  text-align: end;
+}
+
+.sideNote {
+  display: block;
+  font-size: 0.56rem;
+  color: var(--text-on-dark-muted);
+  margin-top: 0.15rem;
+}
+
+.sideTotal {
+  margin-top: 2rem;
+  padding-top: 1.8rem;
+  border-top: 0.5px solid rgba(196, 154, 82, 0.18);
+}
+
+.sideTotalLabel {
+  font-size: 0.46rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  /* Mockup: rgba(255,255,255,0.24) — 2.3:1. */
+  color: var(--label-on-dark);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.sideTotalAmount {
+  font-family: var(--s);
+  font-size: 2rem;
+  font-weight: 300;
+  color: #fff;
+  line-height: 1;
+  display: block;
+}
+
+.sideTotalNote {
+  font-size: 0.58rem;
+  /* Mockup: rgba(255,255,255,0.2) — 2.1:1. This line states the pay-at-check-in
+     policy, which the guest must actually be able to read. */
+  color: var(--text-on-dark-muted);
+  margin-top: 0.6rem;
+  line-height: 1.7;
+}
+
+.sideEmpty {
+  color: var(--text-on-dark-muted);
+  font-size: 0.7rem;
+  line-height: 1.9;
+}
+
+/* --- Confirmation -------------------------------------------------------- */
+
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  gap: 1.8rem;
+}
+
+.successTitle {
+  font-family: var(--s);
+  font-size: 2.2rem;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.successTitle em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.success p {
+  font-size: 0.74rem;
+  color: var(--fog);
+  line-height: 2;
+  max-width: 380px;
+  font-weight: 200;
+}
+
+.reference {
+  border: 0.5px solid rgba(196, 154, 82, 0.4);
+  padding: 1.2rem 2.4rem;
+}
+
+.referenceLabel {
+  display: block;
+  font-size: 0.46rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-bottom: 0.5rem;
+}
+
+.referenceValue {
+  font-family: var(--s);
+  font-size: 1.6rem;
+  color: var(--ink);
+  /* A booking reference is an identifier, not prose: it reads left-to-right
+     even on an Arabic page, or the CV- prefix lands at the wrong end. */
+  direction: ltr;
+  display: block;
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .crumb,
+:global([lang='ar']) .pageLabel,
+:global([lang='ar']) .step,
+:global([lang='ar']) .fieldLabel,
+:global([lang='ar']) .roomsLabel,
+:global([lang='ar']) .roomCategory,
+:global([lang='ar']) .roomPer,
+:global([lang='ar']) .btnPrimary,
+:global([lang='ar']) .btnBack,
+:global([lang='ar']) .sideTotalLabel,
+:global([lang='ar']) .referenceLabel,
+:global([lang='ar']) .loading {
+  /* Arabic has no letter case, and letter-spacing breaks the cursive joins
+     between glyphs. */
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .step,
+:global([lang='ar']) .fieldLabel,
+:global([lang='ar']) .roomsLabel,
+:global([lang='ar']) .roomCategory {
+  font-size: 0.75rem;
+}
+
+@media (max-width: 1000px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .formSide {
+    padding: 3rem 1.5rem;
+    border-inline-end: none;
+  }
+
+  .breadcrumb {
+    padding: 1.2rem 1.5rem;
+  }
+
+  .sideInner {
+    padding: 3rem 1.5rem;
+  }
+
+  .dateRow,
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .room {
+    grid-template-columns: 40px 1fr auto;
+  }
+
+  .roomCheck {
+    display: none;
+  }
+}
+
+/* --- Room swatches -------------------------------------------------------
+ * The mockups render rooms as CSS gradients rather than photographs, and
+ * photography is still the client's to supply. `imageKey` comes from the
+ * database, so these become real images later by changing this block alone.
+ * Gradients are taken verbatim from design/mockups/reserve.html.
+ */
+
+.roomSwatch {
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.roomSwatch[data-swatch='img-suite'] {
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+
+.roomSwatch[data-swatch='img-terrace'] {
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+}
+
+.roomSwatch[data-swatch='img-corner'] {
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+
+.roomSwatch[data-swatch='img-studio'] {
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}

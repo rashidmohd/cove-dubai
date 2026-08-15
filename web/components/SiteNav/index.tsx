@@ -32,6 +32,11 @@ export function SiteNav() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
+  // The home page has a full-bleed hero designed to run behind a transparent,
+  // fixed nav. Interior pages do not, and a fixed bar there overlaps their
+  // content — so they get the sticky variant the interior mockups use.
+  const overlay = pathname === '/';
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     onScroll();
@@ -41,7 +46,11 @@ export function SiteNav() {
 
   return (
     <nav
-      className={[styles.nav, scrolled ? styles.scrolled : null]
+      className={[
+        styles.nav,
+        overlay ? null : styles.navSolid,
+        overlay && scrolled ? styles.scrolled : null,
+      ]
         .filter(Boolean)
         .join(' ')}
       aria-label={t('menu')}

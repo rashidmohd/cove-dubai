@@ -19,7 +19,8 @@
     "adult": "adult",
     "adults": "adults",
     "languageToggle": "English",
-    "languageToggleLabel": "Switch to English"
+    "languageToggleLabel": "Switch to English",
+    "backHome": "Return home"
   },
   "nav": {
     "about": "About",
@@ -31,7 +32,8 @@
     "reserve": "Reserve",
     "menu": "Menu",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "home": "Home"
   },
   "comingSoon": {
     "title": "Opening soon",
