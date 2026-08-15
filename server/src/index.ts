@@ -5,42 +5,25 @@
  * never touches the database; all reservation work here goes through the
  * `BookingProvider` interface (see the `pms-readiness` skill).
  */
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
-
+import { createApp } from './app.js';
 import { config } from './config.js';
+import { disconnectPrisma } from './db/prisma.js';
 
-const app = express();
-
-app.use(helmet());
-app.use(
-  cors({
-    origin: config.corsAllowedOrigins,
-    credentials: true,
-  }),
-);
-app.use(express.json());
-app.use(cookieParser());
-
-/** Liveness probe — used by Railway (and later an AWS target group). */
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
-
-const server = app.listen(config.port, () => {
+const server = createApp().listen(config.port, () => {
   console.log(
     `[cove-dubai/server] listening on port ${config.port} (${config.nodeEnv})`,
   );
 });
 
-// Let the platform replace the container/process cleanly on deploy.
+// Let the platform replace the process cleanly on deploy: stop accepting new
+// connections, then close the database pool. Skipping the disconnect leaves
+// connections held until Postgres times them out, which on a small Railway
+// instance can exhaust the connection limit across a few rapid deploys.
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.on(signal, () => {
     console.log(`[cove-dubai/server] ${signal} received, shutting down`);
-    server.close(() => process.exit(0));
+    server.close(() => {
+      void disconnectPrisma().finally(() => process.exit(0));
+    });
   });
 }
-
-export { app };
