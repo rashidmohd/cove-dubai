@@ -10,13 +10,25 @@ engagement** — and the client **has not chosen a PMS yet**. Do not build, wire
 
 ## What we are building (Phase 1)
 
-**Cove Dubai** is a 106-room boutique luxury hotel under construction in Al Quoz, Dubai. This repo delivers:
+**Cove Dubai** is a 106-room boutique luxury hotel under construction in **Al Rigga, Deira, Dubai**, opening
+**2027**. This repo delivers:
 
-1. **Marketing website** — Home, About, Rooms, Reserve. Built pixel-perfect to the Cove Dubai mockups.
+1. **Marketing website** — Home, About, Rooms, Dining, Reserve. Built pixel-perfect to the Cove Dubai mockups.
 2. **Bespoke guest booking flow** — live availability → room selection → guest details → confirmation.
 3. **Hotel admin panel** — room types, rates, availability calendar, reservations dashboard.
 4. **Custom booking API + PostgreSQL** — the reservation engine that runs the hotel at launch.
 5. **Bilingual EN / AR** with full right-to-left (RTL) support across every surface.
+
+> **Corrections applied 15 Aug 2026, confirmed with the client.** This file previously said *Al Quoz* and listed
+> four public pages. The approved mockups place the hotel in **Al Rigga, Deira** (close to the Creek) and include
+> a **Dining** page, making five. The mockups' own copy still says "forty-eight rooms" and "opening 2026"; the
+> site now reads **106 rooms** and **2027**, and those sentences are flagged for the client to re-word properly
+> rather than have a number substituted into their prose. See `docs/project-status.md`.
+
+## Current state
+
+Phase 1 is part-built. **Read [`docs/project-status.md`](docs/project-status.md) before starting work** — it
+records what is done, what is verified, what is next, and the open questions. Keep it current as you go.
 
 ## The Prime Directive: keep the reservation engine swappable
 
