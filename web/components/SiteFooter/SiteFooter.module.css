@@ -46,14 +46,14 @@
   font-size: 0.4rem;
   letter-spacing: 0.6em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--label-on-dark);
   margin-top: -0.5rem;
 }
 
 .tagline {
   font-family: var(--s);
   font-size: 1.05rem;
-  color: rgba(234, 224, 208, 0.6);
+  color: var(--text-on-dark);
   max-width: 22ch;
   line-height: 1.6;
 }
@@ -78,7 +78,7 @@
 
 .list a {
   font-size: 0.8rem;
-  color: rgba(234, 224, 208, 0.55);
+  color: var(--link-on-dark-warm);
   transition: color var(--transition);
 }
 
@@ -100,7 +100,7 @@
   gap: var(--space-4);
   flex-wrap: wrap;
   font-size: 0.7rem;
-  color: rgba(234, 224, 208, 0.4);
+  color: var(--text-on-dark-muted);
 }
 
 :global([lang='ar']) .columnTitle,

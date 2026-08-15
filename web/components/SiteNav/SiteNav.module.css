@@ -55,7 +55,7 @@
   font-size: 0.4rem;
   letter-spacing: 0.6em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--label-on-dark);
   margin-top: 3px;
   font-weight: 300;
 }
@@ -75,7 +75,7 @@
      pushes the word off-centre. A matching indent pulls it back optically. */
   text-indent: 0.28em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.48);
+  color: var(--link-on-dark);
   text-decoration: none;
   transition: color 0.3s;
   white-space: nowrap;
@@ -126,7 +126,7 @@
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.48);
+  color: var(--link-on-dark);
   background: transparent;
   border: 0;
   padding: 0.7rem 0.4rem;

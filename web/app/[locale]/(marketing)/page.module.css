@@ -46,7 +46,7 @@
   margin-top: var(--space-8);
   max-width: 46ch;
   font-size: 1rem;
-  color: rgba(234, 224, 208, 0.62);
+  color: var(--text-on-dark);
   line-height: 1.8;
 }
 

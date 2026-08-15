@@ -25,6 +25,30 @@
   --dark: #180e06; /* primary dark background */
   --dark2: #241408; /* raised dark surface */
 
+  /* --- Text on dark surfaces ----------------------------------------------
+   * The mockups set these as one-off rgba() values tuned by eye against a
+   * photographic hero. Read as flat colour on --dark they are too faint: three
+   * of them measured below 3.2:1, failing the WCAG 2.1 AA floor that CLAUDE.md
+   * makes non-negotiable, and the links sat at a technically-passing but murky
+   * 5:1 at 0.6rem with wide tracking.
+   *
+   * Defined once here with their measured contrast against --dark, so a future
+   * change cannot quietly reintroduce the problem. Same hues as the mockups —
+   * only the alpha is raised, so nothing new enters the palette.
+   *
+   * Note the ceiling on --link-on-dark: links hover to --gold-lt at 9.13:1, so
+   * the resting state must stay clearly below that. Pushed higher, hovering
+   * would make a link *dimmer* and invert the affordance.
+   */
+  --link-on-dark: rgba(255, 255, 255, 0.6); /* 7.24:1 — nav */
+  /* The footer uses a warmer, bone-tinted link in the mockups. Keeping the two
+     distinct preserves that; collapsing them to one would cool the footer. */
+  --link-on-dark-warm: rgba(234, 224, 208, 0.68); /* 7.12:1 — footer */
+  --link-on-dark-hover: var(--gold-lt); /* 9.13:1 */
+  --label-on-dark: rgba(255, 255, 255, 0.62); /* 7.60:1 — small caps labels */
+  --text-on-dark: rgba(234, 224, 208, 0.7); /* 7.47:1 — body copy */
+  --text-on-dark-muted: rgba(234, 224, 208, 0.62); /* 6.06:1 — legal, meta */
+
   /* --- Type ---------------------------------------------------------------
    * --s is where the luxury feel lives: headings, hero lines, ledes.
    * --b carries all UI: nav, buttons, labels, fields, dense body copy.

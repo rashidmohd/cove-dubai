@@ -26,7 +26,7 @@
 
 .body {
   margin-top: var(--space-6);
-  color: rgba(234, 224, 208, 0.6);
+  color: var(--text-on-dark);
   line-height: 1.8;
 }
 
