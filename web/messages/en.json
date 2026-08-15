@@ -1,0 +1,159 @@
+{
+  "meta": {
+    "siteName": "Cove Dubai",
+    "defaultTitle": "Cove Dubai — A boutique hotel in Al Quoz",
+    "description": "A boutique luxury hotel in Al Quoz, Dubai. Rooms and suites considered around light, proportion, and how a room makes you feel when you walk into it."
+  },
+  "common": {
+    "skipToContent": "Skip to content",
+    "brand": "COVE",
+    "brandLocation": "Dubai",
+    "loading": "Loading",
+    "retry": "Try again",
+    "close": "Close",
+    "currency": "AED",
+    "perNight": "/ night",
+    "from": "From",
+    "night": "night",
+    "nights": "nights",
+    "adult": "adult",
+    "adults": "adults",
+    "languageToggle": "العربية",
+    "languageToggleLabel": "Switch to Arabic"
+  },
+  "nav": {
+    "about": "About",
+    "rooms": "Rooms",
+    "dining": "Dining",
+    "wellness": "Wellness",
+    "experiences": "Experiences",
+    "members": "Members",
+    "reserve": "Reserve",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "comingSoon": {
+    "title": "Opening soon",
+    "body": "This part of the hotel is still being finished. We will share it here when it is ready.",
+    "backHome": "Return home"
+  },
+  "reserve": {
+    "title": "Reservation",
+    "steps": {
+      "dates": "Dates",
+      "room": "Room",
+      "details": "Details"
+    },
+    "step1": {
+      "title": "When would you like to stay?",
+      "checkIn": "Check in",
+      "checkOut": "Check out",
+      "selectDate": "Select date",
+      "guests": "Guests",
+      "roomType": "Room type",
+      "anyPreference": "Any preference",
+      "checkAvailability": "Check availability",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month"
+    },
+    "step2": {
+      "title": "Choose your room",
+      "selectRoom": "Select",
+      "selected": "Selected",
+      "roomsLeft": "{count, plural, one {# room left} other {# rooms left}}",
+      "noAvailability": "No rooms are available for those dates.",
+      "changeDates": "Change dates"
+    },
+    "step3": {
+      "title": "Your details",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "specialRequests": "Special requests",
+      "specialRequestsHint": "Anything we should know before you arrive.",
+      "confirm": "Confirm reservation",
+      "submitting": "Confirming…"
+    },
+    "summary": {
+      "title": "Your stay",
+      "room": "Room",
+      "checkIn": "Check in",
+      "checkOut": "Check out",
+      "nights": "Nights",
+      "guests": "Guests",
+      "roomTotal": "Room total",
+      "tourismDirham": "Tourism Dirham",
+      "tourismDirhamNote": "Per room, per night",
+      "vat": "VAT ({rate}%)",
+      "total": "Total",
+      "payAtCheckIn": "No payment is taken now. You pay at check-in."
+    },
+    "success": {
+      "title": "Your reservation is confirmed",
+      "reference": "Booking reference",
+      "emailSent": "A confirmation has been sent to {email}.",
+      "payAtCheckIn": "No payment has been taken. You will pay at check-in.",
+      "cancellationPolicy": "You may cancel free of charge up to {hours} hours before check-in."
+    },
+    "back": "Back",
+    "continue": "Continue"
+  },
+  "errors": {
+    "required": "This field is required.",
+    "invalidEmail": "Enter a valid email address.",
+    "invalidPhone": "Enter a valid phone number.",
+    "selectDates": "Choose your check-in and check-out dates.",
+    "checkOutAfterCheckIn": "Check-out must be after check-in.",
+    "selectRoom": "Choose a room to continue.",
+    "noAvailability": "Those dates are no longer available. Please choose different dates.",
+    "network": "We could not reach the hotel's booking system. Please check your connection and try again.",
+    "unknown": "Something went wrong. Please try again.",
+    "rateLimited": "Too many attempts. Please wait a moment and try again."
+  },
+  "cancel": {
+    "title": "Cancel your reservation",
+    "confirm": "Cancel reservation",
+    "keepBooking": "Keep my booking",
+    "cancelled": "Your reservation has been cancelled.",
+    "invalidLink": "This cancellation link is not valid. It may already have been used.",
+    "alreadyCancelled": "This reservation has already been cancelled."
+  },
+  "footer": {
+    "tagline": "A hotel in Dubai. Considered rooms. Open now.",
+    "columns": {
+      "about": "About",
+      "stay": "Stay",
+      "explore": "Explore",
+      "reachUs": "Reach us"
+    },
+    "links": {
+      "theHotel": "The hotel",
+      "ourStory": "Our story",
+      "press": "Press & media",
+      "careers": "Careers",
+      "rooms": "Rooms & suites",
+      "reserve": "Reserve",
+      "longStays": "Long stays",
+      "giftCards": "Gift cards",
+      "dining": "Dining",
+      "wellness": "Wellness & spa",
+      "experiences": "Experiences",
+      "events": "Events",
+      "gettingHere": "Getting here"
+    },
+    "email": "reservations@cove.com",
+    "phone": "+971 4 000 0000",
+    "phoneHref": "+97140000000",
+    "copyright": "© {year} Cove Dubai",
+    "legal": "Privacy · Terms · Cookies"
+  },
+  "home": {
+    "heroEyebrow": "Al Quoz, Dubai",
+    "heroTitle": "A quiet address",
+    "heroTitleAccent": "in a loud city",
+    "heroBody": "Rooms considered around light, proportion, and how a room makes you feel when you walk into it.",
+    "heroCta": "Reserve a room"
+  }
+}

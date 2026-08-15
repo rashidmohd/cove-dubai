@@ -1,0 +1,164 @@
+/**
+ * Site navigation — ported from design/mockups/.
+ *
+ * The mockup positions this with `left: 0; right: 0`. Those are replaced with
+ * `inset-inline: 0` here, and every other directional value uses a logical
+ * property, so the whole bar mirrors correctly under `dir="rtl"` without a
+ * second stylesheet and without any transform trickery (`arabic-rtl`).
+ */
+
+.nav {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  z-index: 300;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 5rem;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Applied once the page has scrolled. */
+.scrolled {
+  background: rgba(24, 14, 6, 0.92);
+  backdrop-filter: blur(16px);
+  padding: 1.3rem 5rem;
+  border-bottom: 0.5px solid rgba(196, 154, 82, 0.18);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.logo {
+  font-family: var(--s);
+  font-size: 1.5rem;
+  letter-spacing: 0.32em;
+  font-weight: 300;
+  line-height: 1;
+  background: linear-gradient(
+    135deg,
+    #d4ae6e 0%,
+    #c49a52 50%,
+    #e8c882 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.city {
+  font-size: 0.4rem;
+  letter-spacing: 0.6em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 3px;
+  font-weight: 300;
+}
+
+.links {
+  display: flex;
+  gap: 2.8rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.links a {
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  /* The signature detail: tracking is added to the right of each glyph, which
+     pushes the word off-centre. A matching indent pulls it back optically. */
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+  text-decoration: none;
+  transition: color 0.3s;
+  white-space: nowrap;
+}
+
+.links a:hover,
+.links a:focus-visible {
+  color: var(--gold-lt);
+}
+
+/* Marks the page currently being viewed. */
+.active {
+  color: var(--gold-lt) !important;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.reserveButton {
+  font-family: var(--b);
+  font-size: 0.6rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.8rem;
+  border: 0.5px solid rgba(196, 154, 82, 0.45);
+  color: var(--gold-lt);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.35s;
+}
+
+.reserveButton:hover,
+.reserveButton:focus-visible {
+  background: var(--gold);
+  color: #fff;
+  border-color: var(--gold);
+}
+
+.langToggle {
+  font-family: var(--b);
+  font-size: 0.6rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+  background: transparent;
+  border: 0;
+  padding: 0.7rem 0.4rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.langToggle:hover,
+.langToggle:focus-visible {
+  color: var(--gold-lt);
+}
+
+/* Arabic is not uppercased — Arabic script has no letter case, and forcing it
+   only risks odd rendering. Nor is it letter-spaced: spacing Arabic breaks the
+   cursive joins between letters. */
+:global([lang='ar']) .links a,
+:global([lang='ar']) .reserveButton,
+:global([lang='ar']) .langToggle,
+:global([lang='ar']) .city {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .nav,
+  .scrolled {
+    padding: 1.3rem 2rem;
+  }
+
+  .links {
+    display: none;
+  }
+}

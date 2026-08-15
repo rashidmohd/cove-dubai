@@ -1,0 +1,85 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-24) 5rem;
+  background: var(--dark);
+  color: var(--bone);
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--container);
+  margin-inline: auto;
+  width: 100%;
+}
+
+.eyebrow {
+  font-size: 0.6rem;
+  letter-spacing: var(--tracking-wide);
+  text-indent: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: var(--space-8);
+}
+
+.title {
+  font-family: var(--s);
+  font-size: clamp(2.6rem, 7vw, 5.5rem);
+  font-weight: 300;
+  color: var(--w);
+  line-height: 1.05;
+  max-width: 16ch;
+}
+
+/* The design system's signature: a single italic phrase inside a heading. */
+.titleAccent {
+  font-style: italic;
+  color: var(--gold-lt);
+}
+
+.body {
+  margin-top: var(--space-8);
+  max-width: 46ch;
+  font-size: 1rem;
+  color: rgba(234, 224, 208, 0.62);
+  line-height: 1.8;
+}
+
+.cta {
+  display: inline-block;
+  margin-top: var(--space-12);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  padding: 1rem 2.4rem;
+  background: var(--gold);
+  color: #fff;
+  transition: all var(--transition);
+}
+
+.cta:hover,
+.cta:focus-visible {
+  background: var(--gold-lt);
+  /* A 2–3px nudge, never a heavy shadow. Logical so it lifts, not sideways. */
+  transform: translateY(-3px);
+}
+
+:global([lang='ar']) .eyebrow,
+:global([lang='ar']) .cta {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding: var(--space-24) 2rem;
+  }
+}

@@ -1,0 +1,126 @@
+/**
+ * The brand's signature effects.
+ *
+ * These are the brand rather than decoration — the design system names them
+ * explicitly and the mockups use them on nearly every section. All three are
+ * decorative, so each is `aria-hidden` in the component and `pointer-events:
+ * none` here: none of them may ever intercept a click or reach a screen reader.
+ */
+
+/**
+ * Woven texture — a faint gold cross-hatch, lifted verbatim from the mockups.
+ * Spacing and opacity vary slightly per section, so both are custom properties
+ * the component sets.
+ */
+.weave {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--weave-opacity, 0.05);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent var(--weave-gap, 22px),
+      rgba(196, 154, 82, 1) var(--weave-gap, 22px),
+      rgba(196, 154, 82, 1) calc(var(--weave-gap, 22px) + 0.5px)
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent var(--weave-gap, 22px),
+      rgba(196, 154, 82, 1) var(--weave-gap, 22px),
+      rgba(196, 154, 82, 1) calc(var(--weave-gap, 22px) + 0.5px)
+    );
+}
+
+/**
+ * Warm glow — a large soft radial that slowly breathes behind the hero.
+ * Positioned with logical inset properties so it sits on the correct side of
+ * the composition in Arabic.
+ */
+.glow {
+  position: absolute;
+  pointer-events: none;
+  width: var(--glow-width, 600px);
+  height: var(--glow-height, 300px);
+  background: radial-gradient(
+    ellipse,
+    rgba(196, 154, 82, var(--glow-strength, 0.08)) 0%,
+    transparent 70%
+  );
+}
+
+.glowCentre {
+  top: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* In RTL the horizontal translate must reverse, or a centred glow lands off
+   to one side. */
+:global([dir='rtl']) .glowCentre {
+  transform: translate(50%, -50%);
+}
+
+.breathing {
+  animation: breathe 8s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+/* The centred variant already carries a transform; animate opacity only so the
+   two do not fight. */
+.glowCentre.breathing {
+  animation-name: breatheOpacity;
+}
+
+@keyframes breatheOpacity {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/**
+ * Ghost monogram — an oversized, very low opacity C fixed behind the content.
+ * The design system is explicit that it must never reduce text contrast, hence
+ * the 0.02 alpha.
+ */
+.ghost {
+  position: fixed;
+  top: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--s);
+  font-size: min(90vh, 90vw);
+  line-height: 1;
+  color: rgba(234, 224, 208, 0.02);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+:global([dir='rtl']) .ghost {
+  transform: translate(50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breathing,
+  .glowCentre.breathing {
+    animation: none;
+  }
+}

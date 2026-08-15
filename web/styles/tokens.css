@@ -1,0 +1,86 @@
+/**
+ * Cove Dubai design tokens.
+ *
+ * Transcribed verbatim from the approved mockups in design/mockups/ and
+ * cross-checked against the cove-design-system skill — the two agree exactly.
+ * These are the brand. Never approximate one with a "close enough" value, and
+ * never introduce a colour, font or spacing step that is not defined here.
+ */
+
+:root {
+  /* --- Colour -------------------------------------------------------------
+   * Gold is an accent, not a fill: fine lines, small labels, hover states.
+   * Orange is reserved for genuinely live signals and appears almost nowhere.
+   */
+  --ink: #1c1410; /* primary text on light */
+  --fog: #7a6e62; /* muted text, captions */
+  --bone: #eae0d0; /* light text on dark */
+  --linen: #f2ebd9; /* warm light surface */
+  --w: #fef9f2; /* near-white, headings on dark */
+
+  --gold: #c49a52; /* primary accent */
+  --gold-lt: #d4ae6e; /* accent hover / emphasis */
+  --orange: #b85228; /* rare live/alert accent — use sparingly */
+
+  --dark: #180e06; /* primary dark background */
+  --dark2: #241408; /* raised dark surface */
+
+  /* --- Type ---------------------------------------------------------------
+   * --s is where the luxury feel lives: headings, hero lines, ledes.
+   * --b carries all UI: nav, buttons, labels, fields, dense body copy.
+   * --ar is the Arabic face, set on <html lang="ar"> (see arabic-rtl).
+   * The font variables are supplied by next/font in the locale layout.
+   */
+  --s: var(--font-cormorant), 'Cormorant Garamond', serif;
+  --b: var(--font-jost), 'Jost', sans-serif;
+  --ar: var(--font-almarai), 'Almarai', sans-serif;
+
+  /* Signature detail: small labels and buttons are uppercase Jost with wide
+   * tracking and a matching text-indent, so the tracking reads optically
+   * centred rather than pushed left. */
+  --tracking-label: 0.22em;
+  --tracking-wide: 0.34em;
+
+  /* --- Spacing ------------------------------------------------------------
+   * Luxury reads as whitespace. Prefer the larger step when unsure.
+   */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* --- Form ---------------------------------------------------------------
+   * Minimal radius and essentially no drop shadows: depth comes from tone and
+   * the warm glow, never from boxes.
+   */
+  --radius: 2px;
+  --border-hairline: 1px;
+
+  --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  --container: 1280px;
+}
+
+/**
+ * Arabic typography.
+ *
+ * Arabic needs a little more line-height and a slightly larger size to sit at
+ * the same visual weight as the Latin faces. The Latin faces stay loaded — the
+ * English side still needs them.
+ */
+:root:lang(ar),
+[lang='ar'] {
+  --b: var(--font-almarai), 'Almarai', sans-serif;
+  --s: var(--font-almarai), 'Almarai', sans-serif;
+  --line-height-base: 1.9;
+}
+
+:root {
+  --line-height-base: 1.7;
+}
