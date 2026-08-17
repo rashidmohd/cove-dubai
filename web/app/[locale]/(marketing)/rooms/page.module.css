@@ -227,3 +227,58 @@
     padding: var(--space-8) var(--space-6);
   }
 }
+
+/* --- Amenities -------------------------------------------------------------
+ * Quieter than the specs above them: the specs are what distinguishes one room
+ * from another, while amenities are the reassurance that the expected things
+ * are there. Set as a plain wrapped list rather than a grid of icons — we have
+ * no icon set, and inventing one would mean inventing brand assets.
+ */
+
+.amenities {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+}
+
+.amenitiesTitle {
+  font-family: var(--b);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--fog);
+  margin-bottom: var(--space-3);
+}
+
+.amenityList {
+  display: flex;
+  flex-wrap: wrap;
+  /* `list-style: none` does not remove the browser's default list indent, and
+     without this the amenities sit ~40px inside their own heading. */
+  padding-inline-start: 0;
+  /* A column gap wide enough that the separators read as separators. */
+  gap: var(--space-2) var(--space-4);
+  list-style: none;
+}
+
+.amenityItem {
+  font-family: var(--b);
+  font-size: 0.78rem;
+  color: var(--ink);
+  position: relative;
+}
+
+/* A hairline dot between items, on the side the reading direction starts from,
+   so it mirrors in Arabic without a direction-specific rule. */
+.amenityItem + .amenityItem::before {
+  content: '·';
+  position: absolute;
+  inset-inline-start: calc(var(--space-4) / -2);
+  transform: translateX(-50%);
+  color: var(--gold);
+}
+
+[dir='rtl'] .amenityItem + .amenityItem::before {
+  transform: translateX(50%);
+}

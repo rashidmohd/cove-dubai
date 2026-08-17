@@ -13,6 +13,10 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
 import { getBookingProvider } from '../booking/index.js';
+import {
+  sendBookingConfirmation,
+  sendCancellationConfirmation,
+} from '../emails/index.js';
 import { asyncRoute, HttpError } from '../middleware/errors.js';
 import {
   availabilityQuerySchema,
@@ -86,7 +90,13 @@ bookingRouter.post(
   asyncRoute(async (req, res) => {
     const draft = createReservationSchema.parse(req.body);
     const reservation = await getBookingProvider().createReservation(draft);
+
+    // Respond first, then send. The booking is already committed and the guest
+    // has their reference on screen; making them wait on a mail provider — or
+    // worse, showing them a failure because of one — would be wrong.
     res.status(201).json({ reservation });
+
+    void sendBookingConfirmation(reservation);
   }),
 );
 
@@ -131,6 +141,9 @@ bookingRouter.post(
     const cancelled = await getBookingProvider().cancelReservation(reference, {
       guestToken: token,
     });
+
     res.json({ reservation: cancelled });
+
+    void sendCancellationConfirmation(cancelled);
   }),
 );

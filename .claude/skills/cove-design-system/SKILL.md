@@ -73,6 +73,17 @@ Reproduce these from the mockups — they are the brand, not decoration:
 
 - Do not introduce a new colour, font, or heavy UI pattern (cards with shadows, bright fills, rounded pills
   everywhere) that isn't in the mockups.
-- The admin panel may be more utilitarian than the guest site, but still uses these tokens and fonts — it should
-  feel like the same brand, just denser.
+- **The admin panel is an agreed exception** (15 August 2026). `/admin`
+  is a work tool used all day, and this system's hero typography — tracked uppercase micro-caps, oldstyle serif
+  figures, 3rem gutters — actively slows down scanning a reservations table. It runs its own dashboard-UI
+  language instead: a neutral warm-grey ramp, a 14px system sans, sentence case, 8px radii, hairline borders.
+  The rules for it are in the header comment of `web/app/[locale]/admin/Admin.module.css`, and its component
+  layer is `web/app/[locale]/admin/ui.tsx`. Everything in this file still governs **every guest-facing surface**,
+  and the exception does not travel: do not import an admin token, an admin component, or its font stack into a
+  marketing page, the reserve flow, or an email.
+  - What the panel still takes from here: the accent (`--gold`), the ink (`--ink`), the alert colour
+    (`--orange`), the spacing scale, and the whole of **arabic-rtl**. Only the neutrals and a four-step semantic
+    status ramp are new, and they are defined once with their measured contrast.
+  - Still no utility-CSS framework anywhere, admin included. The panel is CSS Modules and custom properties like
+    the rest of the project — it borrows shadcn/ui's *conventions*, not Tailwind.
 - If a mockup and this file ever disagree, the mockup wins — flag the discrepancy so this file can be updated.

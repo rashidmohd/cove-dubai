@@ -74,9 +74,85 @@ model RoomType {
   ratePlans    RatePlan[]
   inventory    RoomTypeInventory[]
   reservations Reservation[]
+  amenities    RoomTypeAmenity[]
+  voucherLimits VoucherRoomType[]
 
   @@index([isActive, sortOrder])
   @@map("room_types")
+}
+
+/// What a room type comes with — air conditioning, a safe, a balcony.
+///
+/// Modelled as its own table against a standard vocabulary rather than as prose
+/// in the front-end, because room amenities are one of the few things in
+/// hospitality with a genuine published standard. `otaCode` holds the
+/// OpenTravel **RMA (Room Amenity Type)** code, which is what channel managers,
+/// OTAs and PMS platforms exchange (Booking.com's connectivity API consumes
+/// exactly this list). That makes the set portable to whichever PMS the client
+/// eventually picks: mapping becomes a lookup rather than re-entering the data.
+///
+/// The prose specs — "Soaking tub & rain shower", floor ranges — deliberately
+/// stay in the message files. Those are marketing copy with no standard behind
+/// them, and the reasoning in docs/project-status.md still holds for them.
+model Amenity {
+  id String @id @default(cuid())
+
+  /// Our own stable slug, used in the API and admin URLs (`air-conditioning`).
+  code String @unique
+
+  /// OpenTravel RMA code, e.g. 2 = Air conditioning, 92 = Safe, 5017 = Balcony.
+  /// Nullable on purpose: the hotel can add an amenity the standard has no code
+  /// for without being blocked, exactly like `externalRef` elsewhere.
+  otaCode Int?
+
+  nameEn String
+  nameAr String
+
+  category AmenityCategory @default(COMFORT)
+
+  /// Optional icon key for the front-end. Like `imageKey`, a style key rather
+  /// than an asset path.
+  iconKey String?
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomTypes RoomTypeAmenity[]
+
+  @@index([isActive, sortOrder])
+  @@map("amenities")
+}
+
+/// Grouping for display. Guests scan a room's amenities by kind rather than
+/// reading one long list.
+enum AmenityCategory {
+  BATHROOM
+  COMFORT
+  TECHNOLOGY
+  SERVICES
+  ACCESSIBILITY
+}
+
+/// Which amenities a room type has.
+///
+/// A join table rather than an array column or a comma-separated string, so the
+/// question "which room types have a balcony" is an index lookup, and so a
+/// future channel-manager export can select per room type without parsing.
+model RoomTypeAmenity {
+  roomTypeId String
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  amenityId String
+  amenity   Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([roomTypeId, amenityId])
+  @@index([amenityId])
+  @@map("room_type_amenities")
 }
 
 /// A nightly rate for a room type, optionally limited to a date window so
@@ -91,6 +167,10 @@ model RatePlan {
   nameEn String
   nameAr String
 
+  /// Marketing copy, set only on plans the hotel advertises as an offer.
+  descriptionEn String?
+  descriptionAr String?
+
   nightlyRateAed Decimal @db.Decimal(10, 2)
 
   /// Null on both sides means "the default plan, always applicable".
@@ -103,10 +183,19 @@ model RatePlan {
   priority Int     @default(0)
   isActive Boolean @default(true)
 
+  /// Advertise this plan as an **offer** on the public site.
+  ///
+  /// An offer is not a separate concept from a rate plan — it *is* one, with
+  /// marketing copy attached and a flag saying the hotel wants it seen. Modelling
+  /// it any other way would mean a second pricing path competing with the one
+  /// that is already tested, and two places for a nightly rate to disagree.
+  isPublicOffer Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([roomTypeId, isActive, startDate, endDate])
+  @@index([isPublicOffer, isActive])
   @@map("rate_plans")
 }
 
@@ -236,6 +325,9 @@ model Reservation {
   checkedInAt  DateTime?
   checkedOutAt DateTime?
 
+  /// At most one — a booking cannot stack discount codes.
+  voucherRedemption VoucherRedemption?
+
   @@index([checkIn, checkOut])
   @@index([status, checkIn])
   @@index([roomTypeId, checkIn])
@@ -311,6 +403,202 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Guest accounts
+// ---------------------------------------------------------------------------
+
+/// An optional account a guest can create to see their own bookings.
+///
+/// **Deliberately separate from `Guest`.** A `Guest` row is a profile captured
+/// at booking time and its email is *not* unique — a hotel legitimately has
+/// several guests sharing a family address, and the same person books more than
+/// once. An account is a login, and its email must be unique. Joining the two
+/// on email at read time keeps both facts true: one account can see every
+/// booking made with its address, without rewriting history or merging guests.
+///
+/// Booking never requires an account. The launch model is a guest flow that
+/// works for someone who has never been here and never will again.
+model GuestAccount {
+  id String @id @default(cuid())
+
+  email        String @unique
+  passwordHash String
+
+  firstName String
+  lastName  String
+
+  preferredLocale Locale @default(EN)
+
+  /// Null until the guest follows the link in their verification email. An
+  /// unverified account can sign in but cannot see bookings — otherwise
+  /// anyone could register a stranger's address and read their stays.
+  emailVerifiedAt DateTime?
+
+  lastLoginAt DateTime?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tokens GuestAccountToken[]
+
+  @@map("guest_accounts")
+}
+
+/// A single-use token for verifying an address or resetting a password.
+///
+/// Stored hashed, exactly as a password would be. These arrive by email and
+/// grant access; a leaked database backup should not hand over live links.
+model GuestAccountToken {
+  id String @id @default(cuid())
+
+  accountId String
+  account   GuestAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  /// SHA-256 of the token that was emailed. The plaintext is never stored.
+  tokenHash String @unique
+
+  purpose GuestTokenPurpose
+
+  expiresAt DateTime
+  /// Set the moment it is spent, so a link cannot be replayed.
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([accountId, purpose])
+  @@index([expiresAt])
+  @@map("guest_account_tokens")
+}
+
+enum GuestTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+// ---------------------------------------------------------------------------
+// Promotions
+// ---------------------------------------------------------------------------
+
+/// A discount code a guest types at booking.
+///
+/// Two rules from the `booking-engine` skill shape this model, and both are
+/// easy to get wrong:
+///
+///   1. **A discount reduces the accommodation charge only.** VAT is therefore
+///      calculated on the *discounted* room total, while the Tourism Dirham is
+///      a fixed per-room-per-night government fee and is never discounted.
+///   2. **Redemption limits are enforced by the database.** `redemptionCount`
+///      is incremented inside the same transaction that writes the booking, and
+///      a CHECK constraint makes exceeding `maxRedemptions` impossible. This is
+///      the same guarantee the inventory ledger gives against overselling —
+///      two guests racing for the last use of a single-use code cannot both win.
+model Voucher {
+  id String @id @default(cuid())
+
+  /// Stored uppercase and matched case-insensitively — guests type these off a
+  /// printed card or an email and the case is never reliable.
+  code String @unique
+
+  /// Shown to the guest on the summary line, so it needs both languages.
+  nameEn String
+  nameAr String
+
+  discountType  DiscountType
+  /// A percentage (0–100) or a fixed amount in AED, per `discountType`.
+  discountValue Decimal      @db.Decimal(10, 2)
+
+  /// Null on either side means unbounded in that direction.
+  validFrom DateTime? @db.Date
+  validTo   DateTime? @db.Date
+
+  /// Null means unlimited. Otherwise the CHECK constraint enforces it.
+  maxRedemptions  Int?
+  redemptionCount Int  @default(0)
+
+  /// Stay requirements the booking must meet for the code to apply.
+  minimumNights Int  @default(1)
+  minimumSpend  Decimal? @db.Decimal(10, 2)
+
+  /// Empty means "any room type"; otherwise the code only applies to these.
+  roomTypes VoucherRoomType[]
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  redemptions VoucherRedemption[]
+
+  @@index([isActive, validFrom, validTo])
+  @@map("vouchers")
+}
+
+enum DiscountType {
+  /// A percentage off the accommodation charge.
+  PERCENTAGE
+  /// A fixed number of AED off the accommodation charge.
+  FIXED_AMOUNT
+}
+
+/// Restricts a voucher to particular room types. No rows means no restriction.
+model VoucherRoomType {
+  voucherId String
+  voucher   Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  roomTypeId String
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  @@id([voucherId, roomTypeId])
+  @@index([roomTypeId])
+  @@map("voucher_room_types")
+}
+
+/// One use of a voucher, written atomically with the reservation.
+///
+/// The amount is recorded here as well as in the reservation's price snapshot,
+/// so "what has this campaign cost us" is a query rather than a reconstruction.
+model VoucherRedemption {
+  id String @id @default(cuid())
+
+  voucherId String
+  voucher   Voucher @relation(fields: [voucherId], references: [id])
+
+  /// One redemption per reservation — a booking cannot stack codes.
+  reservationId String      @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  /// AED taken off the accommodation charge.
+  discountAed Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([voucherId])
+  @@map("voucher_redemptions")
+}
+
+/// Server-side admin sessions, backing `express-session`.
+///
+/// Sessions live in Postgres rather than in process memory for two reasons:
+/// Railway restarts containers freely and an in-memory store would log every
+/// admin out on each deploy, and a session that exists only in one process
+/// cannot be revoked or survive running more than one instance.
+model AdminSession {
+  /// express-session's own session id, which is the value in the cookie.
+  sid String @id
+
+  /// The serialized session payload, owned by express-session.
+  data String
+
+  /// Absolute row expiry, refreshed on each request to implement the idle
+  /// timeout. Indexed so the periodic sweep of dead rows stays cheap.
+  expiresAt DateTime
+
+  @@index([expiresAt])
+  @@map("admin_sessions")
 }
 
 /// Operational values that must be changeable without a deploy — the Tourism

@@ -155,6 +155,36 @@ export default async function RoomsPage({
                       </div>
                     </dl>
 
+                    {/* Amenities come from the API, so the hotel edits them in
+                        the admin panel rather than in a message file. The specs
+                        above are still prose in `messages/` — they have no
+                        standard vocabulary behind them, unlike these.
+
+                        `?? []` is load-bearing, not defensive habit. This page
+                        caches room types for an hour, and `web` and `server`
+                        deploy independently — so a response predating this
+                        field is a normal state, not a broken one, and reading
+                        `.length` off it directly throws. */}
+                    {(room.amenities ?? []).length > 0 ? (
+                      <div className={styles.amenities}>
+                        <h3 className={styles.amenitiesTitle}>
+                          {t('amenitiesTitle')}
+                        </h3>
+                        <ul className={styles.amenityList}>
+                          {(room.amenities ?? []).map((amenity) => (
+                            <li
+                              key={amenity.code}
+                              className={styles.amenityItem}
+                            >
+                              {/* Database text in either script — isolated so
+                                  it cannot disturb the surrounding layout. */}
+                              <bdi>{amenity.name[locale]}</bdi>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
                     <div className={styles.roomFooter}>
                       <p className={styles.price}>
                         <span className={styles.priceLabel}>{t('from')}</span>

@@ -120,7 +120,14 @@
     "keepBooking": "Keep my booking",
     "cancelled": "Your reservation has been cancelled.",
     "invalidLink": "This cancellation link is not valid. It may already have been used.",
-    "alreadyCancelled": "This reservation has already been cancelled."
+    "alreadyCancelled": "This reservation has already been cancelled.",
+    "reference": "Booking reference",
+    "room": "Room",
+    "stay": "Stay",
+    "total": "Total",
+    "confirmBody": "Cancelling releases your room back to sale. No payment was taken, so there is nothing to refund.",
+    "cancelledBody": "We are sorry not to be welcoming you this time. You are welcome to book again whenever suits.",
+    "backHome": "Back to the hotel"
   },
   "footer": {
     "tagline": "A hotel in Dubai. Considered rooms. Open now.",
@@ -285,7 +292,8 @@
       "titleAccent": "right?",
       "body": "Our team will help you choose. No obligation, no script.",
       "cta": "Send an enquiry"
-    }
+    },
+    "amenitiesTitle": "In every room"
   },
   "dining": {
     "label": "Dining",
@@ -402,6 +410,181 @@
         "roomsValue": "106 rooms & suites",
         "openingLabel": "Opening",
         "openingValue": "2027"
+      }
+    }
+  },
+  "admin": {
+    "brand": "Cove Dubai",
+    "title": "Hotel Administration",
+    "loading": "Loading…",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "signOut": "Sign out",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "dialog": {
+      "goBack": "Go back"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "reservations": "Reservations",
+      "rooms": "Room types",
+      "inventory": "Availability",
+      "settings": "Settings",
+      "amenities": "Amenities",
+      "groups": {
+        "overview": "Overview",
+        "property": "Property",
+        "system": "System"
+      }
+    },
+    "roles": {
+      "admin": "Administrator",
+      "staff": "Front desk"
+    },
+    "login": {
+      "email": "Email",
+      "password": "Password",
+      "signIn": "Sign in",
+      "signingIn": "Signing in…",
+      "failed": "Incorrect email or password.",
+      "rateLimited": "Too many sign-in attempts. Please wait a few minutes."
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "checkedIn": "Checked in",
+      "checkedOut": "Checked out",
+      "held": "Held"
+    },
+    "errors": {
+      "signedOut": "Your session has ended. Please sign in again.",
+      "forbidden": "Your role does not permit this action.",
+      "inventoryBelowBooked": "Some nights already have more rooms booked than that. Nothing was changed.",
+      "invalidTransition": "That booking cannot move to that status.",
+      "amenityInUse": "That amenity is still listed on room types. Remove it from them first, or withdraw it instead."
+    },
+    "dashboard": {
+      "arrivals": "Arriving today",
+      "departures": "Departing today",
+      "occupancy": "Occupancy today",
+      "totalReservations": "Reservations",
+      "roomsBooked": "{booked} of {total} rooms",
+      "recent": "Recent bookings",
+      "noArrivals": "No arrivals today.",
+      "noDepartures": "No departures today."
+    },
+    "reservations": {
+      "count": "{count} in total",
+      "search": "Search",
+      "searchHint": "Name, email, or reference",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "from": "Staying from",
+      "to": "Staying until",
+      "apply": "Apply",
+      "none": "No reservations match these filters.",
+      "reference": "Reference",
+      "guest": "Guest",
+      "roomType": "Room type",
+      "stay": "Stay",
+      "total": "Total",
+      "actions": "Actions",
+      "checkIn": "Check in",
+      "checkOut": "Check out",
+      "cancel": "Cancel",
+      "confirmCancelTitle": "Cancel this booking?",
+      "confirmCancelAction": "Cancel booking",
+      "confirmCancel": "Booking {reference} will be released back to sale. This cannot be undone here."
+    },
+    "pagination": {
+      "label": "Pages",
+      "previous": "Previous",
+      "next": "Next",
+      "showing": "Showing {from}–{to} of {total}"
+    },
+    "rooms": {
+      "count": "{count} room types",
+      "code": "Code",
+      "baseRate": "Base rate",
+      "maxOccupancy": "Sleeps",
+      "totalRooms": "Rooms",
+      "onSale": "On sale",
+      "onSaleYes": "On sale",
+      "onSaleNo": "Not on sale",
+      "yes": "Yes",
+      "no": "No",
+      "edit": "Edit",
+      "editing": "Editing",
+      "nameEn": "Name (English)",
+      "nameAr": "Name (Arabic)",
+      "descriptionEn": "Description (English)",
+      "descriptionAr": "Description (Arabic)",
+      "saved": "{name} saved.",
+      "rateNote": "Changing the base rate affects new quotes only. Bookings already taken keep the price they were quoted.",
+      "amenitiesSaved": "Amenities updated."
+    },
+    "inventory": {
+      "roomType": "Room type",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "from": "From",
+      "to": "To",
+      "totalRooms": "Rooms on sale",
+      "stopSell": "Stop sell",
+      "unchanged": "Unchanged",
+      "open": "Open",
+      "closed": "Closed",
+      "apply": "Apply to range",
+      "ofTotal": "of {total}",
+      "updated": "Availability updated from {from} to {to}.",
+      "nothingToChange": "Set a room count, a stop sell, or both.",
+      "notOpen": "The calendar is not open for this month. Set a room count and apply it to a range to open it.",
+      "editTitle": "Set availability",
+      "editIntro": "Applies to every night in the range at once. If any night already has more rooms booked than the new total, the whole range is refused rather than partly applied.",
+      "legendAvailable": "Rooms available",
+      "legendFull": "Fully booked",
+      "legendClosed": "Closed to arrivals"
+    },
+    "settings": {
+      "intro": "These take effect on the next quote — no deploy needed. Bookings already taken keep the price they were quoted.",
+      "value": "Value",
+      "saved": "{key} updated.",
+      "readOnly": "Administrators only"
+    },
+    "amenities": {
+      "title": "Amenities",
+      "intro": "The shared list every room type draws from. Withdrawing an amenity hides it from guests everywhere but keeps it on the rooms that have it, so it can be brought back. Deleting is only possible once no room lists it.",
+      "count": "{count} in the list",
+      "add": "Add an amenity",
+      "name": "Name",
+      "code": "Code",
+      "codeHint": "Lowercase letters, numbers and hyphens, for example air-conditioning",
+      "otaCode": "OTA code",
+      "otaOptional": "Optional",
+      "otaHint": "The OpenTravel RMA code, which channel managers and property-management systems use to identify an amenity. Leave it blank for something bespoke rather than guessing a code that means something else.",
+      "category": "Category",
+      "usedBy": "Rooms",
+      "shown": "Shown",
+      "shownYes": "Shown",
+      "withdrawn": "Withdrawn",
+      "withdraw": "Withdraw",
+      "restore": "Restore",
+      "delete": "Delete",
+      "choose": "Choose amenities",
+      "noneOnRoom": "No amenities listed for this room yet.",
+      "created": "{name} added.",
+      "saved": "{name} saved.",
+      "deleted": "{name} deleted.",
+      "confirmDeleteTitle": "Delete this amenity?",
+      "confirmDelete": "{name} will be removed from the list entirely. Withdrawing it instead keeps it available to bring back.",
+      "categories": {
+        "bathroom": "Bathroom",
+        "comfort": "Comfort",
+        "technology": "Technology",
+        "services": "Services",
+        "accessibility": "Accessibility"
       }
     }
   }

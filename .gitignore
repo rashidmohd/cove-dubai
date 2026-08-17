@@ -6,6 +6,11 @@ node_modules/
 .env.local
 .env.*.local
 
+# Local credential notes. Anything named *.local.md holds real passwords and
+# stays on the machine that wrote it — see docs/admin-access.md for the
+# committed, secret-free version.
+*.local.md
+
 # Build output
 .next/
 out/

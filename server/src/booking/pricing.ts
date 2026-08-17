@@ -40,19 +40,40 @@ function toMoney(value: Prisma.Decimal): number {
   return value.toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP).toNumber();
 }
 
+/** A discount to apply to the accommodation charge. */
+export interface DiscountInput {
+  code: string;
+  name: { en: string; ar: string };
+  type: 'percentage' | 'fixed';
+  /** A percentage (0–100), or an amount in AED. */
+  value: Prisma.Decimal;
+}
+
 /**
  * Build the full breakdown for a stay.
  *
- * VAT applies to the accommodation charge. The Tourism Dirham is a fixed
- * government fee per room per night and is not itself an accommodation charge,
- * so it is not part of the VAT base — it is added after VAT is calculated.
+ * The order of operations here is the whole point, and getting it wrong
+ * mis-taxes every discounted booking:
+ *
+ *   1. **The discount comes off the accommodation charge**, and nothing else.
+ *   2. **VAT is charged on the discounted accommodation charge.** The guest is
+ *      taxed on what they actually pay for the room, not on the list price.
+ *   3. **The Tourism Dirham is never discounted, and is never in the VAT base.**
+ *      It is a fixed per-room-per-night government fee set by the DET, not an
+ *      accommodation charge the hotel is free to reduce. A voucher that
+ *      appeared to discount it would be the hotel absorbing someone else's levy.
+ *
+ * A discount is also clamped so it can never exceed the room total — a fixed
+ * AED 500 code against a AED 300 stay makes the accommodation free, not
+ * negative.
  */
 export function calculatePrice(args: {
   nightlyRates: NightlyRate[];
   roomsCount: number;
   settings: PricingSettings;
+  discount?: DiscountInput | undefined;
 }): PriceBreakdown {
-  const { nightlyRates, roomsCount, settings } = args;
+  const { nightlyRates, roomsCount, settings, discount } = args;
 
   const rooms = new Prisma.Decimal(roomsCount);
   const nights = nightlyRates.length;
@@ -61,13 +82,21 @@ export function calculatePrice(args: {
     .reduce((sum, night) => sum.plus(night.rate), new Prisma.Decimal(0))
     .times(rooms);
 
+  const discountAmount = resolveDiscountAmount(roomTotal, discount);
+  const discountedRoomTotal = roomTotal.minus(discountAmount);
+
   const tourismDirhamTotal = settings.tourismDirhamPerRoomPerNight
     .times(nights)
     .times(rooms);
 
-  const vatTotal = roomTotal.times(settings.vatRatePercent).dividedBy(100);
+  // The discounted total is the VAT base — see rule 2 above.
+  const vatTotal = discountedRoomTotal
+    .times(settings.vatRatePercent)
+    .dividedBy(100);
 
-  const grandTotal = roomTotal.plus(vatTotal).plus(tourismDirhamTotal);
+  const grandTotal = discountedRoomTotal
+    .plus(vatTotal)
+    .plus(tourismDirhamTotal);
 
   return {
     currency: settings.currency,
@@ -78,6 +107,15 @@ export function calculatePrice(args: {
       rate: toMoney(night.rate),
     })),
     roomTotal: toMoney(roomTotal),
+    ...(discount
+      ? {
+          discount: {
+            code: discount.code,
+            name: discount.name,
+            amount: toMoney(discountAmount),
+          },
+        }
+      : {}),
     tourismDirham: {
       perRoomPerNight: toMoney(settings.tourismDirhamPerRoomPerNight),
       total: toMoney(tourismDirhamTotal),
@@ -88,6 +126,25 @@ export function calculatePrice(args: {
     },
     grandTotal: toMoney(grandTotal),
   };
+}
+
+/** The AED a discount takes off, never more than the room total itself. */
+function resolveDiscountAmount(
+  roomTotal: Prisma.Decimal,
+  discount: DiscountInput | undefined,
+): Prisma.Decimal {
+  if (!discount) return new Prisma.Decimal(0);
+
+  const raw =
+    discount.type === 'percentage'
+      ? roomTotal.times(discount.value).dividedBy(100)
+      : discount.value;
+
+  // Clamped at both ends: a negative discount would raise the price, and one
+  // larger than the stay would make the accommodation charge negative and
+  // hand the guest money back through the VAT line.
+  if (raw.lessThan(0)) return new Prisma.Decimal(0);
+  return raw.greaterThan(roomTotal) ? roomTotal : raw;
 }
 
 /**

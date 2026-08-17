@@ -27,6 +27,18 @@ const STATUS_BY_CODE: Record<BookingErrorCode, number> = {
   CANCELLATION_NOT_PERMITTED: 409,
   // 403 rather than 404: the booking exists, the link just is not valid for it.
   INVALID_CANCELLATION_TOKEN: 403,
+  // 409: the request is well-formed, it just conflicts with rooms already sold.
+  INVENTORY_BELOW_BOOKED: 409,
+  SETTING_NOT_FOUND: 404,
+  INVALID_STATUS_TRANSITION: 409,
+  AMENITY_NOT_FOUND: 404,
+  AMENITY_CODE_IN_USE: 409,
+  VOUCHER_NOT_FOUND: 404,
+  // 409 rather than 400: the code is well-formed, it just cannot be used now.
+  VOUCHER_EXPIRED: 409,
+  VOUCHER_EXHAUSTED: 409,
+  VOUCHER_NOT_APPLICABLE: 409,
+  VOUCHER_CODE_IN_USE: 409,
 };
 
 /** Raised by routes for non-domain failures such as a bad session. */

@@ -27,6 +27,28 @@ export interface LocalizedText {
   ar: string;
 }
 
+export type AmenityCategory =
+  | 'bathroom'
+  | 'comfort'
+  | 'technology'
+  | 'services'
+  | 'accessibility';
+
+/**
+ * Something a room comes with.
+ *
+ * `otaCode` is the OpenTravel RMA code — the vocabulary channel managers and
+ * PMS platforms exchange. The front-end does not use it, but it travels with
+ * the amenity so nothing downstream has to look it up separately.
+ */
+export interface Amenity {
+  code: string;
+  otaCode: number | null;
+  name: LocalizedText;
+  category: AmenityCategory;
+  iconKey: string | null;
+}
+
 export interface RoomType {
   code: string;
   name: LocalizedText;
@@ -35,6 +57,16 @@ export interface RoomType {
   maxOccupancy: number;
   baseRate: number;
   imageKey: string;
+  /**
+   * Ordered by category then sort order, ready to render as-is.
+   *
+   * **Optional on purpose.** The marketing pages cache room types for an hour
+   * and the two services deploy independently, so a response from before this
+   * field existed is a normal thing to meet rather than a fault. Marking it
+   * optional makes the compiler insist on the guard at every read instead of
+   * leaving it to whoever writes the next component.
+   */
+  amenities?: Amenity[];
 }
 
 export interface PriceBreakdown {
@@ -107,5 +139,16 @@ export type ApiErrorCode =
   | 'RATE_LIMITED'
   | 'NOT_FOUND'
   | 'INTERNAL_ERROR'
+  // --- Admin panel ---------------------------------------------------------
+  | 'UNAUTHENTICATED'
+  | 'FORBIDDEN'
+  | 'CSRF_TOKEN_MISSING'
+  | 'CSRF_TOKEN_INVALID'
+  | 'INVALID_CREDENTIALS'
+  | 'INVENTORY_BELOW_BOOKED'
+  | 'INVALID_STATUS_TRANSITION'
+  | 'SETTING_NOT_FOUND'
+  | 'AMENITY_NOT_FOUND'
+  | 'AMENITY_CODE_IN_USE'
   /** Raised by the client itself when the API cannot be reached at all. */
   | 'NETWORK_ERROR';

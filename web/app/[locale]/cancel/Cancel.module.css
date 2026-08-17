@@ -1,0 +1,149 @@
+/**
+ * The cancellation page.
+ *
+ * A single centred card. Logical properties throughout, so it mirrors on /ar
+ * with no direction-specific rules (`arabic-rtl`), and every value comes from
+ * the design tokens (`cove-design-system`).
+ */
+
+.wrap {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-24) var(--space-6);
+  background: var(--linen);
+}
+
+.card {
+  width: 100%;
+  max-width: 34rem;
+  padding: var(--space-12);
+  background: var(--w);
+  border: var(--border-hairline) solid rgba(196, 154, 82, 0.35);
+  border-radius: var(--radius);
+}
+
+.title {
+  font-family: var(--s);
+  font-size: 2rem;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: var(--space-8);
+}
+
+.body {
+  font-family: var(--b);
+  font-size: 0.9rem;
+  line-height: var(--line-height-base);
+  color: var(--fog);
+  margin-bottom: var(--space-8);
+}
+
+.status {
+  font-family: var(--b);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--fog);
+}
+
+.error {
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  font-family: var(--b);
+  font-size: 0.85rem;
+  color: var(--orange);
+  background: rgba(184, 82, 40, 0.08);
+  border: var(--border-hairline) solid rgba(184, 82, 40, 0.3);
+  border-radius: var(--radius);
+}
+
+.done {
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  font-family: var(--b);
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: rgba(196, 154, 82, 0.14);
+  border: var(--border-hairline) solid rgba(196, 154, 82, 0.4);
+  border-radius: var(--radius);
+}
+
+.summary {
+  margin-bottom: var(--space-8);
+  border-top: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-hairline) solid rgba(28, 20, 16, 0.06);
+}
+
+.rowLabel {
+  font-family: var(--b);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--fog);
+}
+
+.rowValue {
+  font-family: var(--b);
+  font-size: 0.9rem;
+  color: var(--ink);
+  /* `end`, not `right` — follows the reading direction. */
+  text-align: end;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* The destructive action. Deliberately not gold: gold is the brand's
+   invitation to book, and reusing it here would make cancelling look like the
+   encouraged path. */
+.confirm {
+  padding: var(--space-4) var(--space-8);
+  font-family: var(--b);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--w);
+  background: var(--orange);
+  border: var(--border-hairline) solid var(--orange);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.confirm:hover {
+  opacity: 0.88;
+}
+
+.confirm:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.keep {
+  font-family: var(--b);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: var(--border-hairline) solid var(--gold);
+  padding-bottom: var(--space-1);
+  transition: color var(--transition);
+}
+
+.keep:hover {
+  color: var(--gold);
+}

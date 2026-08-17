@@ -1,0 +1,1574 @@
+/**
+ * Admin panel styling.
+ *
+ * ---------------------------------------------------------------------------
+ * Why this does not look like the rest of the site
+ * ---------------------------------------------------------------------------
+ *
+ * The guest site is hero typography: Cormorant at display sizes, uppercase Jost
+ * with 0.22em tracking, cream surfaces, generous air. That is the brand and it
+ * is right for someone deciding where to spend a weekend.
+ *
+ * It is wrong for someone working a shift. Wide-tracked uppercase micro-labels
+ * are slow to scan, oldstyle serif figures read as decoration rather than data,
+ * and 3rem gutters push a reservations table below the fold. The panel is used
+ * all day; density, legibility and hit targets beat atmosphere.
+ *
+ * So the admin runs its own visual language, borrowed from the conventions of
+ * modern dashboard UI (shadcn/ui): a neutral warm-grey ramp, a 14px system
+ * sans, sentence case with normal tracking, 8px radii, hairline borders and one
+ * accent colour used sparingly. It is deliberately **not** a second brand — the
+ * accent, the ink and the alert colour are all Cove Dubai's own tokens, and the
+ * spacing steps come straight from tokens.css. Only the neutrals and the
+ * semantic status ramp are new, and they are defined once, below, with their
+ * measured contrast.
+ *
+ * This is an agreed exception to `cove-design-system`, which otherwise governs
+ * every pixel. It applies to `/admin` and nowhere else.
+ *
+ * ---------------------------------------------------------------------------
+ * Two rules that have not changed
+ * ---------------------------------------------------------------------------
+ *
+ *   - **Logical properties only** — `inline-start`, `margin-inline`,
+ *     `border-block-end`. No `left`/`right` anywhere, so the whole panel mirrors
+ *     natively on /ar with no direction-specific rules (`arabic-rtl`). The two
+ *     unavoidable exceptions — the select chevron's background position and the
+ *     directional chevron glyphs — are handled explicitly and commented.
+ *   - **Numbers pinned away from bidi reordering.** Dates, money and counts go
+ *     through `<bdi>` (see `Num` in pieces.tsx), because "2 – 6" reordered to
+ *     "6 – 2" is wrong information rather than wrong styling.
+ */
+
+/* --------------------------------------------------------------------------
+ * Tokens
+ *
+ * Scoped to the two panel roots rather than `:root`, so nothing here can leak
+ * into a marketing page even if the stylesheets are ever bundled together.
+ * Everything downstream inherits the font, size and colour set here.
+ * -------------------------------------------------------------------------- */
+
+.shell,
+.loginScreen {
+  /* Neutral ramp. Warm greys, not blue-greys, so the brand gold sits in them
+     without looking pasted on. Contrast against --a-surface (#fff) noted where
+     the value carries text. */
+  --a-bg: #fafaf9; /* the page behind the cards */
+  --a-surface: #ffffff; /* cards, sidebar, table body */
+  --a-muted: #f5f5f4; /* table headers, hover fills, secondary buttons */
+  --a-muted-strong: #eceae8; /* hover on a muted fill */
+  --a-fg: #1c1917; /* 16.9:1 — body text */
+  --a-fg-muted: #6b625b; /* 6.1:1 — labels, captions, secondary text */
+  --a-fg-subtle: #a8a29e; /* 2.6:1 — decorative icons only, never text */
+  --a-border: #e7e5e4;
+  --a-border-strong: #d6d3d1; /* field borders, which need to be findable */
+
+  /* Accent — the brand gold, unchanged from tokens.css. Used for the active nav
+     item, primary buttons, focus rings and the monogram. Nowhere else. */
+  --a-accent: #c49a52;
+  --a-accent-hover: #b78a3f;
+  --a-accent-fg: #1c1410; /* brand ink on gold — 5.7:1 */
+  --a-accent-soft: rgba(196, 154, 82, 0.12);
+  --a-ring: rgba(196, 154, 82, 0.4);
+
+  /* Semantic ramp. Four states, each dark enough to clear WCAG AA as text on
+     its own tinted background — the reason these are not the lighter, prettier
+     shades a palette generator would hand you.
+
+     Measured on the tint over white:
+       success #166534 on #e8f0ea  6.0:1
+       warning #854d0e on #f3ede2  5.9:1
+       danger  #9a4420 on #f8eae5  5.6:1
+
+     --a-danger stays the brand orange for fills and borders; --a-danger-fg is
+     the same hue darkened only enough to carry small text. */
+  --a-success: #166534;
+  --a-success-soft: rgba(22, 101, 52, 0.1);
+  --a-success-border: rgba(22, 101, 52, 0.25);
+  --a-warning: #854d0e;
+  --a-warning-soft: rgba(133, 77, 14, 0.1);
+  --a-warning-border: rgba(133, 77, 14, 0.25);
+  --a-danger: #b85228; /* brand --orange */
+  --a-danger-fg: #9a4420;
+  --a-danger-soft: rgba(184, 82, 40, 0.09);
+  --a-danger-border: rgba(184, 82, 40, 0.28);
+
+  /* Shape. The brand's 2px radius reads as "engraved" at hero scale and as
+     "unfinished" on a 32px button, so the panel uses a dashboard radius. */
+  --a-radius-sm: 0.375rem;
+  --a-radius: 0.5rem;
+  --a-radius-lg: 0.75rem;
+
+  /* Depth. Hairline borders do the work; the shadows are barely-there lifts,
+     not the drop shadows the design system rules out on guest surfaces. */
+  --a-shadow-sm: 0 1px 2px 0 rgb(28 25 23 / 6%);
+  --a-shadow: 0 1px 3px 0 rgb(28 25 23 / 8%), 0 1px 2px -1px rgb(28 25 23 / 6%);
+  --a-shadow-lg: 0 16px 40px -12px rgb(28 25 23 / 28%);
+
+  /* Type. A system UI stack rather than a webfont: nothing extra to download,
+     and it is what dashboard UI is drawn for. Jost is a display face — lovely
+     in a hero line, tiring in a 25-row table. Arabic keeps Almarai, because the
+     system Arabic fallback is genuinely poor. */
+  --a-font:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --a-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --a-text: 0.875rem; /* 14px — body, table cells, buttons */
+  --a-text-sm: 0.8125rem; /* 13px — labels, help text */
+  --a-text-xs: 0.75rem; /* 12px — badges, table headers, captions */
+
+  --a-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --a-sidebar-width: 15.5rem;
+
+  font-family: var(--a-font);
+  font-size: var(--a-text);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--a-fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Arabic sets its own face and needs more leading to sit at the same weight. */
+.shell:lang(ar),
+.loginScreen:lang(ar) {
+  --a-font: var(--font-almarai), 'Almarai', sans-serif;
+  line-height: 1.75;
+}
+
+/**
+ * Undo the global heading rule inside the panel.
+ *
+ * globals.css sets every h1–h4 in Cormorant at weight 300. That is correct
+ * everywhere else and wrong here, and overriding it once is cleaner than
+ * remembering to restate the font on every heading class.
+ */
+.shell :is(h1, h2, h3, h4),
+.loginScreen :is(h1, h2, h3, h4) {
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Decorative icons take their colour from the text they sit beside. */
+.icon {
+  flex: none;
+  color: currentColor;
+}
+
+/**
+ * A chevron that must mirror in Arabic.
+ *
+ * "Previous" points towards the start of the reading direction, which is left
+ * in English and right in Arabic. Mirroring a single glyph is not the same as
+ * faking an RTL layout with a transform — that is what `arabic-rtl` forbids,
+ * and the layout itself here is entirely logical properties.
+ */
+:global(html[dir='rtl']) .iconDirectional {
+  transform: scaleX(-1);
+}
+
+/* --------------------------------------------------------------------------
+ * Shell
+ * -------------------------------------------------------------------------- */
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  /* `minmax(0, 1fr)` rather than `1fr` so a wide table scrolls inside its own
+     container instead of stretching the grid and scrolling the page sideways. */
+  grid-template-columns: var(--a-sidebar-width) minmax(0, 1fr);
+  background: var(--a-bg);
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--a-surface);
+  /* Whichever edge the reading direction starts at. */
+  border-inline-end: 1px solid var(--a-border);
+}
+
+.sidebarHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4);
+  border-block-end: 1px solid var(--a-border);
+}
+
+/**
+ * The gold monogram tile.
+ *
+ * The one piece of overt brand in the chrome. `aria-hidden` in the markup — it
+ * is a logo, and the hotel's name is spelt out immediately beside it.
+ */
+.monogram {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--a-radius-sm);
+  background: var(--a-accent);
+  color: var(--a-accent-fg);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.monogramLarge {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--a-radius);
+  font-size: 1.125rem;
+}
+
+.brand {
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.brandName {
+  font-size: var(--a-text);
+  font-weight: 600;
+  color: var(--a-fg);
+}
+
+.brandRole {
+  display: block;
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+}
+
+.nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* Sentence case, not the brand's tracked small caps — a group heading here is
+   a wayfinding aid, and should recede. */
+.navGroupLabel {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--a-text-xs);
+  font-weight: 500;
+  color: var(--a-fg-muted);
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.5rem var(--space-3);
+  border-radius: var(--a-radius-sm);
+  font-size: var(--a-text);
+  font-weight: 500;
+  color: var(--a-fg-muted);
+  text-decoration: none;
+  transition:
+    background var(--a-transition),
+    color var(--a-transition);
+}
+
+.navLink:hover {
+  background: var(--a-muted);
+  color: var(--a-fg);
+}
+
+.navLink .icon {
+  color: var(--a-fg-subtle);
+  transition: color var(--a-transition);
+}
+
+.navLink:hover .icon {
+  color: var(--a-fg-muted);
+}
+
+.navLinkActive,
+.navLinkActive:hover {
+  background: var(--a-accent-soft);
+  color: var(--a-fg);
+  font-weight: 600;
+}
+
+.navLinkActive .icon,
+.navLinkActive:hover .icon {
+  color: var(--a-accent);
+}
+
+.sidebarFoot {
+  padding: var(--space-3);
+  border-block-start: 1px solid var(--a-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  min-width: 0;
+}
+
+.avatar {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--a-muted);
+  border: 1px solid var(--a-border);
+  font-size: var(--a-text-xs);
+  font-weight: 600;
+  color: var(--a-fg-muted);
+  line-height: 1;
+}
+
+.whoText {
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.whoName {
+  /* Block so the ellipsis has a box to truncate inside — it is a <bdi>, which
+     is inline by default. */
+  display: block;
+  font-size: var(--a-text-sm);
+  font-weight: 500;
+  color: var(--a-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whoRole {
+  display: block;
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+}
+
+/* --- The narrow layout ---------------------------------------------------- */
+
+/**
+ * Doubled class, not for emphasis but for order.
+ *
+ * `.button` sets `display: inline-flex` and is defined further down this file.
+ * A plain `.menuButton { display: none }` is the same specificity and loses on
+ * source order, so the hamburger would show at every width.
+ */
+.button.menuButton {
+  display: none;
+}
+
+.scrim {
+  display: none;
+}
+
+@media (max-width: 60rem) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /**
+   * Off canvas, slid in by `inset-inline-start` rather than a transform.
+   *
+   * A `translateX(-100%)` would push the sidebar off the *left* in both
+   * languages, which is wrong in Arabic. Animating the logical inset mirrors
+   * for free.
+   *
+   * `visibility` matters as much as position: a sidebar parked off screen with
+   * `visibility: visible` still holds six tab stops, so a keyboard user tabs
+   * into a menu they cannot see.
+   */
+  .sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: calc(-1 * var(--a-sidebar-width) - 1px);
+    width: var(--a-sidebar-width);
+    z-index: 50;
+    visibility: hidden;
+    box-shadow: var(--a-shadow-lg);
+    transition:
+      inset-inline-start var(--a-transition),
+      visibility var(--a-transition);
+  }
+
+  .sidebarOpen {
+    inset-inline-start: 0;
+    visibility: visible;
+  }
+
+  .button.menuButton {
+    display: inline-flex;
+  }
+
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    border: none;
+    padding: 0;
+    background: rgb(28 25 23 / 45%);
+    cursor: pointer;
+  }
+}
+
+/* --- Header and content --------------------------------------------------- */
+
+.main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * The page header.
+ *
+ * Sticky, so the screen you are on and its actions stay reachable while a long
+ * reservations list scrolls. Translucent with a blur, with an opaque fallback
+ * first for anything that does not support `color-mix`.
+ */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 3.75rem;
+  padding: var(--space-3) var(--space-6);
+  background: var(--a-surface);
+  background: color-mix(in srgb, var(--a-surface) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-block-end: 1px solid var(--a-border);
+}
+
+.pageTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--a-fg);
+  white-space: nowrap;
+}
+
+.headerDivider {
+  flex: none;
+  width: 1px;
+  height: 1rem;
+  background: var(--a-border-strong);
+}
+
+.pageMeta {
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headerActions {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+@media (max-width: 40rem) {
+  .header {
+    padding-inline: var(--space-4);
+  }
+
+  .content {
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Cards
+ * -------------------------------------------------------------------------- */
+
+.card {
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius);
+  box-shadow: var(--a-shadow-sm);
+  /* Clips a table's first and last row corners to the card's radius. */
+  overflow: hidden;
+}
+
+/**
+ * A card's heading strip.
+ *
+ * The inline padding is `--space-4`, deliberately the same step the table cells
+ * use, so a card title sits in the same column as the first header cell of the
+ * table beneath it. The spacing scale in tokens.css jumps 4 → 6; anything in
+ * between would break that alignment.
+ */
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+
+/* A header directly above a table needs no bottom gap of its own — the table's
+   own header row provides the separation. */
+.cardHeaderTight {
+  padding-block-end: var(--space-4);
+  border-block-end: 1px solid var(--a-border);
+}
+
+.cardTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--a-fg);
+}
+
+.cardDescription {
+  margin-block-start: 0.25rem;
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.cardBody {
+  padding: var(--space-4);
+}
+
+/* The header already paid for the top padding. */
+.cardHeader + .cardBody {
+  padding-block-start: 0;
+}
+
+.cardHeaderTight + .cardBody {
+  padding-block-start: var(--space-4);
+}
+
+/* A second heading strip further down the same card — the amenities block under
+   a room type. Ruled off so it reads as its own section rather than a stray
+   heading floating in the body's whitespace. */
+.cardBody + .cardHeader {
+  border-block-start: 1px solid var(--a-border);
+  padding-block-start: var(--space-4);
+}
+
+/* The checkbox editor, revealed under the current amenity chips. */
+.amenityEditor {
+  margin-block-start: var(--space-6);
+}
+
+/* --- Layout helpers ------------------------------------------------------- */
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: var(--space-4);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-4);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* --- Statistics ----------------------------------------------------------- */
+
+.stat {
+  padding: var(--space-4);
+}
+
+.statLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--a-text-sm);
+  font-weight: 500;
+  color: var(--a-fg-muted);
+}
+
+.statLabel .icon {
+  color: var(--a-fg-subtle);
+}
+
+/**
+ * A headline figure.
+ *
+ * `tabular-nums` keeps the four stat cards' figures aligned as they change, and
+ * stops an occupancy percentage jittering on every refresh. The old serif
+ * `lining-nums` note no longer applies — the panel does not set a serif face.
+ */
+.statValue {
+  margin-block-start: var(--space-2);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--a-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.statNote {
+  margin-block-start: 0.25rem;
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+}
+
+/* Holds the placeholder bar where .statValue's figure will land. */
+.statSkeletonValue {
+  margin-block-start: var(--space-4);
+}
+
+/* --- Definition grid (a room type's figures) ------------------------------ */
+
+.defGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: var(--space-4) var(--space-6);
+}
+
+.defLabel {
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+}
+
+/* `<dd>` carries a browser default indent that has nothing to do with this
+   layout. */
+.defValue {
+  margin: 0.125rem 0 0;
+  font-size: var(--a-text-sm);
+  font-weight: 500;
+  color: var(--a-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+ * Tables
+ * -------------------------------------------------------------------------- */
+
+/* Wide tables scroll inside this, never widening the page itself. */
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--a-text-sm);
+  color: var(--a-fg);
+}
+
+.table th {
+  /* `start`, not `left` — the header follows the reading direction. */
+  text-align: start;
+  padding: 0.625rem var(--space-4);
+  font-size: var(--a-text-xs);
+  font-weight: 500;
+  color: var(--a-fg-muted);
+  background: var(--a-muted);
+  border-block-end: 1px solid var(--a-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.75rem var(--space-4);
+  border-block-end: 1px solid var(--a-border);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-block-end: none;
+}
+
+.table tbody tr:hover td {
+  background: var(--a-muted);
+}
+
+/* An identifier, not prose: monospace makes a mistyped reference obvious and
+   keeps a column of them aligned. */
+.mono {
+  font-family: var(--a-mono);
+  font-size: 0.78125rem;
+  white-space: nowrap;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cellSub {
+  display: block;
+  margin-block-start: 0.125rem;
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+}
+
+.rowActions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: var(--a-fg-muted);
+}
+
+/* --- Pagination ----------------------------------------------------------- */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-block-start: 1px solid var(--a-border);
+}
+
+.paginationInfo {
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+ * Badges
+ * -------------------------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: var(--a-text-xs);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* The dot is reinforcement only. Every badge states its meaning in words, so it
+   survives for anyone who cannot separate the tints. */
+.badgeDot {
+  flex: none;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badgeNeutral {
+  color: var(--a-fg-muted);
+  background: var(--a-muted);
+  border-color: var(--a-border);
+}
+
+.badgeSuccess {
+  color: var(--a-success);
+  background: var(--a-success-soft);
+  border-color: var(--a-success-border);
+}
+
+.badgeWarning {
+  color: var(--a-warning);
+  background: var(--a-warning-soft);
+  border-color: var(--a-warning-border);
+}
+
+.badgeDanger {
+  color: var(--a-danger-fg);
+  background: var(--a-danger-soft);
+  border-color: var(--a-danger-border);
+}
+
+/**
+ * Solid gold.
+ *
+ * Reserved for "checked in" — the one status that means a guest is physically
+ * in the building, which is the state the front desk scans for. Gold cannot be
+ * used as *text* on a tint (it measures 2.3:1), so where it needs to carry
+ * meaning it has to be the fill.
+ */
+.badgeAccent {
+  color: var(--a-accent-fg);
+  background: var(--a-accent);
+  border-color: var(--a-accent);
+}
+
+/* An amenity name, or any other short read-only chip. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--a-radius-sm);
+  border: 1px solid var(--a-border);
+  background: var(--a-muted);
+  font-size: var(--a-text-xs);
+  color: var(--a-fg);
+}
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  /* Removing the marker leaves the indent behind; this takes it back. */
+  padding-inline-start: 0;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * Buttons
+ * -------------------------------------------------------------------------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  padding-inline: 0.875rem;
+  border-radius: var(--a-radius-sm);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: var(--a-text-sm);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--a-transition),
+    border-color var(--a-transition),
+    color var(--a-transition);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--a-accent);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonPrimary {
+  background: var(--a-accent);
+  border-color: var(--a-accent);
+  color: var(--a-accent-fg);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: var(--a-accent-hover);
+  border-color: var(--a-accent-hover);
+}
+
+.buttonSecondary {
+  background: var(--a-muted);
+  border-color: var(--a-border);
+  color: var(--a-fg);
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background: var(--a-muted-strong);
+}
+
+.buttonOutline {
+  background: var(--a-surface);
+  border-color: var(--a-border-strong);
+  color: var(--a-fg);
+}
+
+.buttonOutline:hover:not(:disabled) {
+  background: var(--a-muted);
+}
+
+.buttonGhost {
+  background: transparent;
+  color: var(--a-fg-muted);
+}
+
+.buttonGhost:hover:not(:disabled) {
+  background: var(--a-muted);
+  color: var(--a-fg);
+}
+
+/**
+ * Destructive.
+ *
+ * Outlined rather than a solid red slab. Cancelling a booking and withdrawing
+ * an amenity both live in table rows next to routine actions, and a row of
+ * solid red buttons trains people to ignore the colour — which is the opposite
+ * of what it is for.
+ */
+.buttonDanger {
+  background: var(--a-surface);
+  border-color: var(--a-danger-border);
+  color: var(--a-danger-fg);
+}
+
+.buttonDanger:hover:not(:disabled) {
+  background: var(--a-danger-soft);
+  border-color: var(--a-danger);
+}
+
+.buttonSmall {
+  height: 2rem;
+  padding-inline: 0.625rem;
+  font-size: var(--a-text-xs);
+  gap: 0.375rem;
+}
+
+.buttonIcon {
+  width: 2.25rem;
+  padding-inline: 0;
+}
+
+.buttonFull {
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+ * Forms
+ * -------------------------------------------------------------------------- */
+
+.field {
+  display: grid;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+/* Sentence case at a readable size. The brand's 0.62rem tracked small caps are
+   a signature on a booking form and an obstacle on a screen with nine of them. */
+.label {
+  font-size: var(--a-text-sm);
+  font-weight: 500;
+  color: var(--a-fg);
+}
+
+.hint {
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+  line-height: 1.5;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  height: 2.25rem;
+  padding-inline: 0.75rem;
+  font-family: inherit;
+  font-size: var(--a-text-sm);
+  color: var(--a-fg);
+  background: var(--a-surface);
+  border: 1px solid var(--a-border-strong);
+  border-radius: var(--a-radius-sm);
+  transition:
+    border-color var(--a-transition),
+    box-shadow var(--a-transition);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--a-fg-subtle);
+}
+
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible {
+  border-color: var(--a-accent);
+  box-shadow: 0 0 0 3px var(--a-ring);
+  /* The ring replaces the global focus outline. Kept as a transparent outline
+     rather than `none` so it still appears in forced-colours mode. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  background: var(--a-muted);
+  color: var(--a-fg-muted);
+  cursor: not-allowed;
+}
+
+.textarea {
+  height: auto;
+  min-height: 6.5rem;
+  padding-block: 0.5rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+/**
+ * The select chevron.
+ *
+ * The one place a physical side is unavoidable: `background-position` has no
+ * logical equivalent, so the RTL case is stated explicitly against the document
+ * direction rather than left to a logical property.
+ */
+.select {
+  appearance: none;
+  padding-inline-end: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b625b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  background-position: right 0.625rem center;
+}
+
+:global(html[dir='rtl']) .select {
+  background-position: left 0.625rem center;
+}
+
+.checkbox {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--a-accent);
+  cursor: pointer;
+}
+
+.checkOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: var(--space-2);
+}
+
+.checkOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--a-text-sm);
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius-sm);
+  cursor: pointer;
+  transition:
+    background var(--a-transition),
+    border-color var(--a-transition);
+}
+
+.checkOption:hover {
+  background: var(--a-muted);
+}
+
+/* The whole row reads as selected, not just the box. */
+.checkOption:has(input:checked) {
+  background: var(--a-accent-soft);
+  border-color: var(--a-accent);
+}
+
+/* The checkbox is the focus target; show it on the row it controls. */
+.checkOption:focus-within {
+  outline: 2px solid var(--a-accent);
+  outline-offset: 2px;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-block-end: var(--space-2);
+  font-size: var(--a-text-sm);
+  font-weight: 500;
+  color: var(--a-fg);
+}
+
+/* --- Toolbars ------------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.toolbarField {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-block-start: var(--space-2);
+}
+
+/* --------------------------------------------------------------------------
+ * Messages
+ * -------------------------------------------------------------------------- */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem var(--space-4);
+  border: 1px solid;
+  border-radius: var(--a-radius-sm);
+  font-size: var(--a-text-sm);
+  line-height: 1.6;
+}
+
+.alert .icon {
+  margin-block-start: 0.15rem;
+}
+
+.alertInfo {
+  color: var(--a-fg);
+  background: var(--a-muted);
+  border-color: var(--a-border);
+}
+
+.alertInfo .icon {
+  color: var(--a-fg-muted);
+}
+
+.alertSuccess {
+  color: var(--a-success);
+  background: var(--a-success-soft);
+  border-color: var(--a-success-border);
+}
+
+.alertError {
+  color: var(--a-danger-fg);
+  background: var(--a-danger-soft);
+  border-color: var(--a-danger-border);
+}
+
+/* --- Loading and empty ---------------------------------------------------- */
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: var(--space-12) var(--space-4);
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+}
+
+.spinner {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid var(--a-border-strong);
+  border-top-color: var(--a-accent);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.skeleton {
+  background: var(--a-muted);
+  border-radius: var(--a-radius-sm);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* The global reduced-motion rule collapses durations; a spinner frozen at one
+   angle is a broken-looking artefact, so it is stopped outright instead. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+    border-top-color: var(--a-accent);
+  }
+
+  .skeleton {
+    animation: none;
+  }
+}
+
+/**
+ * "Nothing here" inside a card that already has a heading.
+ *
+ * Quieter than `.empty`: the card's own border and title have already framed
+ * the section, so a second dashed box inside it would be noise.
+ */
+.cardEmpty {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  background: var(--a-surface);
+  border: 1px dashed var(--a-border-strong);
+  border-radius: var(--a-radius);
+}
+
+.empty .icon {
+  color: var(--a-fg-subtle);
+}
+
+.emptyText {
+  max-width: 34rem;
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+ * Confirmation dialog
+ *
+ * A real `<dialog>` rather than `window.confirm`. The native element brings the
+ * focus trap, the Escape handling and the top-layer stacking for free — and the
+ * browser's own confirm box cannot say "this releases the rooms back to sale",
+ * cannot be translated, and cannot mirror in Arabic.
+ * -------------------------------------------------------------------------- */
+
+.dialog {
+  width: calc(100% - 2rem);
+  max-width: 26rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  /* The dialog is in the top layer, so it inherits the panel's tokens through
+     the DOM tree but not the page's centring. */
+  margin: auto;
+}
+
+.dialog::backdrop {
+  background: rgb(28 25 23 / 45%);
+  backdrop-filter: blur(2px);
+}
+
+.dialogCard {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  background: var(--a-surface);
+  border-radius: var(--a-radius-lg);
+  box-shadow: var(--a-shadow-lg);
+  text-align: start;
+}
+
+.dialogTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--a-fg);
+}
+
+.dialogText {
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+  line-height: 1.6;
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+}
+
+/* --------------------------------------------------------------------------
+ * Availability calendar
+ * -------------------------------------------------------------------------- */
+
+.calendarHead,
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.calendarHead {
+  margin-block-end: var(--space-2);
+}
+
+.calendarWeekday {
+  padding-block: var(--space-1);
+  text-align: center;
+  font-size: var(--a-text-xs);
+  font-weight: 500;
+  color: var(--a-fg-muted);
+}
+
+.calendarDay {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-height: 5.25rem;
+  padding: var(--space-3);
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius-sm);
+}
+
+/**
+ * Closed, and fully booked, are not shades of the same thing.
+ *
+ * Closed is a decision someone made — the danger tint, matching every other
+ * deliberate stop in the panel. Fully booked is simply the count reaching zero,
+ * so it goes grey.
+ *
+ * They were both tints at first, amber against orange, and at 10% over white
+ * the two were near enough indistinguishable on a screen full of cells. Grey
+ * against pink cannot be confused, and neither carries the meaning alone — the
+ * cell says "Closed" or "of 48" in words either way.
+ */
+.calendarDayClosed {
+  background: var(--a-danger-soft);
+  border-color: var(--a-danger-border);
+}
+
+.calendarDayFull {
+  background: var(--a-muted);
+  border-color: var(--a-border-strong);
+}
+
+.calendarDate {
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.calendarCount {
+  margin-block-start: auto;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--a-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.calendarNote {
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+}
+
+.calendarLegend {
+  margin-block-start: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  font-size: var(--a-text-xs);
+  color: var(--a-fg-muted);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.legendSwatch {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--a-border-strong);
+  background: var(--a-surface);
+}
+
+.legendSwatchFull {
+  background: var(--a-muted);
+  border-color: var(--a-border-strong);
+}
+
+.legendSwatchClosed {
+  background: var(--a-danger-soft);
+  border-color: var(--a-danger-border);
+}
+
+@media (max-width: 48rem) {
+  .calendarHead,
+  .calendar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* The weekday strip only makes sense above seven columns. */
+  .calendarHead {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Settings
+ * -------------------------------------------------------------------------- */
+
+.settingRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 10rem) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) var(--space-4);
+  border-block-end: 1px solid var(--a-border);
+}
+
+.settingRow:last-child {
+  border-block-end: none;
+}
+
+/* A configuration key is an identifier the operator may have to quote in a
+   support conversation, so it is set in the mono face like any other code. */
+.settingKey {
+  font-family: var(--a-mono);
+  font-size: var(--a-text-sm);
+  font-weight: 500;
+  color: var(--a-fg);
+}
+
+.settingDescription {
+  margin-block-start: 0.25rem;
+  /* Measure, not full width — these run to two or three lines and a settings
+     column stretched across a 1440px screen is unreadable. */
+  max-width: 64ch;
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 48rem) {
+  .settingRow {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Login
+ * -------------------------------------------------------------------------- */
+
+.loginScreen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: var(--a-bg);
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 23rem;
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: var(--a-radius-lg);
+  box-shadow: var(--a-shadow);
+}
+
+.loginBrand {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  margin-block-end: var(--space-2);
+}
+
+.loginTitle {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--a-fg);
+}
+
+.loginSub {
+  margin-block-start: 0.125rem;
+  font-size: var(--a-text-sm);
+  color: var(--a-fg-muted);
+}
+
+/* --------------------------------------------------------------------------
+ * Bidi
+ * -------------------------------------------------------------------------- */
+
+/**
+ * Isolate a value from the surrounding text direction.
+ *
+ * `<bdi>` already isolates and already infers direction from its own content;
+ * this only stops a date or a price from wrapping mid-value. Deliberately no
+ * `direction: ltr` — that would override the element's `auto` and reorder an
+ * Arabic-formatted date, which is the bug this is meant to prevent.
+ */
+.isolate {
+  white-space: nowrap;
+}

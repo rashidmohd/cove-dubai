@@ -37,6 +37,29 @@ export interface LocalizedText {
   ar: string;
 }
 
+/**
+ * Something a room comes with — air conditioning, a safe, a balcony.
+ *
+ * `otaCode` is the OpenTravel **RMA (Room Amenity Type)** code, the vocabulary
+ * OTAs, channel managers and PMS platforms exchange. Carrying it through the
+ * seam means a future integration maps these by lookup rather than by someone
+ * re-typing them. Null where the standard has no code for it.
+ */
+export interface Amenity {
+  code: string;
+  otaCode: number | null;
+  name: LocalizedText;
+  category: AmenityCategory;
+  iconKey: string | null;
+}
+
+export type AmenityCategory =
+  | 'bathroom'
+  | 'comfort'
+  | 'technology'
+  | 'services'
+  | 'accessibility';
+
 export interface RoomType {
   /** Public identifier used in URLs and the API (`cove-suite`). */
   code: string;
@@ -47,6 +70,8 @@ export interface RoomType {
   /** Lowest nightly rate currently published, for "from AED x" displays. */
   baseRate: number;
   imageKey: string;
+  /** What the room comes with, ordered for display. */
+  amenities: Amenity[];
 }
 
 /** A room type offered for a specific stay, with that stay priced. */
@@ -74,14 +99,25 @@ export interface PriceBreakdown {
   roomsCount: number;
   /** Per-night rates making up the room total, for a transparent breakdown. */
   nightlyRates: Array<{ date: IsoDate; rate: number }>;
-  /** Nightly rates summed across every night and room. */
+  /** Nightly rates summed across every night and room, before any discount. */
   roomTotal: number;
-  /** Dubai Tourism Dirham: a per-room, per-night government fee. */
+  /**
+   * Present only when a voucher was applied.
+   *
+   * `amount` comes off `roomTotal`, and VAT below is charged on what remains.
+   * The Tourism Dirham is untouched by it — see `pricing.ts` for why.
+   */
+  discount?: {
+    code: string;
+    name: LocalizedText;
+    amount: number;
+  };
+  /** Dubai Tourism Dirham: a per-room, per-night government fee. Never discounted. */
   tourismDirham: {
     perRoomPerNight: number;
     total: number;
   };
-  /** UAE VAT on the accommodation charge. */
+  /** UAE VAT, charged on the accommodation total *after* any discount. */
   vat: {
     ratePercent: number;
     total: number;
@@ -118,6 +154,8 @@ export interface ReservationDraft extends Stay {
   // `| undefined` is explicit because `exactOptionalPropertyTypes` is on and
   // validated request bodies arrive with the key present but undefined.
   specialRequests?: string | undefined;
+  /** An optional discount code, validated and claimed when the booking commits. */
+  voucherCode?: string | undefined;
 }
 
 export interface Reservation {
@@ -136,26 +174,30 @@ export interface Reservation {
   checkedOutAt?: string;
 }
 
+// `| undefined` is explicit throughout the optional fields below because
+// `exactOptionalPropertyTypes` is on: a validated request body arrives with
+// the key present and set to undefined, which is not the same as absent.
+
 export interface ReservationFilter {
-  status?: ReservationStatus;
-  roomTypeCode?: string;
+  status?: ReservationStatus | undefined;
+  roomTypeCode?: string | undefined;
   /** Reservations whose stay overlaps this window. */
-  from?: IsoDate;
-  to?: IsoDate;
+  from?: IsoDate | undefined;
+  to?: IsoDate | undefined;
   /** Free-text search over guest name, email, and booking reference. */
-  search?: string;
-  limit?: number;
-  offset?: number;
+  search?: string | undefined;
+  limit?: number | undefined;
+  offset?: number | undefined;
 }
 
 export interface ReservationChanges {
-  checkIn?: IsoDate;
-  checkOut?: IsoDate;
-  roomTypeCode?: string;
-  adults?: number;
-  children?: number;
-  roomsCount?: number;
-  specialRequests?: string;
+  checkIn?: IsoDate | undefined;
+  checkOut?: IsoDate | undefined;
+  roomTypeCode?: string | undefined;
+  adults?: number | undefined;
+  children?: number | undefined;
+  roomsCount?: number | undefined;
+  specialRequests?: string | undefined;
 }
 
 export interface OccupancyReport {
@@ -170,6 +212,93 @@ export interface OccupancyReport {
   /** Confirmed revenue for stays overlapping the window. */
   revenueTotal: number;
   currency: string;
+}
+
+// ---------------------------------------------------------------------------
+// Admin-facing shapes
+// ---------------------------------------------------------------------------
+
+/**
+ * A room type as the admin sees it.
+ *
+ * Carries the two fields the guest view has no business knowing: whether the
+ * type is on sale at all, and how many rooms of it the hotel physically owns.
+ */
+export interface AdminRoomType extends RoomType {
+  isActive: boolean;
+  totalRooms: number;
+}
+
+/** An amenity as the admin sees it, including ones withdrawn from display. */
+export interface AdminAmenity extends Amenity {
+  isActive: boolean;
+  sortOrder: number;
+  /** How many room types currently list it — a delete guard for the UI. */
+  roomTypeCount: number;
+}
+
+export interface AmenityDraft {
+  code: string;
+  otaCode?: number | null | undefined;
+  name: LocalizedText;
+  category: AmenityCategory;
+  iconKey?: string | null | undefined;
+  sortOrder?: number | undefined;
+}
+
+export interface AmenityChanges {
+  otaCode?: number | null | undefined;
+  name?: LocalizedText | undefined;
+  category?: AmenityCategory | undefined;
+  iconKey?: string | null | undefined;
+  sortOrder?: number | undefined;
+  isActive?: boolean | undefined;
+}
+
+export interface RoomTypeChanges {
+  name?: LocalizedText | undefined;
+  category?: LocalizedText | undefined;
+  description?: LocalizedText | undefined;
+  maxOccupancy?: number | undefined;
+  baseRate?: number | undefined;
+  imageKey?: string | undefined;
+  isActive?: boolean | undefined;
+}
+
+/** One night of sellable inventory for one room type. */
+export interface InventoryDay {
+  date: IsoDate;
+  /** Rooms of this type on sale that night. */
+  totalRooms: number;
+  /** Rooms already committed to reservations. Never editable directly. */
+  bookedRooms: number;
+  /** Stop-sell: the type is withheld that night regardless of the count. */
+  isClosed: boolean;
+}
+
+export interface InventoryCalendar {
+  roomTypeCode: string;
+  from: IsoDate;
+  /** Inclusive — a calendar is read as a span of days, not a stay. */
+  to: IsoDate;
+  days: InventoryDay[];
+}
+
+export interface InventoryChanges {
+  totalRooms?: number | undefined;
+  isClosed?: boolean | undefined;
+}
+
+/**
+ * An operational value the hotel can change without a deploy — the Tourism
+ * Dirham amount above all, which depends on a DET classification the client
+ * has not yet confirmed.
+ */
+export interface OperationalSetting {
+  key: string;
+  value: string;
+  description: string;
+  updatedAt: string;
 }
 
 /**
@@ -188,7 +317,22 @@ export type BookingErrorCode =
   | 'MINIMUM_STAY_NOT_MET'
   | 'ALREADY_CANCELLED'
   | 'CANCELLATION_NOT_PERMITTED'
-  | 'INVALID_CANCELLATION_TOKEN';
+  | 'INVALID_CANCELLATION_TOKEN'
+  /** An admin tried to cut inventory below the rooms already sold. */
+  | 'INVENTORY_BELOW_BOOKED'
+  | 'SETTING_NOT_FOUND'
+  | 'AMENITY_NOT_FOUND'
+  /** An amenity code is already taken, or an OTA code is claimed twice. */
+  | 'AMENITY_CODE_IN_USE'
+  | 'VOUCHER_NOT_FOUND'
+  | 'VOUCHER_EXPIRED'
+  /** Fully redeemed — the guest lost a race, or the campaign is over. */
+  | 'VOUCHER_EXHAUSTED'
+  /** Real and live, but not for this stay: too short, wrong room, too cheap. */
+  | 'VOUCHER_NOT_APPLICABLE'
+  | 'VOUCHER_CODE_IN_USE'
+  /** A reservation cannot move to the requested status from its current one. */
+  | 'INVALID_STATUS_TRANSITION';
 
 export class BookingError extends Error {
   constructor(

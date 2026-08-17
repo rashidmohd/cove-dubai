@@ -10,31 +10,51 @@
  */
 import { Prisma } from '@prisma/client';
 import type {
+  Amenity as PrismaAmenity,
+  AmenityCategory as PrismaAmenityCategory,
   Guest as PrismaGuest,
   PrismaClient,
   RatePlan as PrismaRatePlan,
   Reservation as PrismaReservation,
   ReservationStatus as PrismaReservationStatus,
   RoomType as PrismaRoomType,
+  Setting as PrismaSetting,
 } from '@prisma/client';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 
-import { countNights, isValidIsoDate, nightsBetween, toIsoDate, toUtcDate } from './dates.js';
+import {
+  addDays,
+  countNights,
+  isValidIsoDate,
+  nightsBetween,
+  toIsoDate,
+  toUtcDate,
+} from './dates.js';
 import {
   calculatePrice,
   resolveMinimumStay,
   resolveNightlyRates,
+  type DiscountInput,
   type PricingSettings,
 } from './pricing.js';
 import type { BookingProvider } from './provider.js';
 import { generateBookingReference } from './reference.js';
 import {
   BookingError,
+  type AdminAmenity,
+  type AdminRoomType,
+  type Amenity,
+  type AmenityCategory,
+  type AmenityChanges,
+  type AmenityDraft,
   type AvailabilityQuery,
   type AvailableRoomType,
+  type InventoryCalendar,
+  type InventoryChanges,
   type IsoDate,
   type Locale,
   type OccupancyReport,
+  type OperationalSetting,
   type PriceBreakdown,
   type Reservation,
   type ReservationChanges,
@@ -42,6 +62,7 @@ import {
   type ReservationFilter,
   type ReservationStatus,
   type RoomType,
+  type RoomTypeChanges,
   type Stay,
 } from './types.js';
 
@@ -58,7 +79,32 @@ const INVENTORY_HOLDING_STATUSES: PrismaReservationStatus[] = [
 
 type Tx = Prisma.TransactionClient;
 
+/**
+ * Load a room type's amenities, ordered for display.
+ *
+ * Used wherever a room type is presented as something to *choose* — the rooms
+ * page, availability, the admin list. Deliberately **not** applied when a room
+ * type comes back attached to a reservation: the guest has already chosen, and
+ * joining the amenity tables onto every reservation read would be work nobody
+ * asked for. `toDomainRoomType` maps the relation to `[]` when it is absent.
+ */
+const WITH_AMENITIES = {
+  amenities: {
+    where: { amenity: { isActive: true } },
+    include: { amenity: true },
+    orderBy: [
+      { amenity: { category: 'asc' } },
+      { amenity: { sortOrder: 'asc' } },
+    ],
+  },
+} satisfies Prisma.RoomTypeInclude;
+
 type RoomTypeWithPlans = PrismaRoomType & { ratePlans: PrismaRatePlan[] };
+
+/** A room type whose amenity relation may or may not have been loaded. */
+type RoomTypeMaybeAmenities = PrismaRoomType & {
+  amenities?: Array<{ amenity: PrismaAmenity }>;
+};
 
 type ReservationWithRelations = PrismaReservation & {
   guest: PrismaGuest;
@@ -76,12 +122,16 @@ export class CustomDbProvider implements BookingProvider {
     const roomTypes = await this.prisma.roomType.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
+      include: WITH_AMENITIES,
     });
     return roomTypes.map(toDomainRoomType);
   }
 
   async getRoomType(code: string): Promise<RoomType | null> {
-    const roomType = await this.prisma.roomType.findUnique({ where: { code } });
+    const roomType = await this.prisma.roomType.findUnique({
+      where: { code },
+      include: WITH_AMENITIES,
+    });
     return roomType ? toDomainRoomType(roomType) : null;
   }
 
@@ -98,7 +148,7 @@ export class CustomDbProvider implements BookingProvider {
       this.prisma.roomType.findMany({
         where: { isActive: true, maxOccupancy: { gte: guests } },
         orderBy: { sortOrder: 'asc' },
-        include: { ratePlans: { where: { isActive: true } } },
+        include: { ratePlans: { where: { isActive: true } }, ...WITH_AMENITIES },
       }),
       this.loadPricingSettings(),
     ]);
@@ -180,6 +230,15 @@ export class CustomDbProvider implements BookingProvider {
     return reservation ? toDomainReservation(reservation) : null;
   }
 
+  /** See the note on the interface: for the email layer only, never over HTTP. */
+  async getCancellationToken(reference: string): Promise<string | null> {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { bookingReference: reference },
+      select: { cancellationToken: true },
+    });
+    return reservation?.cancellationToken ?? null;
+  }
+
   async listReservations(
     filter: ReservationFilter,
   ): Promise<{ reservations: Reservation[]; total: number }> {
@@ -253,10 +312,17 @@ export class CustomDbProvider implements BookingProvider {
         return await this.prisma.$transaction(
           async (tx) => this.createReservationInTransaction(tx, draft),
           {
-            // Waiting for another booking's locks is normal under contention;
-            // allow for it before giving up.
-            timeout: 15_000,
-            maxWait: 10_000,
+            // Waiting for another booking's locks is normal under contention,
+            // and a discount code makes it markedly worse: every booking
+            // quoting the same code queues on that one row, so they serialise
+            // rather than overlap. Measured against the hosted database, five
+            // concurrent bookings on one code take well past 15s end to end.
+            //
+            // A booking that waits is better than a booking that fails, so the
+            // budget is generous. It is not unbounded — `maxWait` still gives
+            // up rather than letting a request hang indefinitely.
+            timeout: 30_000,
+            maxWait: 15_000,
           },
         );
       } catch (error) {
@@ -325,13 +391,46 @@ export class CustomDbProvider implements BookingProvider {
     });
 
     const settings = await this.loadPricingSettings(tx);
+
+    // Validated here but **claimed at the very end** of the transaction.
+    //
+    // Claiming takes a row lock on the voucher, and locks are held until
+    // commit. Every booking quoting the same code wants that one row, so
+    // claiming early serialises the whole remainder of each transaction behind
+    // it — with enough concurrency that exceeds the transaction timeout and
+    // bookings fail with a database error instead of a clear answer. Measured:
+    // five concurrent bookings on one code, two of them lost to P2028.
+    //
+    // So this read is optimistic and takes no lock, and the claim below is the
+    // authoritative gate. If the code is exhausted between the two, the claim
+    // updates no rows and the whole transaction — reservation included — rolls
+    // back.
+    const voucher = draft.voucherCode
+      ? await this.validateVoucher(tx, {
+          code: draft.voucherCode,
+          roomTypeId: roomType.id,
+          nights: nights.length,
+        })
+      : null;
+
     const price = this.priceStay(
       roomType,
       draft.checkIn,
       draft.checkOut,
       draft.roomsCount,
       settings,
+      voucher?.discount,
     );
+
+    // The minimum-spend rule is checked against the priced stay, which is only
+    // known after pricing — so it cannot be part of `claimVoucher` above.
+    if (voucher?.minimumSpend && price.roomTotal < voucher.minimumSpend) {
+      throw new BookingError(
+        'VOUCHER_NOT_APPLICABLE',
+        `This code applies to stays of ${voucher.minimumSpend} ${price.currency} or more.`,
+        { minimumSpend: voucher.minimumSpend, roomTotal: price.roomTotal },
+      );
+    }
 
     const guest = await this.upsertGuest(tx, draft);
 
@@ -358,6 +457,22 @@ export class CustomDbProvider implements BookingProvider {
       },
       include: { guest: true, roomType: true },
     });
+
+    // The claim, deliberately last. See the note where the voucher is
+    // validated: this is the authoritative gate, and holding its row lock for
+    // only the final moments of the transaction is what keeps concurrent
+    // bookings on one code from timing out.
+    if (voucher && price.discount) {
+      await this.claimVoucher(tx, voucher);
+
+      await tx.voucherRedemption.create({
+        data: {
+          voucherId: voucher.id,
+          reservationId: reservation.id,
+          discountAed: new Prisma.Decimal(price.discount.amount),
+        },
+      });
+    }
 
     return toDomainReservation(reservation);
   }
@@ -437,6 +552,138 @@ export class CustomDbProvider implements BookingProvider {
       },
       data: { bookedRooms: { increment: args.roomsCount } },
     });
+  }
+
+  /**
+   * Check that a voucher exists and applies to this stay.
+   *
+   * A plain read — it takes no lock and claims nothing, so several bookings can
+   * be validating the same code at once without queueing. Whether a use is
+   * actually available is settled by `claimVoucher` at the end of the
+   * transaction.
+   *
+   * Every rejection is a distinct message the guest can act on, rather than a
+   * generic "invalid code" that leaves them retyping something that will never
+   * work.
+   */
+  private async validateVoucher(
+    tx: Tx,
+    args: { code: string; roomTypeId: string; nights: number },
+  ): Promise<{
+    id: string;
+    maxRedemptions: number | null;
+    discount: DiscountInput;
+    minimumSpend: number | null;
+  }> {
+    // Matched case-insensitively: these are typed off printed cards and emails.
+    const code = args.code.trim().toUpperCase();
+
+    const voucher = await tx.voucher.findFirst({
+      where: { code: { equals: code, mode: 'insensitive' } },
+      include: { roomTypes: true },
+    });
+
+    if (!voucher || !voucher.isActive) {
+      throw new BookingError(
+        'VOUCHER_NOT_FOUND',
+        'That code is not recognised.',
+        { code },
+      );
+    }
+
+    // Compared as calendar days in UTC, like every other date in the engine —
+    // a code valid "until the 31st" is valid all of the 31st.
+    const today = toUtcDate(toIsoDate(new Date()));
+    if (voucher.validFrom && today < voucher.validFrom) {
+      throw new BookingError(
+        'VOUCHER_NOT_APPLICABLE',
+        'That code is not valid yet.',
+        { validFrom: toIsoDate(voucher.validFrom) },
+      );
+    }
+    if (voucher.validTo && today > voucher.validTo) {
+      throw new BookingError('VOUCHER_EXPIRED', 'That code has expired.', {
+        validTo: toIsoDate(voucher.validTo),
+      });
+    }
+
+    if (args.nights < voucher.minimumNights) {
+      throw new BookingError(
+        'VOUCHER_NOT_APPLICABLE',
+        `This code applies to stays of ${voucher.minimumNights} nights or more.`,
+        { minimumNights: voucher.minimumNights },
+      );
+    }
+
+    // No rows means no restriction.
+    if (
+      voucher.roomTypes.length > 0 &&
+      !voucher.roomTypes.some((link) => link.roomTypeId === args.roomTypeId)
+    ) {
+      throw new BookingError(
+        'VOUCHER_NOT_APPLICABLE',
+        'This code does not apply to the room you have chosen.',
+      );
+    }
+
+    // A code already spent when we looked is worth rejecting now, before the
+    // rest of the booking work. It is only advisory — `claimVoucher` is what
+    // actually decides — but it saves doing the work to then throw it away.
+    if (
+      voucher.maxRedemptions !== null &&
+      voucher.redemptionCount >= voucher.maxRedemptions
+    ) {
+      throw new BookingError(
+        'VOUCHER_EXHAUSTED',
+        'That code has already been fully redeemed.',
+      );
+    }
+
+    return {
+      id: voucher.id,
+      maxRedemptions: voucher.maxRedemptions,
+      minimumSpend: voucher.minimumSpend?.toNumber() ?? null,
+      discount: {
+        code: voucher.code,
+        name: { en: voucher.nameEn, ar: voucher.nameAr },
+        type: voucher.discountType === 'PERCENTAGE' ? 'percentage' : 'fixed',
+        value: voucher.discountValue,
+      },
+    };
+  }
+
+  /**
+   * Claim one use of a voucher. **Atomic, and the authoritative gate.**
+   *
+   * The cap lives in the WHERE clause, so an exhausted code updates zero rows
+   * rather than throwing — which lets the guest be told plainly that the code
+   * has gone. The CHECK constraint stays as the backstop if a code path ever
+   * reaches the counter without coming through here.
+   *
+   * Called as the last act of the booking transaction. Everything written
+   * before it, the reservation included, rolls back if this refuses.
+   */
+  private async claimVoucher(
+    tx: Tx,
+    voucher: { id: string; maxRedemptions: number | null },
+  ): Promise<void> {
+    const claimed = await tx.voucher.updateMany({
+      where: {
+        id: voucher.id,
+        OR: [
+          { maxRedemptions: null },
+          { redemptionCount: { lt: voucher.maxRedemptions ?? 0 } },
+        ],
+      },
+      data: { redemptionCount: { increment: 1 } },
+    });
+
+    if (claimed.count === 0) {
+      throw new BookingError(
+        'VOUCHER_EXHAUSTED',
+        'That code has already been fully redeemed.',
+      );
+    }
   }
 
   /** Give inventory back, e.g. on cancellation. */
@@ -753,6 +1000,7 @@ export class CustomDbProvider implements BookingProvider {
     checkOut: IsoDate,
     roomsCount: number,
     settings: PricingSettings,
+    discount?: DiscountInput | undefined,
   ): PriceBreakdown {
     return calculatePrice({
       nightlyRates: resolveNightlyRates({
@@ -763,6 +1011,7 @@ export class CustomDbProvider implements BookingProvider {
       }),
       roomsCount,
       settings,
+      ...(discount ? { discount } : {}),
     });
   }
 
@@ -801,6 +1050,474 @@ export class CustomDbProvider implements BookingProvider {
       tourismDirhamPerRoomPerNight: new Prisma.Decimal(tourismDirham),
       vatRatePercent: new Prisma.Decimal(vatRate),
     };
+  }
+
+  // -------------------------------------------------------------------------
+  // Admin writes
+  // -------------------------------------------------------------------------
+
+  async listRoomTypes(): Promise<AdminRoomType[]> {
+    const roomTypes = await this.prisma.roomType.findMany({
+      orderBy: { sortOrder: 'asc' },
+      include: WITH_AMENITIES,
+    });
+    return roomTypes.map(toAdminRoomType);
+  }
+
+  async updateRoomType(
+    code: string,
+    changes: RoomTypeChanges,
+  ): Promise<AdminRoomType> {
+    const existing = await this.prisma.roomType.findUnique({ where: { code } });
+    if (!existing) {
+      throw new BookingError(
+        'ROOM_TYPE_NOT_FOUND',
+        `No room type with code "${code}".`,
+      );
+    }
+
+    // Build the update explicitly rather than spreading the input: this is the
+    // boundary between a domain shape and a table, and an unmapped key here
+    // would be a silent way to write a column the caller should not reach.
+    const data: Prisma.RoomTypeUpdateInput = {};
+
+    if (changes.name) {
+      data.nameEn = changes.name.en;
+      data.nameAr = changes.name.ar;
+    }
+    if (changes.category) {
+      data.categoryEn = changes.category.en;
+      data.categoryAr = changes.category.ar;
+    }
+    if (changes.description) {
+      data.descriptionEn = changes.description.en;
+      data.descriptionAr = changes.description.ar;
+    }
+    if (changes.maxOccupancy !== undefined) {
+      data.maxOccupancy = changes.maxOccupancy;
+    }
+    if (changes.baseRate !== undefined) {
+      data.baseRateAed = new Prisma.Decimal(changes.baseRate);
+    }
+    if (changes.imageKey !== undefined) data.imageKey = changes.imageKey;
+    if (changes.isActive !== undefined) data.isActive = changes.isActive;
+
+    const updated = await this.prisma.roomType.update({
+      where: { code },
+      data,
+      include: WITH_AMENITIES,
+    });
+
+    // Deliberately does not reprice existing reservations: each one carries
+    // its own price snapshot, so a rate change never rewrites a total a guest
+    // has already been quoted.
+    return toAdminRoomType(updated);
+  }
+
+  // -------------------------------------------------------------------------
+  // Amenities
+  // -------------------------------------------------------------------------
+
+  async listAmenities(): Promise<AdminAmenity[]> {
+    const amenities = await this.prisma.amenity.findMany({
+      orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
+      include: { _count: { select: { roomTypes: true } } },
+    });
+
+    return amenities.map((amenity) => ({
+      ...toDomainAmenity(amenity),
+      isActive: amenity.isActive,
+      sortOrder: amenity.sortOrder,
+      roomTypeCount: amenity._count.roomTypes,
+    }));
+  }
+
+  async createAmenity(draft: AmenityDraft): Promise<AdminAmenity> {
+    const existing = await this.prisma.amenity.findUnique({
+      where: { code: draft.code },
+    });
+
+    if (existing) {
+      throw new BookingError(
+        'AMENITY_CODE_IN_USE',
+        `An amenity with the code "${draft.code}" already exists.`,
+      );
+    }
+
+    const amenity = await this.prisma.amenity.create({
+      data: {
+        code: draft.code,
+        otaCode: draft.otaCode ?? null,
+        nameEn: draft.name.en,
+        nameAr: draft.name.ar,
+        category: toPrismaAmenityCategory(draft.category),
+        iconKey: draft.iconKey ?? null,
+        sortOrder: draft.sortOrder ?? 0,
+      },
+    });
+
+    return {
+      ...toDomainAmenity(amenity),
+      isActive: amenity.isActive,
+      sortOrder: amenity.sortOrder,
+      roomTypeCount: 0,
+    };
+  }
+
+  async updateAmenity(
+    code: string,
+    changes: AmenityChanges,
+  ): Promise<AdminAmenity> {
+    await this.requireAmenity(code);
+
+    const data: Prisma.AmenityUpdateInput = {};
+
+    if (changes.name) {
+      data.nameEn = changes.name.en;
+      data.nameAr = changes.name.ar;
+    }
+    // `null` is meaningful here — it clears a wrongly-assigned OTA code — so
+    // this tests for `undefined` rather than falsiness.
+    if (changes.otaCode !== undefined) data.otaCode = changes.otaCode;
+    if (changes.category !== undefined) {
+      data.category = toPrismaAmenityCategory(changes.category);
+    }
+    if (changes.iconKey !== undefined) data.iconKey = changes.iconKey;
+    if (changes.sortOrder !== undefined) data.sortOrder = changes.sortOrder;
+    if (changes.isActive !== undefined) data.isActive = changes.isActive;
+
+    const amenity = await this.prisma.amenity.update({
+      where: { code },
+      data,
+      include: { _count: { select: { roomTypes: true } } },
+    });
+
+    return {
+      ...toDomainAmenity(amenity),
+      isActive: amenity.isActive,
+      sortOrder: amenity.sortOrder,
+      roomTypeCount: amenity._count.roomTypes,
+    };
+  }
+
+  async deleteAmenity(code: string): Promise<void> {
+    const amenity = await this.prisma.amenity.findUnique({
+      where: { code },
+      include: { _count: { select: { roomTypes: true } } },
+    });
+
+    if (!amenity) {
+      throw new BookingError(
+        'AMENITY_NOT_FOUND',
+        `No amenity with the code "${code}".`,
+      );
+    }
+
+    // The cascade would happily strip this from every room type listing it,
+    // rewriting published room descriptions as a side effect of a delete.
+    // Refuse, and point at the reversible alternative.
+    if (amenity._count.roomTypes > 0) {
+      throw new BookingError(
+        'AMENITY_CODE_IN_USE',
+        'This amenity is still listed on room types. Remove it from them first, or withdraw it instead of deleting it.',
+        { roomTypeCount: amenity._count.roomTypes },
+      );
+    }
+
+    await this.prisma.amenity.delete({ where: { code } });
+  }
+
+  async setRoomTypeAmenities(
+    roomTypeCode: string,
+    amenityCodes: string[],
+  ): Promise<AdminRoomType> {
+    const roomType = await this.requireRoomType(roomTypeCode);
+    const wanted = [...new Set(amenityCodes)];
+
+    const amenities = await this.prisma.amenity.findMany({
+      where: { code: { in: wanted } },
+    });
+
+    // Report an unknown code rather than quietly saving a shorter list than
+    // the admin selected.
+    if (amenities.length !== wanted.length) {
+      const found = new Set(amenities.map((amenity) => amenity.code));
+      throw new BookingError(
+        'AMENITY_NOT_FOUND',
+        'Some of those amenities do not exist.',
+        { unknown: wanted.filter((code) => !found.has(code)) },
+      );
+    }
+
+    // Replaced inside one transaction: a failure part-way through must not
+    // leave the room type holding some of its old amenities and some new ones.
+    await this.prisma.$transaction([
+      this.prisma.roomTypeAmenity.deleteMany({
+        where: { roomTypeId: roomType.id },
+      }),
+      this.prisma.roomTypeAmenity.createMany({
+        data: amenities.map((amenity) => ({
+          roomTypeId: roomType.id,
+          amenityId: amenity.id,
+        })),
+      }),
+    ]);
+
+    const updated = await this.prisma.roomType.findUniqueOrThrow({
+      where: { id: roomType.id },
+      include: WITH_AMENITIES,
+    });
+
+    return toAdminRoomType(updated);
+  }
+
+  private async requireAmenity(code: string): Promise<PrismaAmenity> {
+    const amenity = await this.prisma.amenity.findUnique({ where: { code } });
+    if (!amenity) {
+      throw new BookingError(
+        'AMENITY_NOT_FOUND',
+        `No amenity with the code "${code}".`,
+      );
+    }
+    return amenity;
+  }
+
+  async getInventoryCalendar(args: {
+    roomTypeCode: string;
+    from: IsoDate;
+    to: IsoDate;
+  }): Promise<InventoryCalendar> {
+    const roomType = await this.requireRoomType(args.roomTypeCode);
+    this.assertValidCalendarRange(args.from, args.to);
+
+    const rows = await this.prisma.roomTypeInventory.findMany({
+      where: {
+        roomTypeId: roomType.id,
+        // `to` is inclusive for a calendar, so reach one day past it.
+        date: { gte: toUtcDate(args.from), lte: toUtcDate(args.to) },
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    return {
+      roomTypeCode: roomType.code,
+      from: args.from,
+      to: args.to,
+      days: rows.map((row) => ({
+        date: toIsoDate(row.date),
+        totalRooms: row.totalRooms,
+        bookedRooms: row.bookedRooms,
+        isClosed: row.isClosed,
+      })),
+    };
+  }
+
+  /**
+   * Set inventory across a range of days.
+   *
+   * The whole range moves inside one transaction, with the affected rows locked
+   * first. Two things make that necessary rather than tidy: a booking landing
+   * mid-edit could otherwise slip between the check and the write, and a
+   * partially-applied range would leave the calendar in a state no one asked
+   * for.
+   *
+   * Rows are created where the calendar has not been opened that far out, so an
+   * admin can extend the booking horizon from this screen rather than needing a
+   * seed run.
+   */
+  async updateInventory(args: {
+    roomTypeCode: string;
+    from: IsoDate;
+    to: IsoDate;
+    changes: InventoryChanges;
+  }): Promise<InventoryCalendar> {
+    const roomType = await this.requireRoomType(args.roomTypeCode);
+    this.assertValidCalendarRange(args.from, args.to);
+
+    const days = nightsBetween(args.from, addDays(args.to, 1));
+
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const locked = await tx.$queryRaw<
+          Array<{ date: Date; bookedRooms: number }>
+        >`
+          SELECT date, "bookedRooms"
+          FROM room_type_inventory
+          WHERE "roomTypeId" = ${roomType.id}
+            AND date >= ${toUtcDate(args.from)}::date
+            AND date <= ${toUtcDate(args.to)}::date
+          ORDER BY date
+          FOR UPDATE
+        `;
+
+        if (args.changes.totalRooms !== undefined) {
+          const requested = args.changes.totalRooms;
+
+          // Refuse the whole range rather than clamping. Cutting inventory
+          // below what is already sold would oversell those nights, and
+          // silently applying a smaller number than asked for hides the
+          // conflict from whoever made the edit.
+          const conflicts = locked
+            .filter((row) => row.bookedRooms > requested)
+            .map((row) => ({
+              date: toIsoDate(row.date),
+              bookedRooms: row.bookedRooms,
+            }));
+
+          if (conflicts.length > 0) {
+            throw new BookingError(
+              'INVENTORY_BELOW_BOOKED',
+              'Some nights already have more rooms booked than that.',
+              { requestedTotalRooms: requested, conflicts },
+            );
+          }
+        }
+
+        const existing = new Set(locked.map((row) => toIsoDate(row.date)));
+
+        const update: Prisma.RoomTypeInventoryUpdateManyMutationInput = {};
+        if (args.changes.totalRooms !== undefined) {
+          update.totalRooms = args.changes.totalRooms;
+        }
+        if (args.changes.isClosed !== undefined) {
+          update.isClosed = args.changes.isClosed;
+        }
+
+        await tx.roomTypeInventory.updateMany({
+          where: {
+            roomTypeId: roomType.id,
+            date: { gte: toUtcDate(args.from), lte: toUtcDate(args.to) },
+          },
+          data: update,
+        });
+
+        const missing = days.filter((day) => !existing.has(day));
+        if (missing.length > 0) {
+          await tx.roomTypeInventory.createMany({
+            data: missing.map((day) => ({
+              roomTypeId: roomType.id,
+              date: toUtcDate(day),
+              // A new row defaults to the room type's own count, so opening
+              // the calendar further out does not require stating it again.
+              totalRooms: args.changes.totalRooms ?? roomType.totalRooms,
+              bookedRooms: 0,
+              isClosed: args.changes.isClosed ?? false,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      });
+    } catch (error) {
+      throw this.translateDatabaseError(error);
+    }
+
+    return this.getInventoryCalendar(args);
+  }
+
+  /**
+   * Move a booking through check-in and check-out.
+   *
+   * Inventory is untouched: a stay that is checked in or out still occupies
+   * its nights, and only cancellation releases them.
+   */
+  async setReservationStatus(
+    reference: string,
+    status: 'checked-in' | 'checked-out',
+  ): Promise<Reservation> {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { bookingReference: reference },
+    });
+
+    if (!reservation) {
+      throw new BookingError(
+        'RESERVATION_NOT_FOUND',
+        `No reservation with reference "${reference}".`,
+      );
+    }
+
+    const current = toDomainStatus(reservation.status);
+
+    // A guest can only check in from a live booking, and only check out having
+    // checked in. Anything else is a mis-click at the front desk.
+    const permitted: Record<typeof status, ReservationStatus[]> = {
+      'checked-in': ['confirmed', 'held'],
+      'checked-out': ['checked-in'],
+    };
+
+    if (!permitted[status].includes(current)) {
+      throw new BookingError(
+        'INVALID_STATUS_TRANSITION',
+        `A reservation that is ${current} cannot be marked ${status}.`,
+        { currentStatus: current, requestedStatus: status },
+      );
+    }
+
+    const updated = await this.prisma.reservation.update({
+      where: { bookingReference: reference },
+      data: {
+        status: toPrismaStatus(status),
+        ...(status === 'checked-in'
+          ? { checkedInAt: new Date() }
+          : { checkedOutAt: new Date() }),
+      },
+      include: { guest: true, roomType: true },
+    });
+
+    return toDomainReservation(updated);
+  }
+
+  // -------------------------------------------------------------------------
+  // Operational settings
+  // -------------------------------------------------------------------------
+
+  async listSettings(): Promise<OperationalSetting[]> {
+    const rows = await this.prisma.setting.findMany({ orderBy: { key: 'asc' } });
+    return rows.map(toDomainSetting);
+  }
+
+  async updateSetting(key: string, value: string): Promise<OperationalSetting> {
+    const existing = await this.prisma.setting.findUnique({ where: { key } });
+
+    // Update only — never create. Settings are seeded with the description
+    // that explains them, and letting a typo'd key create a new orphan row
+    // would mean the real setting silently keeps its old value.
+    if (!existing) {
+      throw new BookingError('SETTING_NOT_FOUND', `No setting named "${key}".`);
+    }
+
+    // The pricing settings are read fresh on every quote, so this takes effect
+    // on the next request with no deploy and no restart.
+    const updated = await this.prisma.setting.update({
+      where: { key },
+      data: { value },
+    });
+
+    return toDomainSetting(updated);
+  }
+
+  /** Look a room type up by code, or raise the domain error for a bad code. */
+  private async requireRoomType(code: string): Promise<PrismaRoomType> {
+    const roomType = await this.prisma.roomType.findUnique({ where: { code } });
+    if (!roomType) {
+      throw new BookingError(
+        'ROOM_TYPE_NOT_FOUND',
+        `No room type with code "${code}".`,
+      );
+    }
+    return roomType;
+  }
+
+  /** A calendar range, where both ends are inclusive and a single day is fine. */
+  private assertValidCalendarRange(from: IsoDate, to: IsoDate): void {
+    if (!isValidIsoDate(from) || !isValidIsoDate(to)) {
+      throw new BookingError('INVALID_STAY', 'Dates must be valid YYYY-MM-DD.');
+    }
+    if (from > to) {
+      throw new BookingError(
+        'INVALID_STAY',
+        'The end of the range must not be before its start.',
+      );
+    }
   }
 
   private assertValidStay(stay: Stay): void {
@@ -857,7 +1574,7 @@ export class CustomDbProvider implements BookingProvider {
 // provider sees a Prisma model, and no internal id crosses this line.
 // ---------------------------------------------------------------------------
 
-function toDomainRoomType(roomType: PrismaRoomType): RoomType {
+function toDomainRoomType(roomType: RoomTypeMaybeAmenities): RoomType {
   return {
     code: roomType.code,
     name: { en: roomType.nameEn, ar: roomType.nameAr },
@@ -866,6 +1583,53 @@ function toDomainRoomType(roomType: PrismaRoomType): RoomType {
     maxOccupancy: roomType.maxOccupancy,
     baseRate: roomType.baseRateAed.toNumber(),
     imageKey: roomType.imageKey,
+    // Empty rather than undefined when the relation was not loaded, so callers
+    // never have to distinguish "no amenities" from "not asked for". See
+    // WITH_AMENITIES for where it is loaded and why not everywhere.
+    amenities: (roomType.amenities ?? []).map((link) =>
+      toDomainAmenity(link.amenity),
+    ),
+  };
+}
+
+function toDomainAmenity(amenity: PrismaAmenity): Amenity {
+  return {
+    code: amenity.code,
+    otaCode: amenity.otaCode,
+    name: { en: amenity.nameEn, ar: amenity.nameAr },
+    category: toDomainAmenityCategory(amenity.category),
+    iconKey: amenity.iconKey,
+  };
+}
+
+/** `BATHROOM` -> `bathroom`. Storage enums are shouty; the domain is not. */
+function toDomainAmenityCategory(
+  category: PrismaAmenityCategory,
+): AmenityCategory {
+  return category.toLowerCase() as AmenityCategory;
+}
+
+function toPrismaAmenityCategory(
+  category: AmenityCategory,
+): PrismaAmenityCategory {
+  return category.toUpperCase() as PrismaAmenityCategory;
+}
+
+/** The admin view: the guest fields plus what is not on sale and how many. */
+function toAdminRoomType(roomType: RoomTypeMaybeAmenities): AdminRoomType {
+  return {
+    ...toDomainRoomType(roomType),
+    isActive: roomType.isActive,
+    totalRooms: roomType.totalRooms,
+  };
+}
+
+function toDomainSetting(setting: PrismaSetting): OperationalSetting {
+  return {
+    key: setting.key,
+    value: setting.value,
+    description: setting.description,
+    updatedAt: setting.updatedAt.toISOString(),
   };
 }
 
