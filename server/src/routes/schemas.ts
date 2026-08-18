@@ -17,6 +17,9 @@ const isoDate = z
 
 const localeSchema = z.enum(['en', 'ar']);
 
+/** Uppercased and trimmed so it matches the stored form regardless of typing. */
+const voucherCodeSchema = z.string().trim().toUpperCase().min(3).max(40);
+
 /** Trimmed, length-bounded free text. */
 const text = (max: number) => z.string().trim().min(1).max(max);
 
@@ -57,6 +60,25 @@ export const createReservationSchema = z.object({
     locale: localeSchema.default('en'),
   }),
   specialRequests: z.string().trim().max(2000).optional(),
+  // Optional. Validated and claimed inside the booking transaction, so a code
+  // that expires between quote and confirm fails the booking rather than
+  // silently charging the guest the undiscounted price.
+  voucherCode: voucherCodeSchema.optional(),
+});
+
+/**
+ * A discount code as a guest types it.
+ *
+ * Deliberately permissive about case and surrounding whitespace — these are
+ * copied from emails and printed cards — and normalised to the stored form
+ * here so no comparison downstream has to think about it.
+ */
+export const voucherPreviewSchema = z.object({
+  code: voucherCodeSchema,
+  roomTypeCode: text(60),
+  checkIn: isoDate,
+  checkOut: isoDate,
+  roomsCount: z.coerce.number().int().min(1).max(10).default(1),
 });
 
 export const bookingReferenceSchema = z

@@ -35,6 +35,7 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
       baseRate: 980,
       imageKey: 'img-studio',
       amenities: [],
+    images: [],
     },
     stay: {
       checkIn: '2027-03-10',

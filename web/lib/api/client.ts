@@ -19,9 +19,11 @@ import type {
   AvailableRoomType,
   CreateReservationInput,
   IsoDate,
+  Offer,
   PriceBreakdown,
   Reservation,
   RoomType,
+  VoucherPreview,
 } from './types';
 
 /**
@@ -131,6 +133,21 @@ export const bookingApi = {
   },
 
   /**
+   * The offers the hotel is advertising.
+   *
+   * Cached like room types: this changes when the hotel edits a rate plan, not
+   * per request. Expiry is enforced by the API's query rather than by cache
+   * lifetime, so a stale cache cannot advertise a finished offer beyond this
+   * window.
+   */
+  async getOffers(): Promise<Offer[]> {
+    const data = await request<{ offers: Offer[] }>('/api/offers', {
+      revalidate: 3600,
+    });
+    return data.offers;
+  },
+
+  /**
    * Live availability for a stay.
    *
    * Never cached. A cached availability response would show a guest a room that
@@ -178,6 +195,26 @@ export const bookingApi = {
       { method: 'POST', body: input, cache: 'no-store' },
     );
     return data.reservation;
+  },
+
+  /**
+   * What a discount code is worth for this stay, without claiming it.
+   *
+   * Advisory in the same way availability is: the code can still be exhausted
+   * by the time the booking commits, and `createReservation` is the authority.
+   */
+  async previewVoucher(args: {
+    code: string;
+    roomTypeCode: string;
+    checkIn: IsoDate;
+    checkOut: IsoDate;
+    roomsCount?: number;
+  }): Promise<VoucherPreview> {
+    const data = await request<{ preview: VoucherPreview }>(
+      '/api/vouchers/preview',
+      { method: 'POST', body: args, cache: 'no-store' },
+    );
+    return data.preview;
   },
 
   async getReservation(reference: string): Promise<Reservation> {

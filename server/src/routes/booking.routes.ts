@@ -24,6 +24,7 @@ import {
   cancelReservationSchema,
   createReservationSchema,
   rateQuerySchema,
+  voucherPreviewSchema,
 } from './schemas.js';
 
 /**
@@ -75,12 +76,47 @@ bookingRouter.get(
   }),
 );
 
+/**
+ * The offers the hotel is advertising.
+ *
+ * Cacheable in the same way room types are — this changes when the hotel edits
+ * a rate plan, not per request — but expiry is handled in the query rather than
+ * by cache lifetime, so a stale cache can never advertise a finished offer for
+ * longer than its revalidation window.
+ */
+bookingRouter.get(
+  '/offers',
+  readRateLimit,
+  asyncRoute(async (_req, res) => {
+    res.json({ offers: await getBookingProvider().listPublicOffers() });
+  }),
+);
+
 bookingRouter.get(
   '/rates',
   readRateLimit,
   asyncRoute(async (req, res) => {
     const query = rateQuerySchema.parse(req.query);
     res.json({ price: await getBookingProvider().getRate(query) });
+  }),
+);
+
+/**
+ * What a discount code is worth for a stay, before committing to it.
+ *
+ * Read-only: it claims nothing. A code shown as valid here can still be
+ * exhausted by the time the booking commits, exactly as availability can —
+ * `createReservation` is the authority in both cases.
+ *
+ * Rate-limited on the write budget rather than the read one. It is a read, but
+ * an unthrottled one is a free oracle for guessing codes.
+ */
+bookingRouter.post(
+  '/vouchers/preview',
+  bookingRateLimit,
+  asyncRoute(async (req, res) => {
+    const query = voucherPreviewSchema.parse(req.body);
+    res.json({ preview: await getBookingProvider().previewVoucher(query) });
   }),
 );
 

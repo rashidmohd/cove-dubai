@@ -26,6 +26,7 @@
 import type {
   AdminAmenity,
   AdminRoomType,
+  AdminVoucher,
   AmenityChanges,
   AmenityDraft,
   AvailabilityQuery,
@@ -34,14 +35,19 @@ import type {
   InventoryChanges,
   IsoDate,
   OccupancyReport,
+  Offer,
   OperationalSetting,
   PriceBreakdown,
   Reservation,
   ReservationChanges,
   ReservationDraft,
   ReservationFilter,
+  RoomImageDraft,
   RoomType,
   RoomTypeChanges,
+  VoucherChanges,
+  VoucherDraft,
+  VoucherPreview,
 } from './types.js';
 
 export interface BookingProvider {
@@ -182,6 +188,41 @@ export interface BookingProvider {
     amenityCodes: string[],
   ): Promise<AdminRoomType>;
 
+  /**
+   * Record a photograph the browser has already uploaded, and attach it.
+   *
+   * Two steps on purpose. The bytes go straight from the browser to object
+   * storage against a presigned URL; this is the API being told the upload
+   * succeeded, so the row and the object cannot disagree if the transfer fails
+   * halfway. New images go to the end of the gallery.
+   */
+  addRoomTypeImage(
+    code: string,
+    draft: RoomImageDraft,
+  ): Promise<AdminRoomType>;
+
+  /**
+   * Detach a photograph and delete its bytes.
+   *
+   * Identified by storage key rather than a row id — the key is already public,
+   * it is the tail of the URL the browser fetched, so nothing internal leaks.
+   */
+  removeRoomTypeImage(
+    code: string,
+    storageKey: string,
+  ): Promise<AdminRoomType>;
+
+  /**
+   * Set gallery order. The first key becomes the primary image.
+   *
+   * Takes the whole ordered list rather than a move instruction, so the result
+   * cannot depend on what the caller thought the previous order was.
+   */
+  reorderRoomTypeImages(
+    code: string,
+    storageKeys: string[],
+  ): Promise<AdminRoomType>;
+
   /** Edit a room type's content, occupancy, or base rate. */
   updateRoomType(
     code: string,
@@ -221,6 +262,56 @@ export interface BookingProvider {
     reference: string,
     status: 'checked-in' | 'checked-out',
   ): Promise<Reservation>;
+
+  // --- Offers --------------------------------------------------------------
+
+  /**
+   * Rate plans the hotel is advertising, for the public offers page.
+   *
+   * Filtered to plans that are active, flagged `isPublicOffer`, and whose date
+   * window has not passed — an offer that has expired must stop being
+   * advertised on its own, rather than waiting for someone to remember to
+   * deactivate it.
+   */
+  listPublicOffers(): Promise<Offer[]>;
+
+  // --- Vouchers ------------------------------------------------------------
+  //
+  // Behind the seam because promotions are pricing, and pricing is exactly what
+  // a PMS takes over. The engine itself — validation, the atomic claim, the
+  // discount arithmetic — already lives below this line.
+
+  /** Every voucher, live or not, for the admin screen. */
+  listVouchers(): Promise<AdminVoucher[]>;
+
+  createVoucher(draft: VoucherDraft): Promise<AdminVoucher>;
+
+  updateVoucher(code: string, changes: VoucherChanges): Promise<AdminVoucher>;
+
+  /**
+   * Delete a voucher outright.
+   *
+   * Refused once it has been redeemed: the redemptions are the financial record
+   * of a campaign, and the cascade would take them with it. Deactivate instead,
+   * which stops it being usable without erasing what it cost.
+   */
+  deleteVoucher(code: string): Promise<void>;
+
+  /**
+   * Price a stay as though a code were applied, **without claiming a use**.
+   *
+   * This is what lets the reserve flow show the discount while the guest is
+   * still deciding. It is advisory in exactly the way `checkAvailability` is:
+   * the authoritative claim happens inside `createReservation`, and a code can
+   * be exhausted between the two.
+   */
+  previewVoucher(args: {
+    code: string;
+    roomTypeCode: string;
+    checkIn: IsoDate;
+    checkOut: IsoDate;
+    roomsCount?: number;
+  }): Promise<VoucherPreview>;
 
   // --- Operational settings ------------------------------------------------
 

@@ -60,6 +60,25 @@ export type AmenityCategory =
   | 'services'
   | 'accessibility';
 
+/**
+ * A photograph of a room type, as the front-end receives it.
+ *
+ * A **URL**, never a bucket key. Which object store the bytes sit in is the
+ * API's business; the Next.js app is handed something it can put in a `src`
+ * and nothing else (`pms-readiness`). That also means changing bucket or CDN
+ * never touches the front-end.
+ */
+export interface RoomImage {
+  /** Absolute, public, ready to render. */
+  url: string;
+  /** Identifies this image in admin calls. Public already — it is in the URL. */
+  storageKey: string;
+  alt: LocalizedText;
+  /** Intrinsic pixels, so the layout can be reserved before the image loads. */
+  width: number;
+  height: number;
+}
+
 export interface RoomType {
   /** Public identifier used in URLs and the API (`cove-suite`). */
   code: string;
@@ -69,9 +88,82 @@ export interface RoomType {
   maxOccupancy: number;
   /** Lowest nightly rate currently published, for "from AED x" displays. */
   baseRate: number;
+  /**
+   * The CSS gradient treatment from the mockups.
+   *
+   * Kept alongside `images` rather than replaced by it. It is the fallback for
+   * a room type with no photography yet — which is every room type today, and
+   * will be some of them for a while — so the page renders a deliberate brand
+   * surface instead of an empty box.
+   */
   imageKey: string;
+  /** Photographs, primary first. Empty when none have been uploaded. */
+  images: RoomImage[];
   /** What the room comes with, ordered for display. */
   amenities: Amenity[];
+}
+
+/** What the browser reports about a file before asking for an upload URL. */
+export interface MediaUploadRequest {
+  contentType: string;
+  byteSize: number;
+  width: number;
+  height: number;
+}
+
+/** A photograph the browser has finished uploading, awaiting its database row. */
+export interface RoomImageDraft {
+  storageKey: string;
+  contentType: string;
+  byteSize: number;
+  width: number;
+  height: number;
+  alt: LocalizedText;
+}
+
+/**
+ * A rate plan the hotel is advertising.
+ *
+ * An offer is not a separate concept from a rate plan — it *is* one, flagged
+ * for display and given marketing copy. Modelling it any other way would mean
+ * a second pricing path competing with the one that already prices every stay,
+ * and two places for a nightly rate to disagree.
+ *
+ * Which means the price on an offer card is the price the booking will use,
+ * because it is the same row.
+ */
+export interface Offer {
+  /** The room type it applies to, for the link into the booking flow. */
+  roomTypeCode: string;
+  roomTypeName: LocalizedText;
+  /** The gradient key or photography for the card. */
+  imageKey: string;
+  images: RoomImage[];
+
+  name: LocalizedText;
+  description: LocalizedText | null;
+
+  /** What a night costs under this plan. */
+  nightlyRate: number;
+  /**
+   * The room type's standard rate, for an honest comparison.
+   *
+   * Null when the offer is not actually cheaper — a plan can legitimately be a
+   * *higher* rate for a peak window, and a "save 0%" badge on one of those
+   * would be a lie the front-end told itself.
+   */
+  standardRate: number | null;
+
+  validFrom: IsoDate | null;
+  validTo: IsoDate | null;
+  minimumStayNights: number;
+  /**
+   * Which nights it applies to, `0` = Sunday.
+   *
+   * All seven means no restriction, and the front-end should say nothing about
+   * days rather than listing every one of them.
+   */
+  daysOfWeek: number[];
 }
 
 /** A room type offered for a specific stay, with that stay priced. */
@@ -255,6 +347,73 @@ export interface AmenityChanges {
   isActive?: boolean | undefined;
 }
 
+/**
+ * A discount code as the admin sees it.
+ *
+ * `redemptionCount` is the live counter the CHECK constraint guards, so it is
+ * the honest answer to "how many are left" rather than a derived estimate.
+ */
+export interface AdminVoucher {
+  code: string;
+  name: LocalizedText;
+  discountType: DiscountType;
+  /** A percentage (0-100) or an amount in AED, per `discountType`. */
+  discountValue: number;
+  validFrom: IsoDate | null;
+  validTo: IsoDate | null;
+  /** Null means unlimited. */
+  maxRedemptions: number | null;
+  redemptionCount: number;
+  minimumNights: number;
+  minimumSpend: number | null;
+  /** Empty means the code applies to every room type. */
+  roomTypeCodes: string[];
+  isActive: boolean;
+  createdAt: string;
+}
+
+export type DiscountType = 'percentage' | 'fixed';
+
+export interface VoucherDraft {
+  code: string;
+  name: LocalizedText;
+  discountType: DiscountType;
+  discountValue: number;
+  validFrom?: IsoDate | null | undefined;
+  validTo?: IsoDate | null | undefined;
+  maxRedemptions?: number | null | undefined;
+  minimumNights?: number | undefined;
+  minimumSpend?: number | null | undefined;
+  roomTypeCodes?: string[] | undefined;
+}
+
+export interface VoucherChanges {
+  name?: LocalizedText | undefined;
+  discountType?: DiscountType | undefined;
+  discountValue?: number | undefined;
+  validFrom?: IsoDate | null | undefined;
+  validTo?: IsoDate | null | undefined;
+  maxRedemptions?: number | null | undefined;
+  minimumNights?: number | undefined;
+  minimumSpend?: number | null | undefined;
+  roomTypeCodes?: string[] | undefined;
+  isActive?: boolean | undefined;
+}
+
+/**
+ * What a code is worth for a particular stay, before committing to it.
+ *
+ * Lets the reserve flow show the discount as the guest types the code, without
+ * consuming a redemption. Deliberately carries the whole recalculated
+ * breakdown rather than just the discount, so the screen never has to do
+ * pricing arithmetic of its own (`pms-readiness`).
+ */
+export interface VoucherPreview {
+  code: string;
+  name: LocalizedText;
+  price: PriceBreakdown;
+}
+
 export interface RoomTypeChanges {
   name?: LocalizedText | undefined;
   category?: LocalizedText | undefined;
@@ -332,7 +491,13 @@ export type BookingErrorCode =
   | 'VOUCHER_NOT_APPLICABLE'
   | 'VOUCHER_CODE_IN_USE'
   /** A reservation cannot move to the requested status from its current one. */
-  | 'INVALID_STATUS_TRANSITION';
+  | 'INVALID_STATUS_TRANSITION'
+  /** No such image, or it is not attached to the room type named. */
+  | 'MEDIA_NOT_FOUND'
+  /** A reorder listed something other than exactly the current gallery. */
+  | 'MEDIA_ORDER_MISMATCH'
+  /** Object storage is not configured, so uploads cannot be offered. */
+  | 'MEDIA_NOT_CONFIGURED';
 
 export class BookingError extends Error {
   constructor(

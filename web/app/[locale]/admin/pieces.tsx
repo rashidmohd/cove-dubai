@@ -122,6 +122,13 @@ export function useApiErrorMessage() {
       return t('errors.invalidTransition');
     }
     if (caught.code === 'AMENITY_CODE_IN_USE') return t('errors.amenityInUse');
+    if (caught.code === 'VOUCHER_NOT_FOUND') return t('errors.voucherNotFound');
+    if (caught.code === 'VOUCHER_EXPIRED') return t('errors.voucherExpired');
+    if (caught.code === 'VOUCHER_EXHAUSTED') return t('errors.voucherExhausted');
+    if (caught.code === 'VOUCHER_NOT_APPLICABLE') {
+      return t('errors.voucherNotApplicable');
+    }
+    if (caught.code === 'VOUCHER_CODE_IN_USE') return t('errors.voucherInUse');
     if (caught.code === 'CSRF_TOKEN_INVALID') return t('errors.signedOut');
 
     return caught.message;

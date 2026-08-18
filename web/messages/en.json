@@ -33,7 +33,8 @@
     "menu": "Menu",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "home": "Home"
+    "home": "Home",
+    "offers": "Offers"
   },
   "comingSoon": {
     "title": "Opening soon",
@@ -100,7 +101,13 @@
       "cancellationPolicy": "You may cancel free of charge up to {hours} hours before check-in."
     },
     "back": "Back",
-    "continue": "Continue"
+    "continue": "Continue",
+    "voucherLabel": "Discount code",
+    "voucherPlaceholder": "If you have one",
+    "voucherApply": "Apply",
+    "voucherApplied": "{name} applied.",
+    "voucherRemove": "Remove",
+    "discount": "Discount"
   },
   "errors": {
     "required": "This field is required.",
@@ -112,7 +119,11 @@
     "noAvailability": "Those dates are no longer available. Please choose different dates.",
     "network": "We could not reach the hotel's booking system. Please check your connection and try again.",
     "unknown": "Something went wrong. Please try again.",
-    "rateLimited": "Too many attempts. Please wait a moment and try again."
+    "rateLimited": "Too many attempts. Please wait a moment and try again.",
+    "voucherNotFound": "That code is not recognised. Please check it and try again.",
+    "voucherExpired": "That code has expired.",
+    "voucherExhausted": "That code has already been fully redeemed.",
+    "voucherNotApplicable": "That code does not apply to this stay."
   },
   "cancel": {
     "title": "Cancel your reservation",
@@ -437,7 +448,8 @@
         "overview": "Overview",
         "property": "Property",
         "system": "System"
-      }
+      },
+      "vouchers": "Discount codes"
     },
     "roles": {
       "admin": "Administrator",
@@ -463,7 +475,12 @@
       "forbidden": "Your role does not permit this action.",
       "inventoryBelowBooked": "Some nights already have more rooms booked than that. Nothing was changed.",
       "invalidTransition": "That booking cannot move to that status.",
-      "amenityInUse": "That amenity is still listed on room types. Remove it from them first, or withdraw it instead."
+      "amenityInUse": "That amenity is still listed on room types. Remove it from them first, or withdraw it instead.",
+      "voucherNotFound": "That code is not recognised.",
+      "voucherExpired": "That code has expired.",
+      "voucherExhausted": "That code has already been fully redeemed.",
+      "voucherNotApplicable": "That code does not apply to this stay.",
+      "voucherInUse": "That code has been redeemed and cannot be deleted. Deactivate it instead."
     },
     "dashboard": {
       "arrivals": "Arriving today",
@@ -524,6 +541,26 @@
       "saved": "{name} saved.",
       "rateNote": "Changing the base rate affects new quotes only. Bookings already taken keep the price they were quoted.",
       "amenitiesSaved": "Amenities updated."
+    },
+    "images": {
+      "title": "Photographs",
+      "primary": "Primary",
+      "noAlt": "No alt text",
+      "choose": "Image file",
+      "formats": "WebP, AVIF, JPEG or PNG, up to 10 MB. The first image is the one guests see first.",
+      "add": "Upload",
+      "uploading": "Uploading…",
+      "remove": "Remove image",
+      "moveEarlier": "Move earlier",
+      "moveLater": "Move later",
+      "altEn": "Alt text (English)",
+      "altAr": "Alt text (Arabic)",
+      "altHint": "Describe the room for someone who cannot see the photograph. Leave both blank only if it is purely decorative.",
+      "fallbackNote": "No photographs yet, so guests see this room type's colour treatment instead.",
+      "unreadable": "That file could not be read as an image.",
+      "uploadFailed": "The image store refused the upload (HTTP {status}).",
+      "corsBlocked": "The browser blocked the upload. The storage bucket needs a CORS rule allowing PUT from this site.",
+      "notConfigured": "Image uploads are not configured on this environment."
     },
     "inventory": {
       "roomType": "Room type",
@@ -586,6 +623,63 @@
         "services": "Services",
         "accessibility": "Accessibility"
       }
+    },
+    "vouchers": {
+      "count": "{count} in the list",
+      "intro": "A discount comes off the accommodation charge. VAT is then charged on what remains, and the Tourism Dirham is never discounted.",
+      "none": "No discount codes yet.",
+      "add": "Add a code",
+      "formHint": "Codes are stored uppercase and matched however a guest types them.",
+      "code": "Code",
+      "codeHint": "Letters, numbers and hyphens, for example SPRING25",
+      "discount": "Discount",
+      "discountType": "Type",
+      "percentage": "Percentage off",
+      "fixed": "Fixed amount off",
+      "percentOff": "Per cent off",
+      "amountOff": "AED off",
+      "validity": "Valid",
+      "validFrom": "Valid from",
+      "validTo": "Valid until",
+      "always": "Always",
+      "used": "Used",
+      "unlimited": "Unlimited",
+      "unlimitedHint": "Leave blank for no limit",
+      "unlimitedUses": "{count} · unlimited",
+      "maxRedemptions": "Maximum uses",
+      "minNights": "Min {count} nights",
+      "minNightsLabel": "Minimum nights",
+      "appliesTo": "Applies to",
+      "allRooms": "All rooms",
+      "allRoomsHint": "Leave all unticked to apply the code to every room type.",
+      "live": "Live",
+      "inactive": "Inactive",
+      "expired": "Expired",
+      "scheduled": "Scheduled",
+      "exhausted": "Fully used",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete",
+      "created": "{code} created.",
+      "saved": "{code} updated.",
+      "deleted": "{code} deleted.",
+      "confirmDeleteTitle": "Delete this code?",
+      "confirmDelete": "Delete {code}? A code that has never been used leaves no record behind. Deactivating it instead keeps it available to bring back.",
+      "taxNote": "The discount applies to the accommodation charge only. VAT is charged on the discounted amount, and the Tourism Dirham is never discounted."
     }
+  },
+  "offers": {
+    "label": "Offers",
+    "title": "Rates &",
+    "titleAccent": "Offers",
+    "intro": "A few reasons to stay a little longer, or to come when the city is quieter. Every rate below is the rate you will be charged — no membership, no conditions buried in a footnote.",
+    "none": "There are no offers at the moment. Our standard rates are on the Rooms page, and they include everything we would otherwise have called a package.",
+    "save": "Save {percent}%",
+    "nightlyRate": "Per night",
+    "minimumStay": "Minimum stay",
+    "nights": "{count} nights",
+    "nightsAvailable": "Nights",
+    "bookBy": "Book by",
+    "book": "Check dates"
   }
 }

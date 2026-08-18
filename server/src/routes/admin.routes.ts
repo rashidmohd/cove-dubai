@@ -26,20 +26,32 @@ import { prisma } from '../db/prisma.js';
 import { currentAdmin, requireAdmin, requireRole } from '../middleware/auth.js';
 import { requireCsrfToken } from '../middleware/csrf.js';
 import { asyncRoute, HttpError } from '../middleware/errors.js';
+import {
+  allowedContentTypes,
+  createSignedUpload,
+  isAllowedContentType,
+} from '../media/storage.js';
+import { mediaUploadsEnabled } from '../config.js';
+import { BookingError } from '../booking/types.js';
 import { bookingReferenceSchema } from './schemas.js';
 import {
   auditLogFilterSchema,
   cancelReservationSchema,
   createAmenitySchema,
+  createVoucherSchema,
   dateRangeSchema,
   dateSchema,
   modifyReservationSchema,
   reservationFilterSchema,
+  addRoomTypeImageSchema,
+  mediaUploadRequestSchema,
+  reorderRoomTypeImagesSchema,
   setRoomTypeAmenitiesSchema,
   updateAmenitySchema,
   updateInventorySchema,
   updateRoomTypeSchema,
   updateSettingSchema,
+  updateVoucherSchema,
 } from './admin.schemas.js';
 
 /**
@@ -328,6 +340,135 @@ adminRouter.put(
   }),
 );
 
+
+// ---------------------------------------------------------------------------
+// Room type photography
+//
+// Uploads go straight from the browser to object storage against a presigned
+// URL; the file never passes through this service. These two endpoints are the
+// bookends: sign, then confirm.
+// ---------------------------------------------------------------------------
+
+/**
+ * Sign a one-shot upload.
+ *
+ * Nothing is written here — a signature is not a promise that the upload will
+ * happen. The row appears only when the browser confirms, below, so a transfer
+ * that fails halfway leaves no half-image in the gallery.
+ */
+adminRouter.post(
+  '/media/uploads',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    if (!mediaUploadsEnabled) {
+      throw new BookingError(
+        'MEDIA_NOT_CONFIGURED',
+        'Image uploads are not configured on this environment.',
+      );
+    }
+
+    const request = mediaUploadRequestSchema.parse(req.body);
+
+    if (!isAllowedContentType(request.contentType)) {
+      throw new BookingError(
+        'MEDIA_NOT_FOUND',
+        `Unsupported image type. Allowed: ${allowedContentTypes.join(', ')}.`,
+      );
+    }
+
+    const upload = await createSignedUpload({
+      contentType: request.contentType,
+      byteSize: request.byteSize,
+    });
+
+    // Not audited. Signing grants nothing on its own and writes nothing; the
+    // attach below is the action worth a record, and auditing both would put
+    // two rows in the log for every photograph.
+    res.json(upload);
+  }),
+);
+
+/** Confirm an upload landed, and attach it to a room type. */
+adminRouter.post(
+  '/room-types/:code/images',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const code = String(req.params.code);
+    const draft = addRoomTypeImageSchema.parse(req.body);
+
+    if (!isAllowedContentType(draft.contentType)) {
+      throw new BookingError(
+        'MEDIA_NOT_FOUND',
+        `Unsupported image type. Allowed: ${allowedContentTypes.join(', ')}.`,
+      );
+    }
+
+    const roomType = await getBookingProvider().addRoomTypeImage(code, draft);
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'room_type.add_image',
+      entityType: 'room_type',
+      entityId: code,
+      details: { storageKey: draft.storageKey },
+    });
+
+    res.status(201).json({ roomType });
+  }),
+);
+
+/** Detach a photograph and delete its bytes. */
+adminRouter.delete(
+  '/room-types/:code/images/:storageKey(*)',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const code = String(req.params.code);
+    // The key contains slashes (`room-types/<uuid>.webp`), hence the wildcard
+    // parameter above and the decode here.
+    const storageKey = decodeURIComponent(String(req.params.storageKey));
+
+    const roomType = await getBookingProvider().removeRoomTypeImage(
+      code,
+      storageKey,
+    );
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'room_type.remove_image',
+      entityType: 'room_type',
+      entityId: code,
+      details: { storageKey },
+    });
+
+    res.json({ roomType });
+  }),
+);
+
+/** Reorder the gallery. The first key becomes the primary image. */
+adminRouter.put(
+  '/room-types/:code/images',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const code = String(req.params.code);
+    const { storageKeys } = reorderRoomTypeImagesSchema.parse(req.body);
+
+    const roomType = await getBookingProvider().reorderRoomTypeImages(
+      code,
+      storageKeys,
+    );
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'room_type.reorder_images',
+      entityType: 'room_type',
+      entityId: code,
+      details: { storageKeys },
+    });
+
+    res.json({ roomType });
+  }),
+);
+
 // ---------------------------------------------------------------------------
 // Availability calendar
 // ---------------------------------------------------------------------------
@@ -371,6 +512,100 @@ adminRouter.patch(
     });
 
     res.json(calendar);
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Vouchers
+// ---------------------------------------------------------------------------
+
+/**
+ * Reading the list is open to STAFF: the front desk fields "is my code still
+ * valid" on the phone. Creating and changing them moves money, so those are
+ * ADMIN-only like every other pricing control.
+ */
+adminRouter.get(
+  '/vouchers',
+  asyncRoute(async (_req, res) => {
+    res.json({ vouchers: await getBookingProvider().listVouchers() });
+  }),
+);
+
+adminRouter.post(
+  '/vouchers',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const draft = createVoucherSchema.parse(req.body);
+    const voucher = await getBookingProvider().createVoucher(draft);
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'voucher.create',
+      entityType: 'voucher',
+      entityId: voucher.code,
+      details: {
+        discountType: voucher.discountType,
+        discountValue: voucher.discountValue,
+        maxRedemptions: voucher.maxRedemptions,
+        validFrom: voucher.validFrom,
+        validTo: voucher.validTo,
+      },
+    });
+
+    res.status(201).json({ voucher });
+  }),
+);
+
+adminRouter.patch(
+  '/vouchers/:code',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const code = String(req.params.code);
+    const changes = updateVoucherSchema.parse(req.body);
+
+    const before = (await getBookingProvider().listVouchers()).find(
+      (voucher) => voucher.code === code.toUpperCase(),
+    );
+
+    const voucher = await getBookingProvider().updateVoucher(code, changes);
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'voucher.update',
+      entityType: 'voucher',
+      entityId: voucher.code,
+      // Discount changes are worth their before and after in full: this is the
+      // one edit here that alters what future guests pay.
+      details: {
+        changed: Object.keys(changes),
+        ...(changes.discountValue !== undefined
+          ? {
+              discountFrom: before?.discountValue ?? null,
+              discountTo: voucher.discountValue,
+            }
+          : {}),
+      },
+    });
+
+    res.json({ voucher });
+  }),
+);
+
+adminRouter.delete(
+  '/vouchers/:code',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const code = String(req.params.code);
+    await getBookingProvider().deleteVoucher(code);
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'voucher.delete',
+      entityType: 'voucher',
+      entityId: code.toUpperCase(),
+    });
+
+    res.json({ ok: true });
   }),
 );
 

@@ -15,7 +15,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { ApiError, bookingApi } from '@/lib/api/client';
-import type { AvailableRoomType, Locale, Reservation } from '@/lib/api/types';
+import type {
+  AvailableRoomType,
+  Locale,
+  Reservation,
+  VoucherPreview,
+} from '@/lib/api/types';
 import { formatMoney, countNights } from '@/lib/format';
 import { Confirmation } from './Confirmation';
 import { DatePicker } from './DatePicker';
@@ -36,6 +41,17 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reservation, setReservation] = useState<Reservation | null>(null);
+
+  /**
+   * The discount the guest has applied, if any.
+   *
+   * Holds the whole repriced breakdown the API returned, not just the code, so
+   * the summary shows exactly the figures the booking will use. It is cleared
+   * whenever the stay or the room changes, because a code valid for a two-night
+   * stay in one room may not apply to a different one — and showing a stale
+   * discount would quote a price the booking then refuses.
+   */
+  const [voucher, setVoucher] = useState<VoucherPreview | null>(null);
 
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -68,6 +84,17 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
             return tErrors('rateLimited');
           case 'INVALID_STAY':
             return tErrors('checkOutAfterCheckIn');
+          // A mistyped code is the guest's to fix, so each reason is named.
+          // Falling through to "something went wrong" would read as a fault at
+          // the hotel's end and leave them with nothing to act on.
+          case 'VOUCHER_NOT_FOUND':
+            return tErrors('voucherNotFound');
+          case 'VOUCHER_EXPIRED':
+            return tErrors('voucherExpired');
+          case 'VOUCHER_EXHAUSTED':
+            return tErrors('voucherExhausted');
+          case 'VOUCHER_NOT_APPLICABLE':
+            return tErrors('voucherNotApplicable');
           default:
             return tErrors('unknown');
         }
@@ -189,6 +216,39 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     describeError,
   ]);
 
+  // A code is validated against a specific stay and room type. Change either
+  // and the preview is no longer the truth.
+  useEffect(() => {
+    setVoucher(null);
+  }, [state.checkIn, state.checkOut, state.roomTypeCode, state.roomsCount]);
+
+  /**
+   * Ask the API what a code is worth for this stay.
+   *
+   * Returns an error message rather than throwing, so the field can show it
+   * inline without the whole flow going into its error state — a mistyped code
+   * is not a failed booking.
+   */
+  async function applyVoucher(code: string): Promise<string | null> {
+    if (!state.checkIn || !state.checkOut || !state.roomTypeCode) return null;
+
+    try {
+      setVoucher(
+        await bookingApi.previewVoucher({
+          code,
+          roomTypeCode: state.roomTypeCode,
+          checkIn: state.checkIn,
+          checkOut: state.checkOut,
+          roomsCount: state.roomsCount,
+        }),
+      );
+      return null;
+    } catch (caught) {
+      setVoucher(null);
+      return describeError(caught);
+    }
+  }
+
   async function submitBooking() {
     if (!state.checkIn || !state.checkOut || !state.roomTypeCode) return;
 
@@ -206,6 +266,10 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         ...(state.specialRequests
           ? { specialRequests: state.specialRequests }
           : {}),
+        // The API re-validates and claims it inside the booking transaction.
+        // If it has been exhausted since the preview, the booking fails rather
+        // than quietly charging the undiscounted price.
+        ...(voucher ? { voucherCode: voucher.code } : {}),
       });
 
       setReservation(created);
@@ -424,7 +488,12 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         adults={state.adults}
         children={state.children}
         room={selectedRoom}
-        price={selectedRoom?.price ?? null}
+        // The previewed breakdown wins when a code is applied: it is the same
+        // arithmetic the booking will use, done by the API.
+        price={voucher?.price ?? selectedRoom?.price ?? null}
+        voucher={voucher}
+        onApplyVoucher={applyVoucher}
+        onRemoveVoucher={() => setVoucher(null)}
       />
     </div>
   );

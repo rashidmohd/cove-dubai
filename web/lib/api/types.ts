@@ -49,6 +49,22 @@ export interface Amenity {
   iconKey: string | null;
 }
 
+/**
+ * A photograph of a room type.
+ *
+ * A URL, already public and ready to render — the front-end never sees a bucket
+ * key or learns which object store the bytes are in.
+ */
+export interface RoomImage {
+  url: string;
+  /** Identifies the image in admin calls. Already public: it is in the URL. */
+  storageKey: string;
+  alt: LocalizedText;
+  /** Intrinsic pixels, so space can be reserved before the image loads. */
+  width: number;
+  height: number;
+}
+
 export interface RoomType {
   code: string;
   name: LocalizedText;
@@ -67,6 +83,33 @@ export interface RoomType {
    * leaving it to whoever writes the next component.
    */
   amenities?: Amenity[];
+  /**
+   * Photographs, primary first.
+   *
+   * Optional for the same reason as `amenities`: the marketing pages cache room
+   * types for an hour and the two services deploy independently, so a response
+   * from before this field existed is normal rather than a fault. `imageKey`
+   * remains the fallback for a room type with no photography.
+   */
+  images?: RoomImage[];
+}
+
+/** A rate plan the hotel is advertising. See `Offer` in the server types. */
+export interface Offer {
+  roomTypeCode: string;
+  roomTypeName: LocalizedText;
+  imageKey: string;
+  images: RoomImage[];
+  name: LocalizedText;
+  description: LocalizedText | null;
+  nightlyRate: number;
+  /** Null when the offer is not actually cheaper than the standard rate. */
+  standardRate: number | null;
+  validFrom: IsoDate | null;
+  validTo: IsoDate | null;
+  minimumStayNights: number;
+  /** `0` = Sunday. All seven means no restriction. */
+  daysOfWeek: number[];
 }
 
 export interface PriceBreakdown {
@@ -74,7 +117,20 @@ export interface PriceBreakdown {
   nights: number;
   roomsCount: number;
   nightlyRates: Array<{ date: IsoDate; rate: number }>;
+  /** Before any discount. */
   roomTotal: number;
+  /**
+   * Present only when a voucher was applied.
+   *
+   * VAT below is already charged on the discounted accommodation total, and
+   * the Tourism Dirham is untouched by it — the API does that arithmetic, and
+   * the summary only renders what it is given (`pms-readiness`).
+   */
+  discount?: {
+    code: string;
+    name: LocalizedText;
+    amount: number;
+  };
   tourismDirham: { perRoomPerNight: number; total: number };
   vat: { ratePercent: number; total: number };
   grandTotal: number;
@@ -122,6 +178,16 @@ export interface CreateReservationInput {
   roomsCount: number;
   guest: GuestDetails;
   specialRequests?: string;
+  /** Optional discount code, claimed atomically when the booking commits. */
+  voucherCode?: string;
+}
+
+/** What a discount code is worth for a stay, before committing to it. */
+export interface VoucherPreview {
+  code: string;
+  name: LocalizedText;
+  /** The whole stay repriced, so the summary never does arithmetic itself. */
+  price: PriceBreakdown;
 }
 
 /** Error codes the API returns. The UI branches on these, never on prose. */
@@ -147,8 +213,19 @@ export type ApiErrorCode =
   | 'INVALID_CREDENTIALS'
   | 'INVENTORY_BELOW_BOOKED'
   | 'INVALID_STATUS_TRANSITION'
+  /** No such image, or it is not attached to the room type named. */
+  | 'MEDIA_NOT_FOUND'
+  /** A gallery reorder listed something other than the current images. */
+  | 'MEDIA_ORDER_MISMATCH'
+  /** Object storage is not configured on this environment. */
+  | 'MEDIA_NOT_CONFIGURED'
   | 'SETTING_NOT_FOUND'
   | 'AMENITY_NOT_FOUND'
   | 'AMENITY_CODE_IN_USE'
+  | 'VOUCHER_NOT_FOUND'
+  | 'VOUCHER_EXPIRED'
+  | 'VOUCHER_EXHAUSTED'
+  | 'VOUCHER_NOT_APPLICABLE'
+  | 'VOUCHER_CODE_IN_USE'
   /** Raised by the client itself when the API cannot be reached at all. */
   | 'NETWORK_ERROR';

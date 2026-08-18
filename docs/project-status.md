@@ -24,10 +24,10 @@ at startup and exit with a readable message if anything required is missing. `se
 ### Checks
 
 ```bash
-cd server && npm run typecheck && npm test     # 74 tests — hits the real database
+cd server && npm run typecheck && npm test     # 106 tests — hits the real database
 cd web    && npm run typecheck && npm test     # 10 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
-cd web    && npx playwright test               # 14 e2e — needs the API running
+cd web    && npx playwright test               # 17 e2e — needs the API running
 ```
 
 The 7 admin e2e tests skip unless `E2E_ADMIN_PASSWORD` is set to the password of `admin@covedubai.local`, so the
@@ -59,6 +59,134 @@ after itself. Remove them and release their inventory with the SQL in [Cleaning 
 | **M6** Admin panel | Done | Sessions, RBAC, CSRF, audit log, 6 screens in both locales. Redesigned 15 Aug 2026 — see below |
 | **M7** Emails + deploy | Done | Bilingual Resend templates, guest cancellation page, `railway.json` for both services |
 
+#### Object storage for room photography — foundation only (16 Aug 2026)
+
+`MediaAsset` + `RoomTypeImage` tables, a 12-factor config block, and an S3-compatible storage adapter in
+`server/src/media/storage.ts`. **Cloudflare R2 is the chosen provider**, but nothing in the code names it: the
+endpoint, bucket, credentials and public origin are all environment variables, so the AWS S3 + CloudFront move
+later is config, not a rewrite (`deployment`).
+
+Decisions worth knowing:
+
+- **Presigned direct-to-bucket uploads.** The browser PUTs to a short-lived signed URL; the photograph never
+  passes through Express. Proxying would buffer multi-megabyte files in the same process that holds the booking
+  transaction, on a container with a fixed memory ceiling.
+- **`storageKey`, never an absolute URL.** The public origin is prefixed at read time, so moving the bucket or
+  putting a CDN in front is one variable rather than a migration over every row.
+- **`width`/`height` are required.** The front-end reserves layout space from them; unsized images are the usual
+  way to blow the CLS < 0.1 budget.
+- **`altEn`/`altAr` are required, not optional.** WCAG 2.1 AA is non-negotiable, and an optional field is one
+  nobody fills in. An empty string is the correct alt for a decorative image; NULL means nobody decided.
+- **SVG is not an allowed upload type** — it executes script, and an SVG on the media origin is stored XSS.
+- **Signature pins `ContentType` *and* `ContentLength`**, so a signed URL cannot be reused to upload something
+  else or something larger.
+- Storage config is **all-or-nothing**: five variables or none. A partial set is refused at boot instead of
+  failing at the first upload.
+
+**The API layer is now built** (17 Aug 2026): `addRoomTypeImage`, `removeRoomTypeImage` and
+`reorderRoomTypeImages` behind the seam, four routes under `/admin`, and `images` on every `RoomType` the API
+returns — as **URLs**, never bucket keys, so the front-end never learns a bucket exists. Verified live:
+`GET /api/room-types` returns `images: []` on all four seeded types alongside the existing `imageKey` gradient.
+
+More decisions:
+
+- **The primary image is the lowest `sortOrder`**, not a boolean. An `isPrimary` flag needs a partial unique index
+  to stop two rows claiming it and still allows "no primary at all"; ordering cannot express either broken state.
+- **New uploads append.** Adding a photograph must never silently change the hero shot on the public site.
+- **Reorder takes the whole list**, so the result cannot depend on what the caller believed the old order was; a
+  partial list is refused with `MEDIA_ORDER_MISMATCH`.
+- **Bytes are deleted only when the last reference goes** — the same asset may sit on more than one room type —
+  and that delete happens *after* the transaction and never fails the request. The row is the record; an orphaned
+  object costs a fraction of a cent, whereas failing there would leave an admin looking at an image they were
+  told was gone. Orphans are logged.
+- **`publicUrlFor` returns null when no public origin is set**, and those images are dropped rather than thrown
+  on, so a misconfigured `MEDIA_PUBLIC_BASE_URL` degrades a room type to its gradient instead of failing every
+  read of the rooms page.
+- **`MEDIA_NOT_CONFIGURED` is a 503, not a 500** — the service is healthy, this one capability is switched off,
+  and retrying will not help until someone sets the variables.
+
+**Verified against the real bucket** (18 Aug 2026, `r2-cove-dev`): sign → PUT → `HeadObject` confirms the object
+lands with the right size and content type → delete. Uploading works.
+
+> 🔒 **A presigned URL did not pin its content type until this was found by testing it.**
+>
+> Setting `ContentType` and `ContentLength` on `PutObjectCommand` does **not** bind them into a presigned URL.
+> The presigner signs only `host` by default and hoists the rest, so a URL issued for `image/png` happily
+> accepted a `text/html` body — measured, 200 OK. Because objects are served from a public origin, that is a
+> stored-XSS hole: request a signature for a PNG, upload HTML, and it is hosted on the assets domain. Exactly
+> the risk the SVG exclusion exists to close, left wide open beside it.
+>
+> Fixed by passing `signableHeaders: new Set(['content-type', 'content-length'])` to `getSignedUrl`. Re-measured:
+> honest PUT 200, wrong content type 403, wrong content length 403.
+>
+> **The lesson is general.** Options on the *command* describe the request; only `signableHeaders` constrains
+> what the URL will accept. Any future presigned operation needs the same treatment, and needs an abuse case
+> proving it — the original code carried a comment claiming this protection while not having it.
+
+> ⚠️ **`assets-dev.covehotels.ae` is not connected to the bucket.** Proved by uploading an object, confirming it
+> exists via `HeadObject`, and getting a Cloudflare `404 text/html` from the custom domain for the same key. DNS
+> resolves to Cloudflare and TLS is valid, so the hostname exists — it is just not bound to `r2-cove-dev`.
+> Connect it under **R2 → the bucket → Settings → Public access → Custom Domains**. Until then every uploaded
+> image resolves to a 404 and room types must keep falling back to `imageKey`.
+
+**The admin gallery is built** (18 Aug 2026): `web/app/[locale]/admin/rooms/RoomImages.tsx`, a section on each
+room-type card. Upload with a preview, bilingual alt text collected *before* upload, reorder, remove, and an
+"Untitled"-style warning badge on any image with no alt text in either language. Reordering uses buttons rather
+than drag-and-drop — dragging is not keyboard-reachable without a lot of extra work, and WCAG 2.1 AA is not
+optional. Verified rendering in both locales; mirrors correctly on /ar.
+
+> ⚠️ **CORS is not configured on the bucket, so browser uploads will fail.** Measured, not assumed: a real
+> preflight (`OPTIONS` with `Origin` and `Access-Control-Request-Method: PUT`) against a signed URL returns
+> **403 with no `Access-Control-Allow-*` headers at all**. Add a CORS rule to `r2-cove-dev` allowing `PUT` and
+> `GET` from the web origins, with `Content-Type` in the allowed headers. Until then the UI shows its
+> "browser blocked the upload" message, which is the correct diagnosis but not a working upload.
+>
+> Combined with the unbound custom domain above, **two bucket-side settings still block images end to end**:
+> CORS (blocks upload) and the custom domain (blocks display).
+
+> ⚠️ **No upload has ever been performed from a browser.** The path is proven from Node — sign, PUT, HeadObject,
+> delete all work against the real bucket — but the browser leg is blocked by CORS and cannot be exercised until
+> that is fixed. Also untested: the whole admin flow behind a real login, because the password on file does not
+> match the database.
+
+The R2 token has object read/write but **not** bucket list permission. That is fine — the application never
+lists — but `ListObjectsV2` will fail if anyone reaches for it while debugging.
+
+**Before uploads can work, someone must configure the bucket itself** (not represented in `.env.example` because
+it is not application config): an R2 API token scoped to Object Read & Write on that one bucket, a public origin
+(r2.dev or a custom domain), and a **CORS rule allowing PUT from the web origin** — without it the browser
+refuses the direct upload.
+
+#### Rates now vary by day of week, not just by season (16 Aug 2026)
+
+`RatePlan` gained `daysOfWeek Int[]` (**0 = Sunday … 6 = Saturday**, matching `getUTCDay()`, which the inventory
+calendar already uses — a second numbering convention would eventually price the wrong night). A plan applies to a
+night when **both** hold: the night is inside the date window *and* its weekday is one the plan prices. "Peak
+season, weekends only" is one plan rather than one row per weekend, forever.
+
+`resolveNightlyRates` and `resolveMinimumStay` both honour it, so availability, quoting and the minimum-stay gate
+agree. Each night resolves independently — a stay crossing a surcharge is billed per night, never averaged. A
+night belongs to the day it is **slept on**, parsed as UTC; a local-time parse on a server in another zone shifts
+a night into the neighbouring day and misprices it silently.
+
+Backward compatible: every pre-existing row defaulted to all seven days, so applying the migration could not
+change a quoted price. 82 server tests pass (was 74).
+
+> ⚠️ **A CHECK constraint that did not constrain.** The first migration guarded the empty array with
+> `array_length("daysOfWeek", 1) >= 1`. `array_length('{}', 1)` returns **NULL**, not 0, and a CHECK constraint
+> **passes** when its expression is NULL — so the one value it existed to reject was the one value it allowed.
+> That matters because the resolver reads "no day restriction" as *every* night, so a plan saved with every
+> checkbox cleared would have priced all seven, silently, on the money path. Fixed in
+> `20260816093000_fix_rate_plan_days_empty_check` using `cardinality()`, which returns 0 for the empty array.
+> Verified against the live database: `[]` and `[7]` are refused, `[4,5,6]` and all-seven are accepted.
+> **Use `cardinality()`, never `array_length()`, in any future array CHECK.**
+
+**Still to do on this thread:** room type create / publish / archive with inventory opening (a new room type has
+no `RoomTypeInventory` rows, so it is unsellable and its calendar reads "not open" until a range is opened — the
+two must be one flow); the rate-plan admin UI (season window + day grid); the missing `category`, `totalRooms`
+and `sortOrder` edit fields; an advisory allocated-vs-106 reconciliation; and room images on S3-compatible
+storage with presigned direct upload.
+
 #### The admin panel has its own visual language (15 Aug 2026)
 
 The panel was first built in the guest brand: Cormorant at display sizes, uppercase Jost at 0.22em tracking on
@@ -83,8 +211,8 @@ Added to Phase 1 scope after M7, and **not yet finished** — the plan and the d
 
 | Feature | State |
 |---|---|
-| **Vouchers** | Engine done and tested — discount arithmetic, atomic redemption. **No API, admin screen, or field in the reserve flow**, so codes can only be created with SQL. |
-| **Offers** | Data model only (`RatePlan.isPublicOffer` + description columns). No API, no editing, no page. |
+| **Vouchers** | **Done.** Engine, API, admin screen, and a code field in the reserve flow. Verified in a browser: discount applied, VAT charged on the discounted total, Tourism Dirham untouched. Editing an existing code's value from the panel is still to do — only activate/deactivate/delete are offered. |
+| **Offers** | **Guest side done.** `GET /api/offers`, a public page at `/[locale]/offers`, and a nav entry between Rooms and Dining. **No admin editing yet** — offers can only be created with SQL. |
 | **Guest accounts** | Data model only (`GuestAccount`, `GuestAccountToken`). No auth, no email, no screens. |
 
 ### Routes live today
@@ -97,6 +225,7 @@ browser.
 /[locale]                 home
 /[locale]/about
 /[locale]/rooms           reads live room types from the API
+/[locale]/offers          advertised rate plans, from the API
 /[locale]/dining
 /[locale]/coming-soon     stands in for Wellness, Experiences, Members
 /[locale]/reserve         the booking flow (noindex)
@@ -190,6 +319,14 @@ Claims below were tested, not inferred.
   saving the codes it recognised.
 - **A withdrawn amenity disappears from guests but stays on the room.** `isActive: false` hides it everywhere
   without deleting the link, so it can be restored.
+- **A discount reaches the guest correctly through the whole stack.** Measured in a browser on a two-night stay:
+  room total AED 1,960, discount −392, VAT **78.40** — five per cent of the discounted 1,568, not of 1,960 — and
+  the Tourism Dirham still 40. The summary lines reconcile with the total.
+- **A code shown as valid is the code that is charged.** The preview and the booking run the same validation, so
+  the reserve flow cannot display a discount the booking would refuse.
+- **Previewing a code claims nothing.** Two previews leave `redemptionCount` at zero.
+- **A mistyped code fails inline and by name** — "not recognised", "expired", "fully redeemed" — rather than
+  putting the booking flow into a generic error state.
 - **The whole email loop works in a browser.** A real booking was made, the confirmation rendered with a working
   link, the link opened the cancellation page, cancelling released the inventory, and replaying the burned link
   no longer offers to cancel. Verified end to end, then cleaned up.

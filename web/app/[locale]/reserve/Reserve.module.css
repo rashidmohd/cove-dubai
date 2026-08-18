@@ -858,3 +858,123 @@
 .roomSwatch[data-swatch='img-studio'] {
   background: linear-gradient(150deg, #c4b8a4, #9a9080);
 }
+
+/* --- Discount code ---------------------------------------------------------
+ * Below the total, and quiet. Most guests do not have a code, and a prominent
+ * field invites the feeling that a discount is expected — or worse, sends
+ * someone off to search for one mid-booking.
+ */
+
+.voucher {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: var(--border-hairline) solid rgba(196, 154, 82, 0.25);
+}
+
+.voucherLabel {
+  display: block;
+  font-family: var(--b);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--label-on-dark);
+  margin-bottom: var(--space-3);
+}
+
+.voucherRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.voucherInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--space-3);
+  font-family: var(--b);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone);
+  background: rgba(0, 0, 0, 0.25);
+  border: var(--border-hairline) solid rgba(196, 154, 82, 0.35);
+  border-radius: var(--radius);
+}
+
+.voucherInput:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.voucherInput::placeholder {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-on-dark-muted);
+}
+
+.voucherApply {
+  flex: 0 0 auto;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--b);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--dark);
+  background: var(--gold);
+  border: var(--border-hairline) solid var(--gold);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.voucherApply:hover:not(:disabled) {
+  background: var(--gold-lt);
+}
+
+.voucherApply:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.voucherError {
+  margin-top: var(--space-3);
+  font-family: var(--b);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  /* Readable on the dark summary panel, unlike the light-surface --orange. */
+  color: #e8a48a;
+}
+
+.voucherApplied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: var(--border-hairline) solid rgba(196, 154, 82, 0.25);
+}
+
+.voucherAppliedText {
+  font-family: var(--b);
+  font-size: 0.78rem;
+  color: var(--gold-lt);
+}
+
+.voucherRemove {
+  font-family: var(--b);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--link-on-dark);
+  background: none;
+  border: none;
+  border-bottom: var(--border-hairline) solid currentColor;
+  padding: 0 0 var(--space-1);
+  cursor: pointer;
+}
+
+.voucherRemove:hover {
+  color: var(--link-on-dark-hover);
+}

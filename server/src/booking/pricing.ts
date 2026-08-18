@@ -148,23 +148,74 @@ function resolveDiscountAmount(
 }
 
 /**
+ * The two dimensions a rate plan can be restricted by.
+ *
+ * A plan applies to a night when **both** hold: the night falls inside the
+ * plan's date window, and the night's day of the week is one the plan prices.
+ * A hotel's real rate card is the product of the two — "peak season, weekends
+ * only" is one plan, not two.
+ */
+interface PlanWindow {
+  startDate: Date | null;
+  endDate: Date | null;
+  /**
+   * 0 = Sunday … 6 = Saturday. Absent means every day.
+   *
+   * The database forbids the empty array precisely so that "no days" can never
+   * arrive here and be read as "all days" — see the migration. Optional in this
+   * signature only so a caller that predates day-of-week pricing still behaves
+   * exactly as it did.
+   */
+  daysOfWeek?: number[] | undefined;
+}
+
+/**
+ * Does this plan price this particular night?
+ *
+ * `date` is the night itself — the day slept on, not the day checked out of.
+ * Parsed as UTC because the server's local timezone is not the hotel's, and a
+ * local-time parse would shift a night into the neighbouring day for anywhere
+ * behind or ahead of it. That is the whole bug class this comment exists for:
+ * a Gulf Standard Time night quietly billed at Wednesday's rate.
+ */
+function planCoversNight(plan: PlanWindow, date: IsoDate): boolean {
+  if (plan.startDate && plan.endDate) {
+    const from = plan.startDate.toISOString().slice(0, 10);
+    const to = plan.endDate.toISOString().slice(0, 10);
+    if (date < from || date > to) return false;
+  }
+
+  if (plan.daysOfWeek && plan.daysOfWeek.length > 0) {
+    const day = new Date(`${date}T00:00:00Z`).getUTCDay();
+    if (!plan.daysOfWeek.includes(day)) return false;
+  }
+
+  return true;
+}
+
+/**
  * Pick the applicable nightly rate for each night of a stay.
  *
- * The winner for a night is the highest-priority active plan whose date window
- * covers it; a plan with no window is the always-applicable default. If no plan
- * matches at all, the room type's base rate is used, so a stay can always be
- * priced even when the hotel has not configured plans for a far-future date.
+ * The winner for a night is the highest-priority active plan that covers it, by
+ * both date window and day of week; a plan restricted by neither is the
+ * always-applicable default. If no plan matches at all, the room type's base
+ * rate is used, so a stay can always be priced even when the hotel has not
+ * configured plans for a far-future date.
+ *
+ * Note that each night is resolved independently. A Thursday-to-Sunday stay
+ * spanning a weekend surcharge is billed per night at the rate that night
+ * earns — never averaged, and never flattened to the rate of the first night.
  */
 export function resolveNightlyRates(args: {
   checkIn: IsoDate;
   checkOut: IsoDate;
   baseRate: Prisma.Decimal;
-  ratePlans: Array<{
-    nightlyRateAed: Prisma.Decimal;
-    startDate: Date | null;
-    endDate: Date | null;
-    priority: number;
-  }>;
+  ratePlans: Array<
+    PlanWindow & {
+      nightlyRateAed: Prisma.Decimal;
+      priority: number;
+    }
+  >;
 }): NightlyRate[] {
   const { checkIn, checkOut, baseRate, ratePlans } = args;
 
@@ -172,35 +223,29 @@ export function resolveNightlyRates(args: {
   const plans = [...ratePlans].sort((a, b) => b.priority - a.priority);
 
   return nightsBetween(checkIn, checkOut).map((date) => {
-    const match = plans.find((plan) => {
-      if (!plan.startDate || !plan.endDate) return true;
-      const from = plan.startDate.toISOString().slice(0, 10);
-      const to = plan.endDate.toISOString().slice(0, 10);
-      return date >= from && date <= to;
-    });
-
+    const match = plans.find((plan) => planCoversNight(plan, date));
     return { date, rate: match?.nightlyRateAed ?? baseRate };
   });
 }
 
-/** The strictest minimum-stay requirement among the plans covering a stay. */
+/**
+ * The strictest minimum-stay requirement among the plans covering a stay.
+ *
+ * A plan only imposes its minimum if the stay actually touches a night it
+ * prices. A weekend-only two-night minimum must not block a Monday-to-Tuesday
+ * booking that happens to fall in the same season — which is exactly what would
+ * happen if this filtered on the date window alone.
+ */
 export function resolveMinimumStay(args: {
   checkIn: IsoDate;
   checkOut: IsoDate;
-  ratePlans: Array<{
-    startDate: Date | null;
-    endDate: Date | null;
-    minimumStayNights: number;
-  }>;
+  ratePlans: Array<PlanWindow & { minimumStayNights: number }>;
 }): number {
   const nights = nightsBetween(args.checkIn, args.checkOut);
 
-  const applicable = args.ratePlans.filter((plan) => {
-    if (!plan.startDate || !plan.endDate) return true;
-    const from = plan.startDate.toISOString().slice(0, 10);
-    const to = plan.endDate.toISOString().slice(0, 10);
-    return nights.some((date) => date >= from && date <= to);
-  });
+  const applicable = args.ratePlans.filter((plan) =>
+    nights.some((date) => planCoversNight(plan, date)),
+  );
 
   return applicable.reduce(
     (max, plan) => Math.max(max, plan.minimumStayNights),

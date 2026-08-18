@@ -15,12 +15,12 @@ Read [`project-status.md`](project-status.md) first for where the rest of the pr
 
 | | Data model | Engine | API | Admin UI | Guest UI | Tests |
 |---|---|---|---|---|---|---|
-| **Vouchers** | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ 18 |
-| **Offers** | ✅ | — reuses rate plans | ❌ | ❌ | ❌ | ❌ |
+| **Vouchers** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ 31 + 3 e2e |
+| **Offers** | ✅ | — reuses rate plans | ✅ | ❌ | ✅ | ✅ 11 |
 | **Guest accounts** | ✅ | ❌ | ❌ | n/a | ❌ | ❌ |
 
-**74 server tests pass.** Nothing here is half-applied: the migration is deployed, everything typechecks, and the
-unused tables are empty and inert.
+**106 server tests pass**, plus 3 browser tests for the discount flow. Nothing here is half-applied: the migration
+is deployed, everything typechecks, and the tables for the unbuilt features are empty and inert.
 
 ⚠️ **The Railway database now has empty `vouchers`, `voucher_room_types`, `voucher_redemptions`,
 `guest_accounts`, and `guest_account_tokens` tables, plus three new columns on `rate_plans`.** Harmless, but they
@@ -87,38 +87,74 @@ Recorded so they are not re-litigated later. Each is reversible, but each has a 
 
 Dependency order. Each step ends somewhere the suite is green and the app runs.
 
-### 1 · Voucher API and admin *(the engine has no way in yet)*
+### 1 · Voucher API and admin — **done**
 
-Codes can only be created with SQL today, which is the main reason this is first.
+Built and verified end to end in a browser: a code created in the panel, applied in the reserve flow, with the
+summary reconciling line by line.
 
-- **`server/src/booking/types.ts`** — `AdminVoucher`, `VoucherDraft`, `VoucherChanges`.
-- **`server/src/booking/provider.ts`** — `listVouchers`, `createVoucher`, `updateVoucher`, `deleteVoucher`, and a
-  `previewVoucher(code, stay)` for the guest-facing check. These belong behind the seam: a PMS would own promotions.
-- **`custom-db.provider.ts`** — implement them. Deleting a voucher with redemptions must be **refused**, exactly as
-  an in-use amenity is: the redemptions are the campaign's financial record. Deactivate instead.
-- **`server/src/routes/admin.routes.ts`** — CRUD under `/admin/vouchers`, `requireRole('ADMIN')`, every write
-  audited. Add `voucher.create` / `.update` / `.delete` to `AuditAction`.
-- **`server/src/routes/booking.routes.ts`** — a guest-facing `POST /api/vouchers/preview` so the reserve flow can
-  show the discount *before* committing. It must **not** claim a use — validation only.
-- **`server/src/routes/schemas.ts`** — accept `voucherCode` on `createReservationSchema`. The provider already
-  reads `draft.voucherCode`; nothing passes it yet.
-- **`web/app/[locale]/admin/vouchers/`** — list, create, edit, deactivate. Follow `admin/amenities/` exactly.
-- **`web/app/[locale]/reserve/`** — a code field on the guest-details step, with the discount shown as its own
-  line in `StaySummary`. The summary lines must still sum to the total; there is already an e2e test asserting that.
-- **Tests** — an API test file mirroring `tests/amenities.test.ts`, plus an e2e booking with a code applied.
+| Piece | Where |
+|---|---|
+| Provider methods | `listVouchers`, `createVoucher`, `updateVoucher`, `deleteVoucher`, `previewVoucher` |
+| Admin routes | `/admin/vouchers` — read open to STAFF, writes ADMIN-only, every write audited |
+| Guest route | `POST /api/vouchers/preview` — prices a stay with a code, **claims nothing** |
+| Admin screen | `web/app/[locale]/admin/vouchers/` |
+| Reserve flow | A code field under the summary total, and a discount line in the breakdown |
+| Tests | `tests/vouchers-api.test.ts` (13), `e2e/voucher.spec.ts` (3) |
 
-### 2 · Offers
+Measured in the browser on a two-night stay: room total AED 1,960, discount −392, **VAT 78.40 (5% of the
+discounted 1,568, not of 1,960)**, Tourism Dirham 40 undiscounted, total 1,686.40.
 
-Small, because the pricing already works. This is mostly exposure and editing.
+Two things worth knowing about the shape of it:
 
-- **Provider** — `listRatePlans(roomTypeCode)`, `createRatePlan`, `updateRatePlan`, `deleteRatePlan`, and
-  `listPublicOffers()` returning active plans with `isPublicOffer` true and a live date window.
-- **Admin** — rate-plan editing per room type, including the new `descriptionEn/Ar` and `isPublicOffer`. This also
-  closes the "no rate-plan editing" gap already recorded in `project-status.md`.
-- **Guest** — `GET /api/offers`, and a surface for them. **Decide with the client where that lives** before
-  building the page.
-- **Watch:** an offer whose window has passed must stop being advertised. `listPublicOffers` filters on date; do
-  not rely on someone deactivating it by hand.
+- **The preview and the booking share one validation path.** `previewVoucher` calls the same `validateVoucher`
+  the booking transaction uses, so a guest cannot be shown a discount the booking would then refuse.
+- **A rejected code fails inline, not as a booking error.** `applyVoucher` returns a message rather than throwing,
+  so a mistyped code does not put the whole flow into its error state.
+
+#### Left undone in step 1
+
+- **No editing of an existing code's fields from the panel** — only activate, deactivate, and delete. Changing a
+  discount value or window is a `PATCH` the API supports and the screen does not yet offer.
+- **No redemption report.** The count is visible per code; which bookings used it is not.
+
+### 2 · Offers — **guest side done, admin editing outstanding**
+
+**Where offers live was decided on 18 Aug 2026:** their own nav entry and page, between Rooms and Dining. That is
+the standard position on hotel sites — Hilton, and the hotel-website structure guides, all put Offers in the core
+nav — and it is where a guest who has just looked at rooms will go next.
+
+| Piece | Where |
+|---|---|
+| Provider | `listPublicOffers()` — active, flagged, and not expired |
+| Guest route | `GET /api/offers` |
+| Page | `web/app/[locale]/(marketing)/offers/` — in the nav and the sitemap |
+| Tests | `tests/offers.test.ts` (11) |
+
+The page follows the Rooms layout deliberately rather than inventing one: an offer is a room at a price, and the
+guest is making the same kind of decision. It shows a saving badge, the struck-through standard rate, minimum
+stay, which nights it applies to, and a link into the booking flow with the room preselected.
+
+Decisions taken here:
+
+- **An expired offer removes itself.** `listPublicOffers` filters on the date window, so nobody has to remember to
+  deactivate last summer's rate. An offer ending *today* is still shown — "valid until the 31st" includes the 31st.
+- **A saving is only claimed when it is real.** `standardRate` comes back null when the plan is not actually
+  cheaper than the room's base rate, and the badge renders from that field alone. A rate plan can legitimately be
+  a *higher* peak rate, and "save 0%" on one of those would be a lie.
+- **A future offer is advertised, with its dates.** Worth promoting before it starts.
+- **Ordinary rate plans are never advertised.** Only `isPublicOffer` ones — otherwise the hotel's internal
+  seasonal pricing structure ends up on a marketing page.
+- **Weekday restrictions are formatted with `Intl.ListFormat`**, not by joining on a comma. Arabic does not use
+  "," and renders "الجمعة والسبت" correctly.
+
+#### Left undone in step 2
+
+- **No admin editing of rate plans**, so offers can only be created with SQL — the same gap vouchers had before
+  step 1. This is the remaining work: `createRatePlan` / `updateRatePlan` / `deleteRatePlan` behind the seam,
+  routes under `/admin/room-types/:code/rate-plans`, and a screen. It also closes the "no rate-plan editing" gap
+  already recorded in `project-status.md`.
+- **No per-offer page.** The list links straight into the booking flow. If marketing wants to link to a single
+  offer from an email, `RatePlan` needs a `slug` — a small migration, deliberately not done on spec.
 
 ### 3 · Guest accounts
 

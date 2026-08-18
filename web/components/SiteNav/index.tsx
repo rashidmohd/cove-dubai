@@ -20,6 +20,9 @@ import styles from './SiteNav.module.css';
 const NAV_ITEMS = [
   { key: 'about', href: '/about' },
   { key: 'rooms', href: '/rooms' },
+  // After Rooms and before Dining: a guest who has just looked at rooms is the
+  // one an offer is for, and it is the standard position on hotel sites.
+  { key: 'offers', href: '/offers' },
   { key: 'dining', href: '/dining' },
   { key: 'wellness', href: '/coming-soon' },
   { key: 'experiences', href: '/coming-soon' },

@@ -99,6 +99,39 @@ export interface AdminDashboard {
   totalReservations: number;
 }
 
+
+export type DiscountType = 'percentage' | 'fixed';
+
+export interface AdminVoucher {
+  code: string;
+  name: LocalizedText;
+  discountType: DiscountType;
+  discountValue: number;
+  validFrom: IsoDate | null;
+  validTo: IsoDate | null;
+  /** Null means unlimited. */
+  maxRedemptions: number | null;
+  redemptionCount: number;
+  minimumNights: number;
+  minimumSpend: number | null;
+  /** Empty means the code applies to every room type. */
+  roomTypeCodes: string[];
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface VoucherInput {
+  name: LocalizedText;
+  discountType: DiscountType;
+  discountValue: number;
+  validFrom?: IsoDate | null;
+  validTo?: IsoDate | null;
+  maxRedemptions?: number | null;
+  minimumNights?: number;
+  minimumSpend?: number | null;
+  roomTypeCodes?: string[];
+}
+
 export interface ReservationListFilter {
   status?: ReservationStatus;
   roomTypeCode?: string;
@@ -332,6 +365,71 @@ export const adminApi = {
     });
   },
 
+  // --- Room type photography ----------------------------------------------
+
+  /**
+   * Ask the API to sign a one-shot upload.
+   *
+   * Nothing is stored yet. The signature is bound to exactly this content type
+   * and byte count, so the URL cannot be reused for anything else.
+   */
+  async requestImageUpload(file: {
+    contentType: string;
+    byteSize: number;
+    width: number;
+    height: number;
+  }): Promise<{ uploadUrl: string; storageKey: string }> {
+    return request('/api/admin/media/uploads', {
+      method: 'POST',
+      body: file,
+    });
+  },
+
+  /** Record a finished upload against a room type. */
+  async addRoomTypeImage(
+    roomTypeCode: string,
+    image: {
+      storageKey: string;
+      contentType: string;
+      byteSize: number;
+      width: number;
+      height: number;
+      alt: LocalizedText;
+    },
+  ): Promise<AdminRoomType> {
+    const data = await request<{ roomType: AdminRoomType }>(
+      `/api/admin/room-types/${encodeURIComponent(roomTypeCode)}/images`,
+      { method: 'POST', body: image },
+    );
+    return data.roomType;
+  },
+
+  async removeRoomTypeImage(
+    roomTypeCode: string,
+    storageKey: string,
+  ): Promise<AdminRoomType> {
+    const data = await request<{ roomType: AdminRoomType }>(
+      `/api/admin/room-types/${encodeURIComponent(roomTypeCode)}/images/` +
+        // The key contains slashes and they must survive as path segments the
+        // server can decode, so each part is encoded rather than the whole.
+        storageKey.split('/').map(encodeURIComponent).join('/'),
+      { method: 'DELETE' },
+    );
+    return data.roomType;
+  },
+
+  /** Set gallery order. The first key becomes the primary image. */
+  async reorderRoomTypeImages(
+    roomTypeCode: string,
+    storageKeys: string[],
+  ): Promise<AdminRoomType> {
+    const data = await request<{ roomType: AdminRoomType }>(
+      `/api/admin/room-types/${encodeURIComponent(roomTypeCode)}/images`,
+      { method: 'PUT', body: { storageKeys } },
+    );
+    return data.roomType;
+  },
+
   /** Replace the whole list for one room type. An empty array clears it. */
   async setRoomTypeAmenities(
     roomTypeCode: string,
@@ -342,6 +440,43 @@ export const adminApi = {
       { method: 'PUT', body: { amenityCodes } },
     );
     return data.roomType;
+  },
+
+
+  // --- Vouchers ------------------------------------------------------------
+
+  async listVouchers(): Promise<AdminVoucher[]> {
+    const data = await request<{ vouchers: AdminVoucher[] }>(
+      '/api/admin/vouchers',
+    );
+    return data.vouchers;
+  },
+
+  async createVoucher(
+    draft: VoucherInput & { code: string },
+  ): Promise<AdminVoucher> {
+    const data = await request<{ voucher: AdminVoucher }>(
+      '/api/admin/vouchers',
+      { method: 'POST', body: draft },
+    );
+    return data.voucher;
+  },
+
+  async updateVoucher(
+    code: string,
+    changes: Partial<VoucherInput> & { isActive?: boolean },
+  ): Promise<AdminVoucher> {
+    const data = await request<{ voucher: AdminVoucher }>(
+      `/api/admin/vouchers/${encodeURIComponent(code)}`,
+      { method: 'PATCH', body: changes },
+    );
+    return data.voucher;
+  },
+
+  async deleteVoucher(code: string): Promise<void> {
+    await request(`/api/admin/vouchers/${encodeURIComponent(code)}`, {
+      method: 'DELETE',
+    });
   },
 
   // --- Availability calendar ----------------------------------------------

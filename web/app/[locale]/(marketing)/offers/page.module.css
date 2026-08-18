@@ -1,0 +1,196 @@
+/**
+ * Offers.
+ *
+ * The one public page with no mockup behind it, so it borrows the Rooms page's
+ * structure rather than inventing a layout: alternating visual and body, the
+ * same gradient swatches, the same type scale. An offer is a room at a price,
+ * and the guest is making the same kind of decision.
+ *
+ * Logical properties throughout, so it mirrors on /ar with no direction-specific
+ * rules (`arabic-rtl`).
+ */
+
+.hero {
+  position: relative;
+}
+
+.intro {
+  max-width: 44ch;
+}
+
+.list {
+  padding-block-start: 0;
+}
+
+.empty {
+  font-family: var(--b);
+  font-size: 0.95rem;
+  line-height: var(--line-height-base);
+  color: var(--fog);
+  max-width: 46ch;
+}
+
+.offerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.offer {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: stretch;
+  background: var(--w);
+  border: var(--border-hairline) solid rgba(28, 20, 16, 0.08);
+}
+
+.visual {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.visual[data-swatch='img-suite'] {
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+.visual[data-swatch='img-terrace'] {
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+}
+.visual[data-swatch='img-corner'] {
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+.visual[data-swatch='img-studio'] {
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+/* The saving, on the image. Gold on dark ink rather than the reverse: a
+   discount badge in the brand's accent reads as a mark of quality, and a red
+   sale flash would be the wrong hotel entirely. */
+.saving {
+  position: absolute;
+  inset-block-start: var(--space-6);
+  inset-inline-start: var(--space-6);
+  padding: var(--space-2) var(--space-4);
+  background: var(--dark);
+  color: var(--gold-lt);
+  font-family: var(--b);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+}
+
+.body {
+  padding: var(--space-12);
+  min-width: 0;
+}
+
+.room {
+  font-family: var(--b);
+  font-size: 0.48rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: var(--space-3);
+}
+
+.name {
+  font-family: var(--s);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: var(--space-4);
+}
+
+.description {
+  font-family: var(--b);
+  font-size: 0.9rem;
+  line-height: var(--line-height-base);
+  color: var(--fog);
+  max-width: 52ch;
+  margin-bottom: var(--space-8);
+}
+
+.terms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-6);
+  padding-block: var(--space-6);
+  border-block-start: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+  border-block-end: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+  margin-bottom: var(--space-8);
+}
+
+.term {
+  min-width: 0;
+}
+
+.termLabel {
+  font-family: var(--b);
+  font-size: 0.48rem;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-bottom: var(--space-2);
+}
+
+.termValue {
+  font-family: var(--b);
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+/* The struck-through standard rate. `line-through` on its own is decoration a
+   screen reader ignores, which is correct here — the label already says which
+   figure is the offer, and the saving is stated in words on the badge. */
+.was {
+  margin-inline-start: var(--space-2);
+  color: var(--fog);
+  text-decoration: line-through;
+  font-size: 0.82rem;
+}
+
+.cta {
+  display: inline-block;
+  padding: var(--space-4) var(--space-8);
+  font-family: var(--b);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--dark);
+  background: var(--gold);
+  text-decoration: none;
+  transition: background var(--transition);
+}
+
+.cta:hover {
+  background: var(--gold-lt);
+}
+
+.cta:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .offer {
+    grid-template-columns: 1fr;
+  }
+
+  .visual {
+    min-height: 200px;
+    aspect-ratio: 16 / 10;
+  }
+
+  .body {
+    padding: var(--space-8) var(--space-6);
+  }
+}

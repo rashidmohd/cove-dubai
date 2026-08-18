@@ -15,11 +15,17 @@
  * it (`pms-readiness`), and a total calculated twice is a total that can
  * disagree with itself.
  */
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Glow, Weave } from '@/components/BrandEffects';
 import { formatMoney, formatStayDate } from '@/lib/format';
-import type { AvailableRoomType, Locale, PriceBreakdown } from '@/lib/api/types';
+import type {
+  AvailableRoomType,
+  Locale,
+  PriceBreakdown,
+  VoucherPreview,
+} from '@/lib/api/types';
 import styles from './Reserve.module.css';
 
 interface StaySummaryProps {
@@ -30,6 +36,11 @@ interface StaySummaryProps {
   children: number;
   room: AvailableRoomType | null;
   price: PriceBreakdown | null;
+  /** The applied discount, if the guest has entered a valid code. */
+  voucher: VoucherPreview | null;
+  /** Resolves to an error message to show inline, or null on success. */
+  onApplyVoucher: (code: string) => Promise<string | null>;
+  onRemoveVoucher: () => void;
 }
 
 export function StaySummary({
@@ -40,6 +51,9 @@ export function StaySummary({
   children,
   room,
   price,
+  voucher,
+  onApplyVoucher,
+  onRemoveVoucher,
 }: StaySummaryProps) {
   const t = useTranslations('reserve.summary');
   const tCommon = useTranslations('common');
@@ -86,6 +100,21 @@ export function StaySummary({
                 label={t('roomTotal')}
                 value={formatMoney(price.roomTotal, price.currency, locale)}
               />
+              {/* Between the room total and the fees, because that is the
+                  order the money moves in: the discount comes off the
+                  accommodation charge, and the VAT line below is already
+                  calculated on what remains. */}
+              {price.discount ? (
+                <Row
+                  label={price.discount.name[locale]}
+                  value={`−${formatMoney(
+                    price.discount.amount,
+                    price.currency,
+                    locale,
+                  )}`}
+                />
+              ) : null}
+
               <Row
                 label={t('tourismDirham')}
                 note={t('tourismDirhamNote')}
@@ -110,10 +139,116 @@ export function StaySummary({
                   commits — they are confirming a booking that takes no money. */}
               <p className={styles.sideTotalNote}>{t('payAtCheckIn')}</p>
             </div>
+
+            <VoucherField
+              voucher={voucher}
+              onApply={onApplyVoucher}
+              onRemove={onRemoveVoucher}
+            />
           </>
         )}
       </div>
     </aside>
+  );
+}
+
+/**
+ * The discount code entry.
+ *
+ * Below the total on purpose: it is optional, most guests do not have one, and
+ * putting it above the price invites the feeling that a discount is expected.
+ *
+ * Its own small form rather than part of the guest-details step, because
+ * applying a code is a request to the API that reprices the stay — it is not a
+ * field submitted with the booking, and pressing Enter here must not submit
+ * anything else.
+ */
+function VoucherField({
+  voucher,
+  onApply,
+  onRemove,
+}: {
+  voucher: VoucherPreview | null;
+  onApply: (code: string) => Promise<string | null>;
+  onRemove: () => void;
+}) {
+  const t = useTranslations('reserve');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  if (voucher) {
+    return (
+      <div className={styles.voucherApplied}>
+        <p className={styles.voucherAppliedText}>
+          {t('voucherApplied', { name: voucher.name.en })}
+        </p>
+        <button
+          type="button"
+          className={styles.voucherRemove}
+          onClick={() => {
+            onRemove();
+            setCode('');
+            setError(null);
+          }}
+        >
+          {t('voucherRemove')}
+        </button>
+      </div>
+    );
+  }
+
+  async function apply() {
+    if (!code.trim()) return;
+    setBusy(true);
+    setError(await onApply(code.trim()));
+    setBusy(false);
+  }
+
+  return (
+    <div className={styles.voucher}>
+      <label className={styles.voucherLabel} htmlFor="voucher-code">
+        {t('voucherLabel')}
+      </label>
+
+      <div className={styles.voucherRow}>
+        <input
+          id="voucher-code"
+          className={styles.voucherInput}
+          value={code}
+          onChange={(event) => {
+            setCode(event.target.value);
+            setError(null);
+          }}
+          // Enter applies the code rather than submitting the booking form
+          // this sidebar sits beside.
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              void apply();
+            }
+          }}
+          placeholder={t('voucherPlaceholder')}
+          autoComplete="off"
+          // Codes are Latin characters and digits in both locales.
+          dir="ltr"
+        />
+        <button
+          type="button"
+          className={styles.voucherApply}
+          onClick={() => void apply()}
+          disabled={busy || !code.trim()}
+        >
+          {t('voucherApply')}
+        </button>
+      </div>
+
+      {error ? (
+        <p className={styles.voucherError} role="alert">
+          <bdi>{error}</bdi>
+        </p>
+      ) : null}
+    </div>
   );
 }
 

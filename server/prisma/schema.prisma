@@ -71,11 +71,12 @@ model RoomType {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ratePlans    RatePlan[]
-  inventory    RoomTypeInventory[]
-  reservations Reservation[]
-  amenities    RoomTypeAmenity[]
+  ratePlans     RatePlan[]
+  inventory     RoomTypeInventory[]
+  reservations  Reservation[]
+  amenities     RoomTypeAmenity[]
   voucherLimits VoucherRoomType[]
+  images        RoomTypeImage[]
 
   @@index([isActive, sortOrder])
   @@map("room_types")
@@ -176,6 +177,28 @@ model RatePlan {
   /// Null on both sides means "the default plan, always applicable".
   startDate DateTime? @db.Date
   endDate   DateTime? @db.Date
+
+  /// Which nights of the week this plan prices, as **0 = Sunday … 6 = Saturday**.
+  ///
+  /// A season alone cannot express what a hotel actually charges. Dubai city
+  /// hotels price Thursday, Friday and Saturday nights above midweek, and that
+  /// pattern repeats inside every season — so without this, "weekend rate" would
+  /// mean hand-creating one dated plan per weekend, forever.
+  ///
+  /// A *night* belongs to the day it is slept on, not the day the guest checks
+  /// out: a Thursday-to-Saturday stay is two nights, Thursday and Friday.
+  ///
+  /// The numbering matches JavaScript's `Date.getUTCDay()` deliberately, because
+  /// the calendar and the inventory ledger already use it. ISO-8601's 1 = Monday
+  /// would be more standard in isolation and would guarantee that someone
+  /// eventually applies a rate to the wrong night.
+  ///
+  /// Defaults to all seven, so a plan that says nothing about days behaves
+  /// exactly as it did before this column existed. A CHECK constraint in the
+  /// migration forbids the empty array — "no days" must be impossible rather
+  /// than quietly meaning "every day", which is the failure mode that would
+  /// silently misprice a room.
+  daysOfWeek Int[] @default([0, 1, 2, 3, 4, 5, 6])
 
   minimumStayNights Int @default(1)
 
@@ -520,7 +543,7 @@ model Voucher {
   redemptionCount Int  @default(0)
 
   /// Stay requirements the booking must meet for the code to apply.
-  minimumNights Int  @default(1)
+  minimumNights Int      @default(1)
   minimumSpend  Decimal? @db.Decimal(10, 2)
 
   /// Empty means "any room type"; otherwise the code only applies to these.
@@ -612,4 +635,87 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@map("settings")
+}
+
+// ---------------------------------------------------------------------------
+// Media
+// ---------------------------------------------------------------------------
+
+/// An uploaded image, held in object storage.
+///
+/// The row records **where** the bytes are and **what they mean**; the bytes
+/// themselves live in a bucket (see `src/media/storage.ts`). Postgres is a poor
+/// place for binary blobs — it bloats backups and cannot be put behind a CDN —
+/// and the performance baseline in CLAUDE.md asks for images served from one.
+model MediaAsset {
+  id String @id @default(cuid())
+
+  /// The object key inside the bucket, e.g. `room-types/<uuid>.webp`.
+  ///
+  /// **A key, never an absolute URL.** The public origin is configuration
+  /// (`MEDIA_PUBLIC_BASE_URL`), applied when the row is read. That is what
+  /// makes moving Cloudflare R2 -> S3 + CloudFront one environment variable
+  /// rather than a migration rewriting every row.
+  storageKey String @unique
+
+  contentType String
+  byteSize    Int
+
+  /// Intrinsic pixel dimensions, measured in the browser before upload.
+  ///
+  /// Not decoration: without width and height the front-end cannot reserve the
+  /// space before the image loads, and the page reflows as each one arrives.
+  /// CLAUDE.md sets a CLS budget of 0.1, and unsized images are the single
+  /// most common way to blow it.
+  width  Int
+  height Int
+
+  /// Alt text in both languages.
+  ///
+  /// Required, not optional. WCAG 2.1 AA is non-negotiable here, and an
+  /// optional field is one nobody fills in. Bilingual for the same reason every
+  /// other piece of guest-visible content is (`arabic-rtl`) — an English alt
+  /// attribute on the Arabic site is a broken experience for exactly the people
+  /// relying on it.
+  ///
+  /// A purely decorative image would take an empty string, which is the correct
+  /// alt value for one, rather than a NULL that means "nobody decided".
+  altEn String
+  altAr String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomTypes RoomTypeImage[]
+
+  @@map("media_assets")
+}
+
+/// Which images belong to a room type, and in what order.
+///
+/// A join table rather than a column on RoomType, because a room type has a
+/// gallery rather than a picture, and the same asset can legitimately appear on
+/// more than one room type.
+///
+/// **The primary image is the lowest `sortOrder`**, not a boolean flag. An
+/// `isPrimary` column needs a partial unique index to stop two rows both
+/// claiming it, and still leaves "no primary at all" representable. Ordering
+/// cannot express either broken state.
+model RoomTypeImage {
+  id String @id @default(cuid())
+
+  roomTypeId String
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  assetId String
+  asset   MediaAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  /// The same photograph twice in one gallery is always a mistake.
+  @@unique([roomTypeId, assetId])
+  @@index([roomTypeId, sortOrder])
+  @@map("room_type_images")
 }

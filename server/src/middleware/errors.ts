@@ -39,6 +39,12 @@ const STATUS_BY_CODE: Record<BookingErrorCode, number> = {
   VOUCHER_EXHAUSTED: 409,
   VOUCHER_NOT_APPLICABLE: 409,
   VOUCHER_CODE_IN_USE: 409,
+  MEDIA_NOT_FOUND: 404,
+  // 409: the request is well-formed, it just no longer describes the gallery.
+  MEDIA_ORDER_MISMATCH: 409,
+  // 503, not 500: the service is fine, this one capability is switched off by
+  // configuration. Retrying will not help until someone sets the variables.
+  MEDIA_NOT_CONFIGURED: 503,
 };
 
 /** Raised by routes for non-domain failures such as a bad session. */

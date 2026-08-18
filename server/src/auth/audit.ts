@@ -38,6 +38,9 @@ export type AuditAction =
   | 'reservation.check_out'
   | 'room_type.update'
   | 'room_type.set_amenities'
+  | 'room_type.add_image'
+  | 'room_type.remove_image'
+  | 'room_type.reorder_images'
   | 'amenity.create'
   | 'amenity.update'
   | 'amenity.delete'
@@ -45,7 +48,10 @@ export type AuditAction =
   | 'rate_plan.update'
   | 'rate_plan.delete'
   | 'inventory.update'
-  | 'setting.update';
+  | 'setting.update'
+  | 'voucher.create'
+  | 'voucher.update'
+  | 'voucher.delete';
 
 export interface AuditEntry {
   /** Null for actions with no signed-in admin — a failed login, say. */

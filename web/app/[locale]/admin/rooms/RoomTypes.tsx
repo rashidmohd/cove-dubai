@@ -21,6 +21,7 @@ import { formatMoney, formatNumber } from '@/lib/format';
 import { AdminShell } from '../AdminShell';
 import { useAdminSession } from '../AdminSession';
 import { EditIcon } from '../icons';
+import { RoomImages } from './RoomImages';
 import {
   Badge,
   Button,
@@ -155,6 +156,24 @@ export function RoomTypes({ locale }: { locale: Locale }) {
                     already answers it, and twice is once too many. */}
               </dl>
             </CardBody>
+
+            <RoomImages
+              roomType={roomType}
+              locale={locale}
+              canEdit={canEdit}
+              onChanged={(updated) => {
+                // Patch the one room type in place rather than reloading the
+                // whole screen: a gallery edit changes nothing else, and a
+                // reload would collapse any open editor further down the page.
+                setRoomTypes((current) =>
+                  (current ?? []).map((item) =>
+                    item.code === updated.code ? updated : item,
+                  ),
+                );
+                setSaved(null);
+              }}
+              onError={setError}
+            />
 
             <AmenityPicker
               roomType={roomType}

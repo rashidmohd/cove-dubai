@@ -24,6 +24,7 @@ import {
   ReservationsIcon,
   RoomsIcon,
   SettingsIcon,
+  VouchersIcon,
   SignOutIcon,
 } from './icons';
 import { Button, cx } from './ui';
@@ -50,6 +51,7 @@ const NAV_GROUPS = [
       { href: '/admin/rooms', key: 'rooms', Icon: RoomsIcon },
       { href: '/admin/amenities', key: 'amenities', Icon: AmenitiesIcon },
       { href: '/admin/inventory', key: 'inventory', Icon: InventoryIcon },
+      { href: '/admin/vouchers', key: 'vouchers', Icon: VouchersIcon },
     ],
   },
   {

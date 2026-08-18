@@ -13,6 +13,8 @@
  * pieces that do — status badges, API error messages — live in `pieces.tsx`.
  */
 import {
+  cloneElement,
+  isValidElement,
   useEffect,
   useId,
   useRef,
@@ -196,8 +198,15 @@ export function Stat({
 /**
  * A labelled control.
  *
- * The control is a child of the `<label>`, so the association is implicit and
- * needs no matching `id`/`htmlFor` pair to be kept in sync.
+ * The control is a child of the `<label>`, so the label association is implicit
+ * and needs no matching `id`/`htmlFor` pair to be kept in sync.
+ *
+ * **The hint is deliberately not inside the `<label>`.** Everything inside a
+ * label contributes to the control's accessible *name*, so a hint placed there
+ * is announced as part of the name on every focus — "Code, letters, numbers and
+ * hyphens, for example SPRING25, edit text" — rather than as the description it
+ * is. It is rendered as a sibling and wired with `aria-describedby`, which is
+ * what screen readers and voice control expect.
  */
 export function Field({
   label,
@@ -210,12 +219,29 @@ export function Field({
   className?: string;
   children: ReactNode;
 }) {
+  const hintId = useId();
+
+  // The id is injected rather than demanded from every call site, so adding a
+  // hint to a field never becomes a two-part change someone can half-do.
+  const control =
+    hint && isValidElement(children)
+      ? cloneElement(children as React.ReactElement<{ 'aria-describedby'?: string }>, {
+          'aria-describedby': hintId,
+        })
+      : children;
+
   return (
-    <label className={cx(styles.field, className)}>
-      <span className={styles.label}>{label}</span>
-      {children}
-      {hint ? <span className={styles.hint}>{hint}</span> : null}
-    </label>
+    <div className={cx(styles.field, className)}>
+      <label className={styles.fieldLabel}>
+        <span className={styles.label}>{label}</span>
+        {control}
+      </label>
+      {hint ? (
+        <span className={styles.hint} id={hintId}>
+          {hint}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

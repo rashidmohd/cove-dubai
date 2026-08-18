@@ -15,7 +15,7 @@ import { locales } from '@/i18n/routing';
 import { publicConfig } from '@/lib/config';
 
 /** Indexable marketing routes, relative to the locale segment. */
-const ROUTES = ['', '/about', '/rooms', '/dining'] as const;
+const ROUTES = ['', '/about', '/rooms', '/offers', '/dining'] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = publicConfig.siteUrl.replace(/\/$/, '');

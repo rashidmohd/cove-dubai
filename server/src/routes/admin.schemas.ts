@@ -165,3 +165,117 @@ export const auditLogFilterSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 });
+
+/**
+ * Asking for a presigned upload URL.
+ *
+ * The browser measures the file and reports it; the server signs for exactly
+ * those values, so the URL cannot then be used for a different or larger file.
+ * The content type is checked against the allowlist in the storage module
+ * rather than duplicated here — one list, one place to change it.
+ */
+export const mediaUploadRequestSchema = z.object({
+  contentType: z.string().min(1).max(100),
+  byteSize: z.number().int().positive(),
+  width: z.number().int().positive().max(20000),
+  height: z.number().int().positive().max(20000),
+});
+
+/**
+ * Confirming an upload finished, and attaching it to a room type.
+ *
+ * Alt text is required in both languages — WCAG 2.1 AA, and Arabic is a
+ * first-class surface. An empty string is allowed because that is the correct
+ * alt for a purely decorative image; what is not allowed is omitting it, which
+ * would mean nobody decided.
+ */
+export const addRoomTypeImageSchema = z.object({
+  storageKey: z.string().min(1).max(300),
+  contentType: z.string().min(1).max(100),
+  byteSize: z.number().int().positive(),
+  width: z.number().int().positive().max(20000),
+  height: z.number().int().positive().max(20000),
+  alt: z.object({
+    en: z.string().trim().max(300),
+    ar: z.string().trim().max(300),
+  }),
+});
+
+/** The complete gallery, in the order it should display. First is primary. */
+export const reorderRoomTypeImagesSchema = z.object({
+  storageKeys: z.array(z.string().min(1).max(300)).max(50),
+});
+
+// --- Vouchers ----------------------------------------------------------------
+
+const discountTypeSchema = z.enum(['percentage', 'fixed']);
+
+/**
+ * A voucher code as typed by staff.
+ *
+ * Uppercased here so the stored value and anything a guest types converge on
+ * one form, and restricted to characters that survive being read aloud, printed
+ * on a card, and retyped — no lookalike-heavy punctuation.
+ */
+const voucherCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .min(3)
+  .max(40)
+  .regex(
+    /^[A-Z0-9][A-Z0-9-]*$/,
+    'Use letters, numbers and hyphens (for example "SPRING25").',
+  );
+
+/** Nullable rather than optional: null clears a limit, absent leaves it alone. */
+const nullableIsoDate = isoDate.nullable();
+const nullablePositiveInt = z.number().int().min(1).max(1_000_000).nullable();
+const nullableMoney = z.number().min(0).max(1_000_000).nullable();
+
+export const createVoucherSchema = z
+  .object({
+    code: voucherCodeSchema,
+    name: localizedText(120),
+    discountType: discountTypeSchema,
+    discountValue: z.number().min(0).max(1_000_000),
+    validFrom: nullableIsoDate.optional(),
+    validTo: nullableIsoDate.optional(),
+    maxRedemptions: nullablePositiveInt.optional(),
+    minimumNights: z.number().int().min(1).max(365).optional(),
+    minimumSpend: nullableMoney.optional(),
+    roomTypeCodes: z.array(text(60)).max(50).optional(),
+  })
+  .refine(
+    (v) => v.discountType !== 'percentage' || v.discountValue <= 100,
+    'A percentage discount cannot exceed 100.',
+  )
+  .refine(
+    (v) => !v.validFrom || !v.validTo || v.validTo >= v.validFrom,
+    'The end of the validity window must not be before its start.',
+  );
+
+export const updateVoucherSchema = z
+  .object({
+    name: localizedText(120).optional(),
+    discountType: discountTypeSchema.optional(),
+    discountValue: z.number().min(0).max(1_000_000).optional(),
+    validFrom: nullableIsoDate.optional(),
+    validTo: nullableIsoDate.optional(),
+    maxRedemptions: nullablePositiveInt.optional(),
+    minimumNights: z.number().int().min(1).max(365).optional(),
+    minimumSpend: nullableMoney.optional(),
+    roomTypeCodes: z.array(text(60)).max(50).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine(
+    (changes) => Object.values(changes).some((value) => value !== undefined),
+    'Provide at least one field to change.',
+  )
+  .refine(
+    (v) =>
+      v.discountType !== 'percentage' ||
+      v.discountValue === undefined ||
+      v.discountValue <= 100,
+    'A percentage discount cannot exceed 100.',
+  );
