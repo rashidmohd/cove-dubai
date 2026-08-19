@@ -5,6 +5,9 @@
   "description": "Cove Dubai booking API — the swappable reservation engine seam (Phase 1)",
   "type": "module",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "build": "tsc -p tsconfig.json",

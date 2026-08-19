@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Cove Dubai front-end \u2014 marketing site, guest booking flow, and admin panel (EN/AR)",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -101,6 +101,29 @@ On AWS, both services sit behind one domain and this tightens back to `lax` with
 
 ---
 
+## The build environment
+
+Two things about the Nixpacks build are load-bearing, and both are in version control:
+
+**Node 20 or newer.** Nixpacks defaults to Node 18 when nothing declares a version, and on 18 the install is a
+wall of `EBADENGINE` warnings — the AWS SDK, Vite, and Vitest all require 20+. Both `package.json` files now
+carry `"engines": { "node": ">=20" }`, which Nixpacks reads to pick the toolchain. If a builder ever ignores it,
+set `NIXPACKS_NODE_VERSION=22` on the service as an override.
+
+**`npm install`, not `npm ci`.** The builder mounts a persistent cache at `/app/node_modules/.cache`. `npm ci`
+deletes `node_modules` wholesale before installing, cannot remove a live mountpoint, and dies with:
+
+```
+npm error EBUSY: resource busy or locked, rmdir '/app/node_modules/.cache'
+```
+
+`npm install` writes in place and never hits it. With a committed lockfile and `package.json` in sync it resolves
+to the same tree; the difference is that it will quietly amend the lockfile if they have drifted, so keep
+`package-lock.json` committed and current. Setting `NIXPACKS_NO_CACHE=1` also works, at the cost of a cold build
+every time.
+
+---
+
 ## Email
 
 Nothing sends until `EMAIL_API_KEY` is set; without it both services log emails to the console instead, which is
