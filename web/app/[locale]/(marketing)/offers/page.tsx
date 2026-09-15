@@ -17,6 +17,7 @@ import { notFound } from 'next/navigation';
 import { Glow, Weave } from '@/components/BrandEffects';
 import {
   BodyText,
+  Photo,
   Reveal,
   Section,
   SectionHeading,
@@ -27,6 +28,7 @@ import { isLocale, type Locale } from '@/i18n/routing';
 import { bookingApi } from '@/lib/api/client';
 import type { Offer } from '@/lib/api/types';
 import { formatMoney, formatNumber, formatStayDate } from '@/lib/format';
+import { resolveRoomPhoto } from '@/lib/media';
 import styles from './page.module.css';
 
 export async function generateMetadata({
@@ -54,6 +56,7 @@ export default async function OffersPage({
 
   const t = await getTranslations('offers');
   const tCommon = await getTranslations('common');
+  const tPhoto = await getTranslations('photos');
 
   // An unreachable API must not take the page down: the hotel's own copy still
   // stands on its own, and an empty offers list reads as "none at the moment"
@@ -88,15 +91,21 @@ export default async function OffersPage({
               <li key={`${offer.roomTypeCode}-${offer.name.en}`}>
                 <Reveal delay={index * 80}>
                   <article className={styles.offer}>
-                    {/* The gradient treatment from the mockups, selected by
-                        attribute exactly as the Rooms page does. Photography
-                        replaces this when the client supplies it — `images` is
-                        already on the payload. */}
-                    <div
-                      className={styles.visual}
-                      data-swatch={offer.imageKey}
-                      role="presentation"
-                    >
+                    {/* The room's photograph, over the gradient that selected
+                        by attribute before there was any. The saving badge
+                        follows in source order so it paints above the image —
+                        both are absolutely positioned within this box. */}
+                    <div className={styles.visual} data-swatch={offer.imageKey}>
+                      <Photo
+                        photo={resolveRoomPhoto(
+                          offer,
+                          locale,
+                          tPhoto('room', {
+                            name: offer.roomTypeName[locale],
+                          }),
+                        )}
+                        sizes="(max-width: 900px) 100vw, 45vw"
+                      />
                       {offer.standardRate !== null ? (
                         <p className={styles.saving}>
                           {t('save', {

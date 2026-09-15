@@ -89,7 +89,11 @@
 
 /* --- Building ------------------------------------------------------------ */
 
+/* The one slot whose photograph was shot to match it: the facade is portrait
+   1423x1688, so 3/4 crops almost nothing. */
 .buildingVisual {
+  position: relative;
+  overflow: hidden;
   aspect-ratio: 3 / 4;
   background: linear-gradient(150deg, #c8a87c, #6a3a16);
 }

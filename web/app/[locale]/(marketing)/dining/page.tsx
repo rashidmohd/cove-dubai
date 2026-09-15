@@ -14,6 +14,7 @@ import { notFound } from 'next/navigation';
 import { Glow, Weave } from '@/components/BrandEffects';
 import {
   BodyText,
+  Photo,
   QuoteBand,
   Reveal,
   Section,
@@ -23,6 +24,7 @@ import {
 } from '@/components/marketing';
 import { Link } from '@/i18n/navigation';
 import { isLocale } from '@/i18n/routing';
+import { propertyPhoto } from '@/lib/media';
 import styles from './page.module.css';
 
 export async function generateMetadata({
@@ -49,6 +51,7 @@ export default async function DiningPage({
   setRequestLocale(locale);
 
   const t = await getTranslations('dining');
+  const tPhoto = await getTranslations('photos');
 
   return (
     <>
@@ -66,7 +69,12 @@ export default async function DiningPage({
       <Section tone="linen">
         <div className={styles.venue}>
           <Reveal>
-            <div className={styles.venueVisual} data-venue="loom" aria-hidden="true" />
+            <div className={styles.venueVisual} data-venue="loom">
+              <Photo
+                photo={propertyPhoto('restaurant', tPhoto('loom'))}
+                sizes="(max-width: 900px) 100vw, 45vw"
+              />
+            </div>
           </Reveal>
 
           <Reveal delay={120}>
@@ -104,11 +112,12 @@ export default async function DiningPage({
       <Section tone="light">
         <div className={`${styles.venue} ${styles.venueReversed}`}>
           <Reveal>
-            <div
-              className={styles.venueVisual}
-              data-venue="atelier"
-              aria-hidden="true"
-            />
+            <div className={styles.venueVisual} data-venue="atelier">
+              <Photo
+                photo={propertyPhoto('restaurantTables', tPhoto('atelier'))}
+                sizes="(max-width: 900px) 100vw, 45vw"
+              />
+            </div>
           </Reveal>
 
           <Reveal delay={120}>

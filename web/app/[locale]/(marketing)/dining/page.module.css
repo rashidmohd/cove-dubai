@@ -27,6 +27,8 @@
 }
 
 .venueVisual {
+  position: relative;
+  overflow: hidden;
   aspect-ratio: 4 / 5;
   background: linear-gradient(150deg, #c8a87c, #6a3a16);
 }

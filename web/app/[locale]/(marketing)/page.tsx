@@ -16,6 +16,7 @@ import { Glow, Weave } from '@/components/BrandEffects';
 import {
   BodyText,
   Kicker,
+  Photo,
   QuoteBand,
   Reveal,
   Section,
@@ -28,8 +29,23 @@ import { Link } from '@/i18n/navigation';
 import { bookingApi } from '@/lib/api/client';
 import { formatMoney } from '@/lib/format';
 import { isLocale } from '@/i18n/routing';
+import { propertyPhoto, resolveRoomPhoto } from '@/lib/media';
+import type { PropertyPhotoName } from '@/lib/media';
 import type { RoomType } from '@/lib/api/types';
 import styles from './page.module.css';
+
+/**
+ * The parts of the building that are not a room and not a restaurant.
+ *
+ * `key` addresses the copy, `photo` the photograph — they differ where the
+ * better shot of a space is not the one named after it.
+ */
+const FACILITIES = [
+  { key: 'pool', photo: 'pool' },
+  { key: 'gym', photo: 'gymStudio' },
+  { key: 'entrance', photo: 'entrance' },
+  { key: 'liftLobby', photo: 'liftLobby' },
+] as const satisfies ReadonlyArray<{ key: string; photo: PropertyPhotoName }>;
 
 export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   const { locale } = await params;
@@ -37,6 +53,7 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
 
   const t = await getTranslations('home');
   const tCommon = await getTranslations('common');
+  const tPhoto = await getTranslations('photos');
 
   // The API is the only source of room data — the front-end never reaches past
   // it. If it is unreachable at build time the page still renders; the rooms
@@ -111,11 +128,22 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
           </Reveal>
 
           <Reveal delay={120}>
-            {/* Decorative composition standing in for the photography the
-                client still owes us. */}
-            <div className={styles.aboutVisual} aria-hidden="true">
-              <div className={styles.aboutVisualMain} />
-              <div className={styles.aboutVisualSmall} />
+            {/* Two photographs offset against each other, the composition the
+                mockups drew as gradients. Both slots keep their gradient
+                underneath as the loading and no-photography state. */}
+            <div className={styles.aboutVisual}>
+              <div className={styles.aboutVisualMain}>
+                <Photo
+                  photo={propertyPhoto('lobby', tPhoto('lobby'))}
+                  sizes="(max-width: 900px) 100vw, 40vw"
+                />
+              </div>
+              <div className={styles.aboutVisualSmall}>
+                <Photo
+                  photo={propertyPhoto('reception', tPhoto('reception'))}
+                  sizes="(max-width: 900px) 45vw, 18vw"
+                />
+              </div>
             </div>
           </Reveal>
         </div>
@@ -145,8 +173,16 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
                   <span
                     className={styles.roomFill}
                     data-swatch={room.imageKey}
-                    aria-hidden="true"
-                  />
+                  >
+                    <Photo
+                      photo={resolveRoomPhoto(
+                        room,
+                        activeLocale,
+                        tPhoto('room', { name: room.name[activeLocale] }),
+                      )}
+                      sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                    />
+                  </span>
                   <span className={styles.roomInfo}>
                     <span className={styles.roomCategory}>
                       <bdi>{room.category[activeLocale]}</bdi>
@@ -161,6 +197,47 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
                     </span>
                   </span>
                 </Link>
+              </Reveal>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      {/* --- Facilities --- */}
+      <Section tone="light">
+        <Reveal>
+          <SectionLabel>{t('facilities.label')}</SectionLabel>
+          <SectionHeading accent={t('facilities.titleAccent')}>
+            {t('facilities.title')}
+          </SectionHeading>
+          <BodyText className={styles.facilitiesIntro}>
+            {t('facilities.intro')}
+          </BodyText>
+        </Reveal>
+
+        <ul className={styles.facilityGrid}>
+          {FACILITIES.map((facility, index) => (
+            <li key={facility.key}>
+              <Reveal delay={index * 120}>
+                <figure className={styles.facility}>
+                  <div className={styles.facilityVisual}>
+                    <Photo
+                      photo={propertyPhoto(
+                        facility.photo,
+                        tPhoto(facility.key),
+                      )}
+                      sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                    />
+                  </div>
+                  <figcaption>
+                    <h3 className={styles.facilityName}>
+                      {t(`facilities.items.${facility.key}Name`)}
+                    </h3>
+                    <BodyText>
+                      {t(`facilities.items.${facility.key}Body`)}
+                    </BodyText>
+                  </figcaption>
+                </figure>
               </Reveal>
             </li>
           ))}

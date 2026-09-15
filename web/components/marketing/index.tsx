@@ -10,6 +10,7 @@ import type { ReactNode } from 'react';
 import styles from './Marketing.module.css';
 
 export { Reveal } from './Reveal';
+export { Photo } from './Photo';
 
 type Tone = 'light' | 'linen' | 'dark';
 

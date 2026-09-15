@@ -123,6 +123,9 @@ lands with the right size and content type → delete. Uploading works.
 > what the URL will accept. Any future presigned operation needs the same treatment, and needs an abuse case
 > proving it — the original code carried a comment claiming this protection while not having it.
 
+> ⚠️ ~~**`assets-dev.covehotels.ae` is not connected to the bucket.**~~ **Resolved 15 Sep 2026** — the custom
+> domain now serves the bucket; see "Photography is live on the marketing site" below. Kept for the method.
+>
 > ⚠️ **`assets-dev.covehotels.ae` is not connected to the bucket.** Proved by uploading an object, confirming it
 > exists via `HeadObject`, and getting a Cloudflare `404 text/html` from the custom domain for the same key. DNS
 > resolves to Cloudflare and TLS is valid, so the hostname exists — it is just not bound to `r2-cove-dev`.
@@ -156,6 +159,56 @@ lists — but `ListObjectsV2` will fail if anyone reaches for it while debugging
 it is not application config): an R2 API token scoped to Object Read & Write on that one bucket, a public origin
 (r2.dev or a custom domain), and a **CORS rule allowing PUT from the web origin** — without it the browser
 refuses the direct upload.
+
+#### Photography is live on the marketing site (15 Sep 2026)
+
+**The custom domain is now bound.** `assets-dev.covehotels.ae` serves the bucket — re-measured, not assumed:
+`GET /images/hotel.jpg` returns `200 image/jpeg`, where it previously returned a Cloudflare `404 text/html`.
+That clears the display half of the two bucket-side blockers above. **CORS is still unconfigured**, so browser
+uploads through the admin gallery remain blocked; the images now on the site were put in the bucket directly.
+
+The client supplied **18 JPEGs under `images/`**: the facade, entrance, lobby (x2), reception, lift lobby,
+restaurant (x2), pool (x2), gym (x2), and six room interiors. All are 2821x1596 except `hotel.jpg`, which is
+portrait 1423x1688.
+
+How they reach the page:
+
+- **`web/lib/media.ts`** names every file against an object key and records its intrinsic size. Keys, never
+  absolute URLs — the origin is `NEXT_PUBLIC_MEDIA_BASE_URL`, mirroring the server's `MEDIA_PUBLIC_BASE_URL`.
+- **`resolveRoomPhoto` prefers the database.** A room type's uploaded `images[0]` wins; only if the gallery is
+  empty does it fall back to a photograph named by `imageKey`, and only then to the gradient. So the moment CORS
+  is fixed and someone uploads through the admin panel, that upload replaces the stand-in with no deploy.
+- **`<Photo>`** (`web/components/marketing/Photo.tsx`) fills a slot with `next/image`, which re-encodes the
+  JPEGs to WebP with a responsive `srcset` and lazy loading. Measured: `lobby.jpg` goes 1.3 MB -> 87 KB at
+  1080px.
+- **The gradients stay underneath every slot.** They are the loading state, the no-photography state, and the
+  misconfigured-origin state at once. `mediaUrl` returns null with no origin set, exactly as the server's
+  `publicUrlFor` does, so a bad environment degrades the page instead of breaking it.
+
+> **The slots are portrait and the photography is 16:9.** Room cards are `3/4`, the About composition and the
+> dining venues `4/5`. Cropping to fill discards roughly 58% of a frame's width. This was put to the client, who
+> chose to keep the mockups' layout and accept the crop rather than relax the slots to landscape. The one slot
+> that fits its photograph is the About building: the facade was shot portrait.
+
+> ⚠️ **The room-card scrim had to be strengthened.** Its single linear ramp reached near-zero opacity exactly
+> where the gold category label sits, and `CLASSIC` and `SIGNATURE` washed out against the pale ceilings in
+> these interiors — invisible while the slots were gradients. The scrim now holds `0.86` to 40% and `0.6` to
+> 70% with `4.5rem` of top padding. Verified legible on all four room types.
+
+**A new Facilities section on the home page** ("The building") carries the pool, fitness floor, entrance and
+lift lobby, which had no page to live on — there is no wellness page, though the nav links to one. Its slots are
+`4/3`, chosen to suit the photography rather than crop against it.
+
+**Still unplaced:** `lobby-2.jpg`, `pool-2.jpg`, `gym.jpg`, `room.jpg`, `room-2.jpg`. **Still gradients:** the
+three staff portraits on About — the client has supplied no people photography.
+
+> **The Offers page wiring is unverified.** It resolves photographs the same way the Rooms page does and it
+> typechecks and builds, but the database has no offers seeded, so the page renders its empty state and the
+> photograph path has never actually executed there.
+
+**Alt text is in `photos.*` in the message files, English in both.** `ar.json` is an English placeholder
+throughout (2/569 keys translated), and CLAUDE.md says the client supplies Arabic. The new keys join the 567
+already awaiting translation rather than being machine-translated.
 
 #### Rates now vary by day of week, not just by season (16 Aug 2026)
 

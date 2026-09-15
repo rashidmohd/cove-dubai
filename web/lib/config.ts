@@ -32,6 +32,17 @@ export const publicConfig = {
   apiUrl: required('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL),
   /** Public base URL of this site — canonical URLs, hreflang, OG, sitemap. */
   siteUrl: required('NEXT_PUBLIC_SITE_URL', process.env.NEXT_PUBLIC_SITE_URL),
+  /**
+   * Public origin serving photography, e.g. `https://assets.example.ae`.
+   *
+   * **Optional, unlike the two above.** The API drops images it cannot build a
+   * URL for rather than failing the response, and the marketing pages fall back
+   * to their gradients; a site with no media origin is degraded, not broken, so
+   * refusing to boot over it would be the wrong trade. It matches the API's own
+   * `MEDIA_PUBLIC_BASE_URL` and must be listed in `next.config.ts` for the
+   * image optimiser to accept it.
+   */
+  mediaBaseUrl: process.env.NEXT_PUBLIC_MEDIA_BASE_URL?.trim() || undefined,
 } as const;
 
 /**

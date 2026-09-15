@@ -17,6 +17,7 @@ import { notFound } from 'next/navigation';
 
 import {
   BodyText,
+  Photo,
   Reveal,
   Section,
   SectionHeading,
@@ -27,6 +28,7 @@ import { Link } from '@/i18n/navigation';
 import { isLocale } from '@/i18n/routing';
 import { bookingApi } from '@/lib/api/client';
 import { formatMoney } from '@/lib/format';
+import { resolveRoomPhoto } from '@/lib/media';
 import type { RoomType } from '@/lib/api/types';
 import styles from './page.module.css';
 
@@ -68,6 +70,7 @@ export default async function RoomsPage({
 
   const t = await getTranslations('rooms');
   const tCommon = await getTranslations('common');
+  const tPhoto = await getTranslations('photos');
 
   let roomTypes: RoomType[] = [];
   try {
@@ -96,11 +99,16 @@ export default async function RoomsPage({
             <li key={room.code}>
               <Reveal delay={index * 120}>
                 <article className={styles.room}>
-                  <div
-                    className={styles.roomVisual}
-                    data-swatch={room.imageKey}
-                    aria-hidden="true"
-                  />
+                  <div className={styles.roomVisual} data-swatch={room.imageKey}>
+                    <Photo
+                      photo={resolveRoomPhoto(
+                        room,
+                        locale,
+                        tPhoto('room', { name: room.name[locale] }),
+                      )}
+                      sizes="(max-width: 900px) 100vw, 50vw"
+                    />
+                  </div>
 
                   <div className={styles.roomBody}>
                     <p className={styles.roomCategory}>

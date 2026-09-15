@@ -49,6 +49,9 @@
 
 .visual {
   position: relative;
+  /* Clips the photograph's crop to the slot. The saving badge is positioned
+     against this same box, so it must stay the containing block. */
+  overflow: hidden;
   width: 100%;
   min-height: 300px;
   background: linear-gradient(150deg, #c4b8a4, #9a9080);

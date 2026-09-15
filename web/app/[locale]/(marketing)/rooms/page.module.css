@@ -42,6 +42,10 @@
      image over the text beside it. */
   width: 100%;
   min-height: 340px;
+  /* The photograph fills whatever height the row settles at, so the slot has
+     to be its containing block and has to clip the crop. */
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(150deg, #c4b8a4, #9a9080);
 }
 

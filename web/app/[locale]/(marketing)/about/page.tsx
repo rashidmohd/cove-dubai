@@ -13,6 +13,7 @@ import { notFound } from 'next/navigation';
 import { Glow, Weave } from '@/components/BrandEffects';
 import {
   BodyText,
+  Photo,
   QuoteBand,
   Reveal,
   Section,
@@ -21,6 +22,7 @@ import {
   Stats,
 } from '@/components/marketing';
 import { isLocale } from '@/i18n/routing';
+import { propertyPhoto } from '@/lib/media';
 import styles from './page.module.css';
 
 const PEOPLE = ['founder', 'design', 'chef'] as const;
@@ -56,6 +58,7 @@ export default async function AboutPage({
   setRequestLocale(locale);
 
   const t = await getTranslations('about');
+  const tPhoto = await getTranslations('photos');
 
   return (
     <>
@@ -182,7 +185,12 @@ export default async function AboutPage({
           </Reveal>
 
           <Reveal delay={120}>
-            <div className={styles.buildingVisual} aria-hidden="true" />
+            <div className={styles.buildingVisual}>
+              <Photo
+                photo={propertyPhoto('facade', tPhoto('facade'))}
+                sizes="(max-width: 900px) 100vw, 45vw"
+              />
+            </div>
           </Reveal>
         </div>
       </Section>

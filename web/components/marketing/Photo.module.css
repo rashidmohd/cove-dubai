@@ -1,0 +1,26 @@
+/**
+ * The photograph itself. Positioning comes from `fill`, which sets
+ * `position: absolute` and pins the element to its parent's box.
+ *
+ * `cover` rather than `contain`: the slots are portrait by design and the
+ * supplied photography is 16:9, so something has to give. Cropping keeps the
+ * composition the mockups established; letterboxing would put grey bands
+ * inside a rectangle the design intends to be full-bleed.
+ */
+.photo {
+  object-fit: cover;
+  /* Interiors are shot with the subject central and the ceiling generous. When
+     a wide frame is cropped to a tall slot the interesting third is the middle,
+     not the top. */
+  object-position: center;
+}
+
+/*
+ * There is deliberately no shared "slot" class here.
+ *
+ * `fill` needs a positioned ancestor with `overflow: hidden`, but several slots
+ * are already `position: absolute` within their own composition. A class from
+ * this module landing on one of those would win or lose on stylesheet order
+ * rather than on intent, and silently break the layout. Each page's own module
+ * marks its slots instead — grep `position: relative` next to a gradient.
+ */

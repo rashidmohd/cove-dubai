@@ -200,6 +200,22 @@
       "viewAll": "All rooms",
       "from": "From"
     },
+    "facilities": {
+      "label": "The building",
+      "title": "More than",
+      "titleAccent": "a room.",
+      "intro": "A pool, a fitness floor, and the spaces you pass through to reach them. The parts of a hotel nobody photographs, done properly.",
+      "items": {
+        "poolName": "The pool",
+        "poolBody": "Water, shade, and loungers set back from it.",
+        "gymName": "The fitness floor",
+        "gymBody": "Full-height glass, and enough room to use it properly.",
+        "entranceName": "Arrival",
+        "entranceBody": "Off the street and out of the heat in one movement.",
+        "liftLobbyName": "The lift lobby",
+        "liftLobbyBody": "Marble and bronze, on every floor."
+      }
+    },
     "band": {
       "quote": "The menu changes. The standard doesn't.",
       "attribution": "Chef Amara Suliman · Executive Chef"
@@ -681,5 +697,17 @@
     "nightsAvailable": "Nights",
     "bookBy": "Book by",
     "book": "Check dates"
+  },
+  "photos": {
+    "facade": "Cove Dubai at dusk, seen from the street corner",
+    "entrance": "The arrival hall, looking out through the revolving door",
+    "lobby": "The lobby lounge, seating arranged beneath a coral chandelier",
+    "reception": "The reception desk, in pale stone and warm oak",
+    "liftLobby": "The lift lobby, lined in marble and brushed bronze",
+    "pool": "The pool terrace at dusk, loungers set back from the water",
+    "gym": "The fitness floor, the city beyond full-height glass",
+    "loom": "The Loom, laid for dinner beneath its sculpted ceiling",
+    "atelier": "The Atelier, tables set along the window wall",
+    "room": "Inside {name} at Cove Dubai"
   }
 }
