@@ -42,7 +42,8 @@
   letter-spacing: 0.44em;
   text-indent: 0.44em;
   text-transform: uppercase;
-  color: var(--gold);
+  /* On light grounds; --gold is 2.18:1 here. See --bronze in tokens.css. */
+  color: var(--bronze);
   margin-bottom: 1.4rem;
   display: flex;
   align-items: center;
@@ -53,7 +54,7 @@
   content: '';
   width: 16px;
   height: 0.5px;
-  background: var(--gold);
+  background: var(--bronze);
   display: inline-block;
   flex-shrink: 0;
 }
@@ -75,7 +76,7 @@
 /* The design system's signature: one italic phrase inside a heading. */
 .headingAccent {
   font-style: italic;
-  color: var(--gold);
+  color: var(--bronze);
   display: block;
 }
 
@@ -126,8 +127,8 @@
 
 .textLink:hover,
 .textLink:focus-visible {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  color: var(--bronze);
+  border-bottom-color: var(--bronze);
 }
 
 .textLinkOnDark {

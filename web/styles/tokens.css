@@ -13,14 +13,44 @@
    * Orange is reserved for genuinely live signals and appears almost nowhere.
    */
   --ink: #1c1410; /* primary text on light */
-  --fog: #7a6e62; /* muted text, captions */
+  /* Body copy and captions. #7a6e62 passed on --w (4.73:1) but not on --linen
+     (4.17:1), and the marketing pages alternate between the two. Two steps of
+     lightness, same hue and saturation — imperceptible, and it clears both. */
+  --fog: #74695d; /* 5.11:1 on --w · 4.50:1 on --linen */
   --bone: #eae0d0; /* light text on dark */
   --linen: #f2ebd9; /* warm light surface */
   --w: #fef9f2; /* near-white, headings on dark */
 
-  --gold: #c49a52; /* primary accent */
-  --gold-lt: #d4ae6e; /* accent hover / emphasis */
+  --gold: #c49a52; /* primary accent — on DARK surfaces and hairlines only */
+  --gold-lt: #d4ae6e; /* accent hover / emphasis, on dark */
   --orange: #b85228; /* rare live/alert accent — use sparingly */
+
+  /* --- The accent on LIGHT surfaces ---------------------------------------
+   * Gold is a colour for dark grounds. Measured against the light surfaces it
+   * was also being used on, --gold reads 2.48:1 on --w and 2.18:1 on --linen —
+   * far under the WCAG 2.1 AA floor of 4.5:1 that CLAUDE.md makes
+   * non-negotiable, and white on a --gold button is 2.60:1. Every section
+   * label, heading accent, venue kind, press source and primary button on a
+   * pale ground failed.
+   *
+   * Lightness is the failing variable, so the fix has to go darker. The
+   * stakeholders asked for "bronze or light brown": bronze works, light brown
+   * does not — a literal light brown (#b08d57) measures 2.95:1, no real
+   * improvement. Web "bronze" (#cd7f32) is 3.00:1 and reads terracotta.
+   *
+   * --bronze is the LIGHTEST bronze that clears AA for small text on both
+   * light surfaces. One step lighter (#8c7853) drops to 4.07:1 and fails.
+   * It is deliberately a second token rather than a redefinition of --gold:
+   * --gold still carries text on dark grounds at 7.33:1, and darkening it
+   * globally would break the nav, the footer, the quote bands and the room
+   * card labels. Same reasoning as the --text-on-dark block below.
+   *
+   * On light grounds hover goes DARKER, not lighter — the mirror of the rule
+   * noted on --link-on-dark. Lightening a bronze on cream would make the
+   * hovered state fainter and invert the affordance.
+   */
+  --bronze: #7d6540; /* 5.27:1 on --w · 4.64:1 on --linen · white on it 5.52:1 */
+  --bronze-dk: #6b5636; /* hover/active — 6.66:1 on --w · white on it 6.98:1 */
 
   --dark: #180e06; /* primary dark background */
   --dark2: #241408; /* raised dark surface */

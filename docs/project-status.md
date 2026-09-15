@@ -160,6 +160,54 @@ it is not application config): an R2 API token scoped to Object Read & Write on 
 (r2.dev or a custom domain), and a **CORS rule allowing PUT from the web origin** — without it the browser
 refuses the direct upload.
 
+#### Text contrast on light surfaces — the accent is now bronze (15 Sep 2026)
+
+An audit of every text style on all seven pages, measured in the browser against each element's actual
+rendered background, found **43 failing styles**. Three root causes, not scattered mistakes:
+
+1. **`--gold` on light grounds.** 2.48:1 on `--w`, 2.18:1 on `--linen` — every section label, italic heading
+   accent, venue kind, press source, staff role and step numeral on a pale ground.
+2. **White on a `--gold` button.** 2.60:1, including `CHECK AVAILABILITY` and the `Select date` placeholder
+   (2.55:1) — inside the booking flow, where CLAUDE.md makes WCAG 2.1 AA non-negotiable.
+3. **`--fog` on `--linen`.** 4.17:1 — passed on `--w` (4.73) and failed only on the alternating linen sections.
+
+**The stakeholders asked for "bronze or light brown".** Bronze works; light brown does not, and it is worth
+recording why: lightness is the failing variable, so a lighter accent cannot fix it. Measured — a literal light
+brown `#b08d57` is 2.95:1, and web "bronze" `#cd7f32` is 3.00:1 and reads terracotta rather than metal.
+
+`--bronze: #7d6540` is the **lightest** bronze clearing AA for small text on both light surfaces (5.27:1 on
+`--w`, 4.64:1 on `--linen`). One step lighter, `#8c7853`, drops to 4.07:1 and fails. It also carries white text
+at 5.52:1, so bronze-filled buttons keep their white labels. `--bronze-dk: #6b5636` is the hover.
+
+> **It is a second token, not a redefinition of `--gold`.** Gold still carries text on dark grounds at 7.33:1
+> (nav, footer, quote bands, the hero, room-card labels over the scrim). Darkening it globally would have
+> broken all of those — `--bronze` on `--dark` is only 3.45:1. Same split the `--text-on-dark` block already
+> uses.
+
+Two rules fell out of it:
+
+- **On light grounds hover goes darker** (`--bronze-dk`), the mirror of the existing note on `--link-on-dark`.
+  Lightening a bronze on cream would make the hovered state fainter and invert the affordance.
+- **Buttons on dark grounds keep the gold fill and darken the label instead** (`--dark` on `--gold`, 7.33:1).
+  A bronze fill on the dark hero reads as recessed rather than hovered, and hover to `--gold-lt` is 9.13:1, so
+  the hovered state is both brighter and higher contrast.
+
+`--fog` moved `#7a6e62` -> `#74695d` (two steps of lightness, same hue and saturation): 5.11:1 on `--w`,
+4.50:1 on `--linen`. The two booking-flow placeholders went to `rgba(28,20,16,0.62)` — 5.00:1 on `--w` — and
+stay clearly lighter than an entered value, which is full `--ink`.
+
+**Re-measured after the change: 0 failing text styles across 13 page/locale combinations**, English and Arabic.
+
+> One audit artifact worth knowing for next time: the `COVE` wordmark reports 1.05:1 to any script that reads
+> the `color` property. It is painted with `background-clip: text` and a gold gradient, so `color` is unused
+> and the real contrast is ~7.3–9.1:1. Skip elements whose `-webkit-text-fill-color` is transparent.
+
+> ⚠️ **Contrast was the fixable half. The type is still very small.** Body copy is **12px at `font-weight:
+> 200` with `line-height: 2.3`**, and small labels run 7.7–8.3px. That combination — extra-light, small, very
+> loose leading — is the other half of why the pages read as hard work, and no colour change reaches it.
+> **This is not a build defect:** `.body{font-size:0.75rem;line-height:2.3;font-weight:200}` is verbatim from
+> the approved mockups. Raising it to ~14–15px at weight 300 with ~1.7 leading is a client decision, not ours.
+
 #### Photography is live on the marketing site (15 Sep 2026)
 
 **The custom domain is now bound.** `assets-dev.covehotels.ae` serves the bucket — re-measured, not assumed:

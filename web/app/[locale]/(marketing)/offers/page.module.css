@@ -98,7 +98,7 @@
   letter-spacing: 0.28em;
   text-indent: 0.28em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--bronze);
   margin-bottom: var(--space-3);
 }
 
@@ -179,7 +179,7 @@
 }
 
 .cta:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--bronze);
   outline-offset: 3px;
 }
 

@@ -77,7 +77,7 @@
   letter-spacing: 0.28em;
   text-indent: 0.28em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--bronze);
   margin-bottom: 0.5rem;
 }
 
@@ -170,7 +170,7 @@
   text-indent: 0.2em;
   text-transform: uppercase;
   padding: 0.9rem 2.2rem;
-  background: var(--gold);
+  background: var(--bronze);
   color: #fff;
   transition: all var(--transition);
 }
@@ -280,7 +280,7 @@
   position: absolute;
   inset-inline-start: calc(var(--space-4) / -2);
   transform: translateX(-50%);
-  color: var(--gold);
+  color: var(--bronze);
 }
 
 [dir='rtl'] .amenityItem + .amenityItem::before {

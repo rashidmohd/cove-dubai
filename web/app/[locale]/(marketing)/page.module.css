@@ -75,7 +75,11 @@
   text-transform: uppercase;
   padding: 1rem 2.4rem;
   background: var(--gold);
-  color: #fff;
+  /* On the dark hero, so the fill stays gold and the label goes dark: white
+     on --gold is 2.60:1, --dark on it 7.33:1. Hover lightens to --gold-lt
+     (9.13:1), so the hovered state is brighter AND higher contrast — the
+     affordance and the accessibility agree. */
+  color: var(--dark);
   transition: all var(--transition);
 }
 
@@ -307,7 +311,7 @@
 .experienceNumber {
   font-family: var(--s);
   font-size: 0.8rem;
-  color: var(--gold);
+  color: var(--bronze);
   letter-spacing: 0.2em;
 }
 
@@ -341,7 +345,7 @@
   letter-spacing: 0.28em;
   text-indent: 0.28em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--bronze);
   margin-bottom: var(--space-4);
 }
 

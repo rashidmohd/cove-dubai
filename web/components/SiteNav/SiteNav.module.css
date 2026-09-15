@@ -133,7 +133,10 @@
 .reserveButton:hover,
 .reserveButton:focus-visible {
   background: var(--gold);
-  color: #fff;
+  /* White on --gold is 2.60:1. On the dark nav the fill should stay bright —
+     a bronze one would read as recessed rather than hovered — so the label
+     darkens instead: --dark on --gold is 7.33:1. */
+  color: var(--dark);
   border-color: var(--gold);
 }
 

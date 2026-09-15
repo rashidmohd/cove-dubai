@@ -56,7 +56,7 @@
   letter-spacing: 0.44em;
   text-indent: 0.44em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--bronze);
   margin-bottom: 1.2rem;
   display: flex;
   align-items: center;
@@ -67,7 +67,7 @@
   content: '';
   width: 14px;
   height: 0.5px;
-  background: var(--gold);
+  background: var(--bronze);
   display: inline-block;
 }
 
@@ -81,7 +81,7 @@
 
 .pageHeading em {
   font-style: italic;
-  color: var(--gold);
+  color: var(--bronze);
 }
 
 .pageSub {
@@ -120,11 +120,11 @@
 
 .stepActive {
   color: var(--ink);
-  border-bottom-color: var(--gold);
+  border-bottom-color: var(--bronze);
 }
 
 .stepDone {
-  color: var(--gold);
+  color: var(--bronze);
 }
 
 .stepNum {
@@ -187,7 +187,7 @@
 }
 
 .fboxActive {
-  border-color: var(--gold);
+  border-color: var(--bronze);
 }
 
 .fbox svg {
@@ -196,7 +196,11 @@
 }
 
 .placeholder {
-  color: rgba(28, 20, 16, 0.4);
+  /* The unfilled date field. At 0.4 this was 2.55:1 — the one piece of the
+     booking flow still under the AA floor CLAUDE.md calls non-negotiable.
+     0.62 measures 5.00:1 on --w and 4.77:1 on --linen, and stays clearly
+     lighter than an entered value, which is full --ink. */
+  color: rgba(28, 20, 16, 0.62);
 }
 
 /* --- Calendar ------------------------------------------------------------ */
@@ -293,7 +297,7 @@
 }
 
 .calDaySelected {
-  background: var(--gold);
+  background: var(--bronze);
   color: #fff;
 }
 
@@ -302,7 +306,7 @@
 }
 
 .calDayToday {
-  outline: 0.5px solid var(--gold);
+  outline: 0.5px solid var(--bronze);
 }
 
 /* --- Guest counter ------------------------------------------------------- */
@@ -393,7 +397,7 @@
 }
 
 .roomSelected {
-  border-color: var(--gold);
+  border-color: var(--bronze);
   background: var(--linen);
 }
 
@@ -408,7 +412,7 @@
   letter-spacing: 0.28em;
   text-indent: 0.28em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--bronze);
   margin-bottom: 0.2rem;
 }
 
@@ -457,8 +461,8 @@
 }
 
 .roomSelected .roomCheck {
-  background: var(--gold);
-  border-color: var(--gold);
+  background: var(--bronze);
+  border-color: var(--bronze);
 }
 
 .checkMark {
@@ -505,13 +509,15 @@
 
 .input:focus,
 .textarea:focus {
-  border-color: var(--gold);
+  border-color: var(--bronze);
 }
 
 .input::placeholder,
 .textarea::placeholder {
-  /* Mockup: rgba(28,20,16,0.26). Placeholders still need to be readable. */
-  color: rgba(28, 20, 16, 0.45);
+  /* Mockup: rgba(28,20,16,0.26). Placeholders still need to be readable —
+     and 0.45 was only 2.94:1, still short. 0.62 clears 4.5:1 on every field
+     background used here. */
+  color: rgba(28, 20, 16, 0.62);
 }
 
 .inputInvalid {
@@ -550,7 +556,7 @@
   text-indent: 0.2em;
   text-transform: uppercase;
   padding: 1rem 2.6rem;
-  background: var(--gold);
+  background: var(--bronze);
   color: #fff;
   border: none;
   cursor: pointer;
@@ -736,7 +742,7 @@
 
 .successTitle em {
   font-style: italic;
-  color: var(--gold);
+  color: var(--bronze);
 }
 
 .success p {
@@ -902,7 +908,7 @@
 }
 
 .voucherInput:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--bronze);
   outline-offset: 1px;
 }
 
@@ -959,7 +965,7 @@
 .voucherAppliedText {
   font-family: var(--b);
   font-size: 0.78rem;
-  color: var(--gold-lt);
+  color: var(--bronze);
 }
 
 .voucherRemove {
