@@ -160,6 +160,35 @@ it is not application config): an R2 API token scoped to Object Read & Write on 
 (r2.dev or a custom domain), and a **CORS rule allowing PUT from the web origin** — without it the browser
 refuses the direct upload.
 
+#### Favicon and app icons (15 Sep 2026)
+
+`app/favicon.ico` was still the stock Next.js mark (black circle, white triangle). Replaced with the brand's
+own monogram — **the `C` in Cormorant**, which the design system already names as a signature effect (the
+ghost monogram), so this is the existing mark rather than a new one: gold on `--dark`, carrying the wordmark's
+gradient and a faint woven texture at the larger sizes.
+
+Three files, using the Next.js `app/` file conventions — no `<link>` tags to maintain, the framework emits them:
+
+| file | size | emitted as |
+|---|---|---|
+| `app/favicon.ico` | 16 / 32 / 48 | `rel="icon"` |
+| `app/icon.png` | 512 | `rel="icon"` |
+| `app/apple-icon.png` | 180 | `rel="apple-touch-icon"` |
+
+Two things worth recording for whoever regenerates these:
+
+- **Cormorant at its display weights disappears at 16px.** The wordmark's 300 has strokes too thin to survive
+  the downscale. The icon uses **weight 600 at a larger optical size**, with the gradient's dark end lifted
+  (`#f0d18f -> #e0b76a -> #cfa457` rather than down to `#c49a52`), because the stock gradient read as a dark
+  smudge in a tab. Four weight/brightness candidates were compared at actual 16px before choosing.
+- **PNGs inside an `.ico` must be RGBA.** The first build failed with `Format error decoding Ico: The PNG is
+  not in RGBA format!` — `sips` drops the alpha channel on a fully opaque image, and Chrome does the same when
+  encoding a screenshot. The sizes are now produced by halving down through a canvas (a single big downscale
+  loses the serifs) and encoded as colour-type-6 PNGs explicitly.
+
+Verified: build passes, all three assets return 200 with the right content types, and the `.ico` round-trips
+through the server with all three resolutions intact.
+
 #### The type scale — the UI sans was 30-40% too small (15 Sep 2026)
 
 The contrast pass below fixed colour. It could not fix size, and size was the larger half of the complaint.
