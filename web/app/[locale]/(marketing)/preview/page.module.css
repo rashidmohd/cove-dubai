@@ -1,0 +1,138 @@
+/**
+ * The directions index.
+ *
+ * Plain on purpose. It is scaffolding for a decision, and anything expressive
+ * here would compete with the three things it is asking to be looked at.
+ */
+
+.page {
+  background: var(--linen);
+  min-height: 70vh;
+  padding: var(--space-24) 5rem var(--space-32);
+}
+
+.inner {
+  max-width: var(--container);
+  margin-inline: auto;
+}
+
+.badge {
+  font-family: var(--b);
+  font-size: 0.6875rem;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  font-family: var(--s);
+  font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.intro {
+  margin-top: var(--space-6);
+  max-width: 58ch;
+  color: var(--fog);
+  line-height: 1.8;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--w);
+  border: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+
+.card:hover,
+.card:focus-visible {
+  border-color: var(--bronze);
+}
+
+.thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 2;
+  background: linear-gradient(160deg, #c4b8a4, #8a7f6e);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+
+.cardName {
+  font-family: var(--s);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.cardNote {
+  font-size: 0.9375rem;
+  color: var(--fog);
+  line-height: 1.7;
+}
+
+.cardLink {
+  margin-top: var(--space-2);
+  font-size: 0.6875rem;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+
+.current {
+  display: inline-block;
+  margin-top: var(--space-12);
+  font-size: 0.9375rem;
+  color: var(--bronze);
+  border-bottom: var(--border-hairline) solid currentColor;
+  padding-bottom: 0.3rem;
+  transition: color var(--transition);
+}
+
+.current:hover,
+.current:focus-visible {
+  color: var(--bronze-dk);
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .badge,
+:global([lang='ar']) .cardLink {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: var(--space-16) 1.5rem var(--space-24);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+}

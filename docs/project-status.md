@@ -1,6 +1,6 @@
 # Project status
 
-**Last updated:** 15 August 2026
+**Last updated:** 15 September 2026
 **Phase 1 progress:** milestones M0–M7 complete · **not yet deployed to Railway**
 **In flight:** vouchers, offers, and guest accounts — see [`promotions-and-accounts.md`](promotions-and-accounts.md)
 
@@ -25,9 +25,9 @@ at startup and exit with a readable message if anything required is missing. `se
 
 ```bash
 cd server && npm run typecheck && npm test     # 106 tests — hits the real database
-cd web    && npm run typecheck && npm test     # 10 tests — pure, no network
+cd web    && npm run typecheck && npm test     # 29 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
-cd web    && npx playwright test               # 17 e2e — needs the API running
+cd web    && npx playwright test               # 24 e2e — needs the API running
 ```
 
 The 7 admin e2e tests skip unless `E2E_ADMIN_PASSWORD` is set to the password of `admin@covedubai.local`, so the
@@ -328,6 +328,58 @@ three staff portraits on About — the client has supplied no people photography
 **Alt text is in `photos.*` in the message files, English in both.** `ar.json` is an English placeholder
 throughout (2/569 keys translated), and CLAUDE.md says the client supplies Arabic. The new keys join the 567
 already awaiting translation rather than being machine-translated.
+
+#### Three home page drafts, and a stay search that carries its dates (15 Sep 2026)
+
+The home page has no search. A guest's first question is whether the hotel has their dates, and answering it
+costs them a page load into `/reserve` and a date picker they then fill in from scratch. Three drafts of a new
+first screen are at **`/[locale]/preview`**, which lists them and links back to the home page as it stands:
+
+| Draft | Route | The bet |
+|---|---|---|
+| **Still** | `/preview/still` | One photograph at full bleed, hero line over it, search resting on the lower third. |
+| **Editorial** | `/preview/editorial` | Words and search on a linen panel, the facade full-height beside them. |
+| **Gallery** | `/preview/gallery` | Type masthead, four photographs, the search crossing the seam beneath them. |
+
+**They are drafts, not pages of the site.** Each carries `robots: noindex, nofollow`, nothing links to them, and
+`sitemap.ts` is an allowlist they are not on — a second home page with the same copy is a duplicate of the real
+one, and indexing it would let the draft win. They are **not** in `robots.txt`: a `Disallow` there would stop a
+crawler fetching the page and therefore stop it reading the `noindex`, which is the opposite of the intent.
+
+Everything below the hero is one shared `components/marketing/HomeSections.tsx`, so comparing the drafts compares
+the heroes rather than three drifting copies of a page. That file is a **copy** of the live home page's sections,
+not yet a refactor of it: the page the client has signed off must not move while they are choosing. When a hero
+wins it becomes `(marketing)/page.tsx` and the losers and the duplicate go with it.
+
+**The search is the part worth keeping whichever hero wins.** `components/booking/StaySearch.tsx` takes check-in,
+check-out and guests and links to `/reserve?checkIn=…&checkOut=…&adults=…`; `useBookingState` reads that query
+string, so the flow opens already filled in and nobody enters the same dates twice. It deliberately does **not**
+call the availability API — availability and pricing belong behind the Express seam, and a home page that quotes
+prices is a home page that needs rewriting when a PMS takes those over (`pms-readiness`). It is a very good link.
+
+Three things fell out of building it, each worth knowing:
+
+- **One calendar, not two.** The reserve flow's month grid moved to `components/booking/CalendarPopover.tsx` and
+  both now render it. The CSS moved verbatim and the `data-testid`s are unchanged, so the reserve flow renders
+  the pixels it did before — a hotel with two calendars is a hotel where one of them is wrong about the earliest
+  bookable day.
+- **The query string is validated, not trusted.** `readStayQuery` in `lib/stay-dates.ts` is pure and tested (19
+  cases): a stay in the past, a departure before its arrival, one date without the other, and `2026-02-31` all
+  degrade to an empty date field rather than to a request the API rejects for reasons the guest cannot act on.
+  `/reserve` needed a `<Suspense>` boundary for `useSearchParams` — without it the page silently stops
+  prerendering, and it is still SSG in the build output.
+- **The bar sizes itself with a container query, not a media query.** The same component sits full-width under a
+  hero and in a half-width editorial panel, where on a 1440px screen it has 540px. A viewport breakpoint gets
+  that case exactly backwards — it was the first thing that broke.
+
+Checked in a browser at 1440px and 390px in both languages: the bar mirrors natively under RTL (check-in is the
+rightmost field on `/ar`, which is the assertion in `e2e/home-search.spec.ts`), and the `still` hero's scrim was
+measured against the lightest part of its photograph rather than its average, because the nav floats over a lit
+chandelier there. `SiteNav` treats `/preview/still` as an overlay page for the same reason the home page is one;
+the other two open on a pale panel and keep the solid bar.
+
+**Not done here:** the drafts share the home page's existing copy, so nothing new awaits translation except 12
+keys (`preview.*` and one photo caption). No variant has been chosen.
 
 #### Rates now vary by day of week, not just by season (16 Aug 2026)
 

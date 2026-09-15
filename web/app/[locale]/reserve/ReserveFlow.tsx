@@ -22,6 +22,7 @@ import type {
   VoucherPreview,
 } from '@/lib/api/types';
 import { formatMoney, countNights } from '@/lib/format';
+import { MAX_ADULTS } from '@/lib/stay-dates';
 import { Confirmation } from './Confirmation';
 import { DatePicker } from './DatePicker';
 import { GuestDetails } from './GuestDetails';
@@ -346,9 +347,9 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                   type="button"
                   className={styles.counterBtn}
                   onClick={() =>
-                    update({ adults: Math.min(6, state.adults + 1) })
+                    update({ adults: Math.min(MAX_ADULTS, state.adults + 1) })
                   }
-                  disabled={state.adults >= 6}
+                  disabled={state.adults >= MAX_ADULTS}
                   aria-label={`${t('step1.guests')} +`}
                 >
                   +

@@ -1,0 +1,320 @@
+/**
+ * The stay search bar.
+ *
+ * One structure, two grounds. `--gold` carries the call to action and the
+ * hairlines and nothing else, fields are underline-free and transparent rather
+ * than boxed, and the only radius is the 2px the tokens allow
+ * (`cove-design-system`).
+ *
+ * Every directional value is logical, so the bar mirrors under `dir="rtl"`
+ * without a single flipped transform (`arabic-rtl`).
+ */
+
+.shell {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 62rem;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: 1.15fr 1.15fr 0.9fr auto;
+  align-items: end;
+  gap: 0;
+  width: 100%;
+  border-radius: var(--radius);
+  padding: var(--space-2);
+}
+
+/* --- The field ----------------------------------------------------------- */
+
+.field {
+  /* The calendar positions itself against this. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  min-width: 0;
+}
+
+/* A hairline between fields rather than a border on each, so the ends of the
+   bar stay clean. `inline-start` mirrors on its own. */
+.field + .field {
+  border-inline-start: var(--border-hairline) solid;
+}
+
+.label {
+  font-family: var(--b);
+  font-size: 0.6875rem;
+  font-weight: 300;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+/* The date buttons and the guest select are the same object to the eye: one
+   line of Jost, no box, no underline, the bar itself providing the structure. */
+.value {
+  font-family: var(--b);
+  font-size: 0.9375rem;
+  font-weight: 300;
+  text-align: start;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  /* Buttons do not inherit line-height, and without this the date sits a pixel
+     off the select beside it. */
+  line-height: 1.4;
+  transition: color var(--transition);
+}
+
+.value:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+
+select.value {
+  appearance: none;
+  /* Room for the chevron, on whichever side the language ends. */
+  padding-inline-end: var(--space-6);
+}
+
+/* The chevron for the guest select. Drawn here rather than shipped as an SVG
+   element because it is decoration on a native control, not content. */
+.field:has(select)::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: var(--space-6);
+  bottom: calc(var(--space-4) + 0.35rem);
+  width: 7px;
+  height: 7px;
+  border-inline-end: 1.5px solid;
+  border-block-end: 1.5px solid;
+  transform: rotate(45deg);
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* --- The call to action --------------------------------------------------- */
+
+.submit {
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  padding: 1.15rem 2.2rem;
+  margin: var(--space-2);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition);
+}
+
+.submit:hover,
+.submit:focus-visible {
+  /* A 2–3px lift, never a heavy shadow. */
+  transform: translateY(-3px);
+}
+
+/* --- On a photograph ------------------------------------------------------ */
+
+.dark {
+  /* Opaque enough that the measured contrasts on --dark still hold over an
+     unknown photograph. A prettier, thinner glass fails AA over a pale sky. */
+  background: rgba(24, 14, 6, 0.82);
+  backdrop-filter: blur(14px);
+  border: var(--border-hairline) solid rgba(196, 154, 82, 0.28);
+  /* Renders the native option list dark, so the open select does not flash
+     white over the hero. */
+  color-scheme: dark;
+}
+
+.dark .field + .field {
+  border-inline-start-color: rgba(234, 224, 208, 0.16);
+}
+
+.dark .label {
+  color: var(--label-on-dark);
+}
+
+.dark .value {
+  color: var(--w);
+}
+
+.dark .value:hover {
+  color: var(--gold-lt);
+}
+
+.dark .placeholder {
+  color: var(--text-on-dark-muted);
+}
+
+.dark .field:has(select)::after {
+  color: var(--bone);
+}
+
+.dark .submit {
+  background: var(--gold);
+  /* White on --gold is 2.60:1; --dark on it is 7.33:1. Hover lightens to
+     --gold-lt (9.13:1), so the hovered state is both brighter and higher
+     contrast — the affordance and the accessibility agree. */
+  color: var(--dark);
+}
+
+.dark .submit:hover,
+.dark .submit:focus-visible {
+  background: var(--gold-lt);
+}
+
+/* --- On a pale panel ------------------------------------------------------ */
+
+.light {
+  background: var(--w);
+  border: var(--border-hairline) solid rgba(28, 20, 16, 0.12);
+}
+
+.light .field + .field {
+  border-inline-start-color: rgba(28, 20, 16, 0.12);
+}
+
+.light .label {
+  color: var(--fog);
+}
+
+.light .value {
+  color: var(--ink);
+}
+
+.light .value:hover {
+  color: var(--bronze);
+}
+
+.light .placeholder {
+  /* 5.00:1 on --w, and still clearly lighter than an entered date, which is
+     full --ink. The same value the reserve flow's empty field uses. */
+  color: rgba(28, 20, 16, 0.62);
+}
+
+.light .field:has(select)::after {
+  color: var(--ink);
+}
+
+.light .submit {
+  /* Gold is a colour for dark grounds: on a pale panel the accent is --bronze,
+     which carries white at 5.52:1. */
+  background: var(--bronze);
+  color: #fff;
+}
+
+.light .submit:hover,
+.light .submit:focus-visible {
+  background: var(--bronze-dk);
+}
+
+/* --- Arabic ---------------------------------------------------------------
+ * Tracked uppercase micro-caps are a Latin typographic device. Arabic has no
+ * case, and letter-spacing breaks the joins between letters, so the signature
+ * detail is dropped rather than transliterated — the same rule the marketing
+ * pages apply to their own labels and buttons (`arabic-rtl`).
+ */
+
+:global([lang='ar']) .label,
+:global([lang='ar']) .submit {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .label {
+  font-size: 0.8125rem;
+}
+
+:global([lang='ar']) .submit {
+  font-size: 1rem;
+}
+
+/* --- Narrow ---------------------------------------------------------------
+ * Measured against the bar's own width, so the half-width editorial panel gets
+ * the same treatment at 1440px that a phone gets at 390px.
+ *
+ * Two columns rather than one, all the way down. Four stacked rows is a very
+ * tall bar on a phone, and it pushes the button that is the whole point of the
+ * component below the fold. Dates share the first row; guests and the button
+ * share the second.
+ */
+
+@container (max-width: 52rem) {
+  .bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* The guest field starts the second row, so its separator is above it, not
+     beside it — an inline-start border there reads as an orphan tick. */
+  .field:nth-child(3) {
+    border-inline-start: none;
+    border-block-start: var(--border-hairline) solid;
+  }
+
+  .dark .field:nth-child(3) {
+    border-block-start-color: rgba(234, 224, 208, 0.16);
+  }
+
+  .light .field:nth-child(3) {
+    border-block-start-color: rgba(28, 20, 16, 0.12);
+  }
+
+  .submit {
+    /* Fills its half of the second row, level with the guest field. */
+    align-self: stretch;
+    margin-inline-start: var(--space-4);
+  }
+}
+
+@container (max-width: 26rem) {
+  .bar {
+    grid-template-columns: 1fr;
+  }
+
+  .field + .field {
+    border-inline-start: none;
+    border-block-start: var(--border-hairline) solid;
+  }
+
+  .dark .field + .field {
+    border-block-start-color: rgba(234, 224, 208, 0.16);
+  }
+
+  .light .field + .field {
+    border-block-start-color: rgba(28, 20, 16, 0.12);
+  }
+
+  .submit {
+    margin-inline-start: var(--space-2);
+  }
+
+  /* A 272px calendar hanging from the start edge of a column narrower than it
+     would run off the side of the screen. Centred on the field instead. */
+  .popover {
+    inset-inline-start: 50%;
+    /* Not a logical property, and it does not need to be: this centres the box
+       on its own midpoint, which is the same move in both directions. */
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit {
+    transition: none;
+  }
+
+  .submit:hover,
+  .submit:focus-visible {
+    transform: none;
+  }
+}

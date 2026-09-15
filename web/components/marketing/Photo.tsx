@@ -25,6 +25,7 @@ export function Photo({
   photo,
   sizes,
   className,
+  priority = false,
 }: {
   /** Null when no photograph is available — the slot renders its gradient. */
   photo: Photograph | null;
@@ -35,6 +36,16 @@ export function Photo({
    */
   sizes: string;
   className?: string;
+  /**
+   * Load this one eagerly, ahead of everything else.
+   *
+   * For a photograph filling the first screen, which is then the LCP element —
+   * lazy loading it means the largest paint waits for the image to be
+   * discovered, which is the usual way the 2.5s budget in CLAUDE.md is missed.
+   * Never set on more than one image per page: marking everything urgent is
+   * the same as marking nothing.
+   */
+  priority?: boolean;
 }) {
   if (!photo) return null;
 
@@ -46,6 +57,7 @@ export function Photo({
       alt={photo.alt}
       fill
       sizes={sizes}
+      priority={priority}
       className={[styles.photo, className].filter(Boolean).join(' ')}
     />
   );

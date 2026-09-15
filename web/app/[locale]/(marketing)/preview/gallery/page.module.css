@@ -1,0 +1,136 @@
+/**
+ * Home, direction three: "Gallery".
+ *
+ * Masthead, mosaic, and a search bar pulled up over the join between them. The
+ * overlap is the whole idea, so the values that produce it — the negative pull
+ * and the padding that makes room for it — are load-bearing, not decoration.
+ */
+
+.hero {
+  background: var(--linen);
+  /* Tight on purpose. The whole idea is the bar sitting on the join between the
+     photographs and the page, and a join below the fold is not an idea. */
+  padding-block-start: var(--space-16);
+  /* Room for the search bar, which is pulled up out of this box. */
+  padding-block-end: var(--space-16);
+}
+
+.masthead {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: 5rem;
+  padding-block-end: var(--space-8);
+}
+
+.eyebrow {
+  font-size: 0.8125rem;
+  letter-spacing: var(--tracking-wide);
+  text-indent: var(--tracking-wide);
+  text-transform: uppercase;
+  /* Gold is a colour for dark grounds; on linen the accent is bronze. */
+  color: var(--bronze);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-family: var(--s);
+  font-size: clamp(2.6rem, 6vw, 4.8rem);
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.05;
+  max-width: 18ch;
+}
+
+.titleAccent {
+  font-style: italic;
+  color: var(--bronze);
+}
+
+.body {
+  margin-top: var(--space-6);
+  max-width: 46ch;
+  font-size: 1rem;
+  color: var(--fog);
+  line-height: 1.8;
+}
+
+/* --- The mosaic ----------------------------------------------------------- */
+
+.mosaic {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  /* A hairline of the page's own ground between frames, rather than a border:
+     the gap belongs to the composition, and a border would sit inside it. */
+  gap: 2px;
+  height: clamp(17rem, 34vh, 24rem);
+}
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  /* The loading and no-photography state, as everywhere else on the site. */
+  background: linear-gradient(160deg, #c4b8a4, #8a7f6e);
+}
+
+.frame:nth-child(2) {
+  background: linear-gradient(160deg, #b9ac96, #7e7464);
+}
+
+.frame:nth-child(3) {
+  background: linear-gradient(160deg, #a89c88, #6f6656);
+}
+
+.frame:nth-child(4) {
+  background: linear-gradient(160deg, #c9bda9, #91866f);
+}
+
+/* --- The search on the seam ------------------------------------------------ */
+
+.searchRow {
+  display: flex;
+  justify-content: center;
+  padding-inline: 5rem;
+  /* Half the bar sits on the photographs, half on the page. */
+  margin-block-start: -3.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.search {
+  /* The bar is a pale panel lifted off the mosaic, and this is the one place on
+     a guest-facing surface where a shadow earns itself: without it the overlap
+     reads as a mistake rather than as a layer. Kept faint. */
+  box-shadow: 0 10px 34px rgba(28, 20, 16, 0.14);
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .eyebrow {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .masthead {
+    padding-inline: 1.5rem;
+  }
+
+  .mosaic {
+    grid-template-columns: repeat(2, 1fr);
+    height: clamp(20rem, 48vh, 28rem);
+  }
+
+  .searchRow {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (max-width: 34rem) {
+  .searchRow {
+    /* Stacked, the bar is far too tall to straddle anything — the overlap would
+       push it over the whole mosaic. It sits below instead. */
+    margin-block-start: var(--space-8);
+  }
+}

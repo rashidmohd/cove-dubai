@@ -7,6 +7,7 @@
  * Unlike the marketing pages this is deliberately not worth indexing — the
  * content is a form, and its value to a searcher is the Rooms page instead.
  */
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -60,7 +61,14 @@ export default async function ReservePage({
       </nav>
 
       <main id="main">
-        <ReserveFlow locale={locale} />
+        {/* `ReserveFlow` seeds its dates from the query string — the home page
+            search links here with them — and `useSearchParams` cannot be known
+            at build time. Without this boundary the page opts out of
+            prerendering entirely, and Next fails the build rather than letting
+            it happen silently. */}
+        <Suspense fallback={null}>
+          <ReserveFlow locale={locale} />
+        </Suspense>
       </main>
 
       <SiteFooter />

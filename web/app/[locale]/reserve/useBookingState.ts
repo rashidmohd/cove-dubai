@@ -13,9 +13,16 @@
  *
  * Note what is *not* stored: no price, and no availability. Both are the API's
  * to state (`pms-readiness`), and a cached price is a price that can be wrong.
+ *
+ * Initial state has two sources — saved progress, and the query string a home
+ * page search arrives with. Both are resolved here, because "what stay is this
+ * flow starting from" is one question and should not have two answers in two
+ * components.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
+import { readStayQuery, todayInDubai } from '@/lib/stay-dates';
 import type { Locale } from '@/lib/api/types';
 
 export type Step = 1 | 2 | 3;
@@ -52,16 +59,6 @@ export const initialBookingState: BookingState = {
   guest: { firstName: '', lastName: '', email: '', phone: '' },
   specialRequests: '',
 };
-
-/** Today in Dubai, as YYYY-MM-DD. */
-function todayInDubai(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Dubai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-}
 
 /**
  * Restore saved progress, discarding anything unusable.
@@ -102,14 +99,56 @@ function restore(): BookingState {
   }
 }
 
+/**
+ * Apply a stay handed over in the query string, e.g. from the home page search.
+ *
+ * **The link wins over saved progress.** Someone who has just searched for
+ * March is telling us more about what they want than a draft from earlier in
+ * the session, and silently ignoring the dates they picked reads as a bug.
+ * Because that replaces the stay, it also drops the room chosen against the old
+ * one: a room selected for different dates may not even be available for these.
+ *
+ * Validation lives in `readStayQuery` — it is pure, and it is tested.
+ */
+function applyStayFromParams(
+  state: BookingState,
+  params: URLSearchParams,
+): BookingState {
+  const stay = readStayQuery(params, todayInDubai());
+  const next = { ...state };
+
+  if (stay.adults !== null) next.adults = stay.adults;
+
+  if (stay.checkIn && stay.checkOut) {
+    next.checkIn = stay.checkIn;
+    next.checkOut = stay.checkOut;
+    next.roomTypeCode = null;
+    next.step = 1;
+  }
+
+  return next;
+}
+
 export function useBookingState(locale: Locale) {
   // Always start from the default so the server and first client render agree;
   // restoring during render would cause a hydration mismatch.
   const [state, setState] = useState<BookingState>(initialBookingState);
   const [restored, setRestored] = useState(false);
 
+  const searchParams = useSearchParams();
+
+  // Read once, on mount. Held in a ref so that a later navigation which changes
+  // the query string cannot reach back in and overwrite dates the guest has
+  // since edited by hand.
+  const initialParams = useRef(searchParams);
+
   useEffect(() => {
-    setState(restore());
+    setState(
+      applyStayFromParams(
+        restore(),
+        new URLSearchParams(initialParams.current.toString()),
+      ),
+    );
     setRestored(true);
   }, []);
 

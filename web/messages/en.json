@@ -268,6 +268,27 @@
       }
     }
   },
+  "preview": {
+    "title": "Home page directions",
+    "intro": "Three treatments of the first screen, each with the stay search built in. Everything below the hero is identical, so what you are comparing is the hero. Pick one and the rest goes.",
+    "badge": "Draft",
+    "view": "Open",
+    "current": "The home page as it stands today",
+    "variants": {
+      "still": {
+        "name": "Still",
+        "note": "One photograph, full screen, the search resting on it."
+      },
+      "editorial": {
+        "name": "Editorial",
+        "note": "The room on one side, the words and the search on the other."
+      },
+      "gallery": {
+        "name": "Gallery",
+        "note": "Four photographs at once, the search crossing the seam below them."
+      }
+    }
+  },
   "rooms": {
     "label": "Accommodation",
     "title": "Rooms &",
@@ -706,6 +727,7 @@
     "liftLobby": "The lift lobby, lined in marble and brushed bronze",
     "pool": "The pool terrace at dusk, loungers set back from the water",
     "gym": "The fitness floor, the city beyond full-height glass",
+    "roomInterior": "A king room, the bed set against a panelled wall",
     "loom": "The Loom, laid for dinner beneath its sculpted ceiling",
     "atelier": "The Atelier, tables set along the window wall",
     "room": "Inside {name} at Cove Dubai"

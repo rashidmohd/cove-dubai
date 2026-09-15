@@ -1,0 +1,131 @@
+/**
+ * Home, direction two: "Editorial".
+ *
+ * Two columns that become two rows on a phone. The order is deliberate in both:
+ * the photograph leads on a narrow screen, where a wall of words above the fold
+ * is the worst possible first impression of a hotel.
+ */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* The solid nav on this page occupies layout space rather than floating over
+     it, so a full viewport height here would push the panel's own footer off
+     the bottom of the screen by exactly the height of the bar. */
+  min-height: calc(100vh - 5.5rem);
+  min-height: calc(100dvh - 5.5rem);
+  background: var(--linen);
+}
+
+.panel {
+  display: flex;
+  align-items: center;
+  padding: var(--space-24) 4rem;
+  /* The panel is the page's own ground, so the nav above it does not appear to
+     float over a different surface. */
+  background: var(--linen);
+}
+
+.panelInner {
+  width: 100%;
+  max-width: 34rem;
+  margin-inline-start: auto;
+}
+
+.eyebrow {
+  font-size: 0.8125rem;
+  letter-spacing: var(--tracking-wide);
+  text-indent: var(--tracking-wide);
+  text-transform: uppercase;
+  /* Gold is a colour for dark grounds; on linen the accent is bronze. */
+  color: var(--bronze);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-family: var(--s);
+  font-size: clamp(2.4rem, 4.6vw, 4.2rem);
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.05;
+  max-width: 14ch;
+}
+
+.titleAccent {
+  font-style: italic;
+  color: var(--bronze);
+}
+
+.body {
+  margin-top: var(--space-6);
+  max-width: 42ch;
+  font-size: 1rem;
+  color: var(--fog);
+  line-height: 1.8;
+}
+
+.search {
+  margin-top: var(--space-8);
+}
+
+.quiet {
+  display: inline-block;
+  margin-top: var(--space-8);
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  border-bottom: var(--border-hairline) solid currentColor;
+  padding-bottom: 0.3rem;
+  transition: color var(--transition);
+}
+
+.quiet:hover,
+.quiet:focus-visible {
+  /* On a pale ground hover goes darker. Lightening a bronze on cream would
+     make the hovered state fainter and invert the affordance. */
+  color: var(--bronze-dk);
+}
+
+.photo {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #c4b8a4, #8a7f6e);
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .eyebrow,
+:global([lang='ar']) .quiet {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    /* Height comes from the content once stacked; pinning the viewport here
+       would crush the panel against the search bar. */
+    min-height: 0;
+  }
+
+  .panel {
+    padding: var(--space-16) 1.5rem;
+    order: 2;
+  }
+
+  .panelInner {
+    max-width: none;
+    margin-inline-start: 0;
+  }
+
+  .photo {
+    order: 1;
+    /* Tall enough to be a photograph rather than a band, short enough that the
+       search still shows on a phone without scrolling far. */
+    aspect-ratio: 4 / 3;
+  }
+}
