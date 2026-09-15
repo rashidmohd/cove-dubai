@@ -379,7 +379,42 @@ chandelier there. `SiteNav` treats `/preview/still` as an overlay page for the s
 the other two open on a pale panel and keep the solid bar.
 
 **Not done here:** the drafts share the home page's existing copy, so nothing new awaits translation except 12
-keys (`preview.*` and one photo caption). No variant has been chosen.
+keys (`preview.*` and one photo caption).
+
+> **Chosen: "Still" (15 Sep 2026).** It is now `(marketing)/page.tsx` — see the entry below. `preview/still` was
+> deleted rather than kept, because it had become a byte-for-byte second copy of the home page. Editorial and
+> Gallery remain under `/preview` until nobody needs them.
+
+#### "Still" is the home page, and the navigation brings its own ground (15 Sep 2026)
+
+The client chose the full-bleed photographic hero. What changed:
+
+- **`(marketing)/page.tsx` is now that hero** — photograph, hero line, stay search on the lower third — followed
+  by `HomeSections`. It defines **no metadata of its own**, deliberately: the locale layout already sets the
+  canonical URL, the language alternates and the default title for this exact page, and a `generateMetadata` here
+  would have to restate all three correctly or quietly break them. The draft's `noindex` is gone with it.
+- **`preview/still` was deleted.** Once promoted it was a second copy of the home page at a second URL, which is
+  the duplicate-content problem the drafts were marked `noindex` to avoid in the first place.
+- **The home page's stylesheet now holds only its hero.** The section chrome moved wholesale into
+  `HomeSections.module.css`, so the copy that existed while the heroes were being compared is resolved — there is
+  one set of rules again, shared by the home page and the two remaining drafts.
+- **`SiteNav` is back to `pathname === '/'`** for the overlay variant. The `/preview/still` special case went with
+  the directory.
+
+**The navigation carries its own gradient now.** A `::before` on the transparent bar only, fading out once the
+page scrolls and the bar takes its solid background. Previously the nav's legibility was borrowed entirely from
+the hero's scrim, which meant darkening the whole ceiling of the photograph — an 0.8 alpha top stop — to keep
+seven nav items readable. The wrong thing was paying for it. With the bar bringing its own ground the hero scrim
+drops to **0.42**, and the chandelier and lobby that the client supplied are actually visible.
+
+> ⚠️ **The nav contrast was not re-measured.** Lightening the hero scrim moves the nav links closer to their
+> floor, and CLAUDE.md makes WCAG 2.1 AA non-negotiable. It reads clearly by eye at 1440px and 390px in both
+> languages, but nobody has put a number on it — **check it on staging** against the real photograph, or measure
+> it before launch. The gradient's alpha is one value in `SiteNav.module.css` if it needs to go up.
+
+Verified: 39 unit tests, 33 e2e (the home search suite now drives `/` rather than the draft path), the five
+reserve tests that exercise the calendar without writing reservations, a clean build with the home page and both
+drafts prerendered in both locales, and lint steady at its 11 pre-existing errors.
 
 #### The calendar now opens where it can be reached — including in the live booking flow (15 Sep 2026)
 

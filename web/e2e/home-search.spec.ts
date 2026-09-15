@@ -26,8 +26,21 @@ function isoDaysFromNow(days: number): string {
 const CHECK_IN = isoDaysFromNow(DAYS_AHEAD);
 const CHECK_OUT = isoDaysFromNow(DAYS_AHEAD + 3);
 
-/** The three hero treatments all mount the same search component. */
-const VARIANTS = ['still', 'editorial', 'gallery'] as const;
+/**
+ * Every surface that mounts the search, by the path it lives at.
+ *
+ * The home page leads, because it is the one that ships. "Still" became it on
+ * 15 Sep 2026, so there is no `/preview/still` any more — the two drafts below
+ * are the directions that were not taken, kept until nobody needs them.
+ */
+const SURFACES = [
+  { name: 'home', path: '' },
+  { name: 'editorial', path: '/preview/editorial' },
+  { name: 'gallery', path: '/preview/gallery' },
+] as const;
+
+/** The home page, in the language under test. */
+const home = (locale: 'en' | 'ar') => `/${locale}`;
 
 /**
  * Advance the calendar to the month containing `isoDate`.
@@ -48,11 +61,11 @@ async function navigateToMonth(page: Page, isoDate: string) {
 }
 
 test.describe('home page stay search', () => {
-  for (const variant of VARIANTS) {
-    test(`the ${variant} hero hands its dates to the reserve flow`, async ({
+  for (const surface of SURFACES) {
+    test(`the ${surface.name} hero hands its dates to the reserve flow`, async ({
       page,
     }) => {
-      await page.goto(`/en/preview/${variant}`);
+      await page.goto(`/en${surface.path}`);
 
       await page.getByTestId('stay-search-checkin').click();
       await navigateToMonth(page, CHECK_IN);
@@ -83,14 +96,15 @@ test.describe('home page stay search', () => {
   test('an empty search opens the calendar instead of navigating', async ({
     page,
   }) => {
-    await page.goto('/en/preview/still');
+    await page.goto(home('en'));
 
     await page.getByTestId('stay-search-submit').click();
 
     // Saying what is missing beats an error under an empty field — and the
     // guest must not land on a booking form with nothing filled in.
     await expect(page.getByRole('dialog', { name: 'Check in' })).toBeVisible();
-    expect(page.url()).toContain('/preview/still');
+    // Still on the home page: an empty search must not navigate anywhere.
+    expect(page.url()).not.toContain('/reserve');
   });
 
   test('a stay in the query string fills the reserve flow', async ({
@@ -120,7 +134,7 @@ test.describe('home page stay search', () => {
   });
 
   test('the bar mirrors in Arabic', async ({ page }) => {
-    await page.goto('/ar/preview/still');
+    await page.goto(home('ar'));
 
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 
@@ -169,18 +183,18 @@ test.describe('the calendar opens where it can be reached', () => {
     expect(overflowTop, `${label}: ran off the top`).toBeLessThanOrEqual(0);
   }
 
-  for (const variant of VARIANTS) {
+  for (const surface of SURFACES) {
     for (const viewport of [
       { width: 1440, height: 900 },
       { width: 390, height: 844 },
     ]) {
-      const label = `${variant} at ${viewport.width}x${viewport.height}`;
+      const label = `${surface.name} at ${viewport.width}x${viewport.height}`;
 
       test(`the ${label} hero keeps its calendar on screen`, async ({
         page,
       }) => {
         await page.setViewportSize(viewport);
-        await page.goto(`/en/preview/${variant}`);
+        await page.goto(`/en${surface.path}`);
 
         await page.getByTestId('stay-search-checkin').click();
         await expectFullyOnScreen(page, label);
@@ -220,10 +234,10 @@ test.describe('the calendar opens where it can be reached', () => {
   }) => {
     // Placement is presentation, but it is applied by the same component that
     // handles the click. This proves moving the popover did not break using it.
-    await page.goto('/en/preview/still');
+    await page.goto(home('en'));
 
     await page.getByTestId('stay-search-checkin').click();
-    await expectFullyOnScreen(page, 'still (before navigating)');
+    await expectFullyOnScreen(page, 'home (before navigating)');
     await navigateToMonth(page, CHECK_IN);
     await page.getByTestId(`day-${CHECK_IN}`).click();
     await page.getByTestId(`day-${CHECK_OUT}`).click();
