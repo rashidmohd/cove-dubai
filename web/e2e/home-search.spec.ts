@@ -139,3 +139,97 @@ test.describe('home page stay search', () => {
     expect(checkIn!.x).toBeGreaterThan(checkOut!.x);
   });
 });
+
+/**
+ * The calendar has to be reachable without scrolling.
+ *
+ * It used to be pinned below its field, and every field we have sits low on the
+ * screen — the hero search on the lower third, the reserve flow's own picker
+ * below the fold on a short laptop window. A guest was asked to scroll blind to
+ * reach the days, which on a booking form is a lost booking.
+ *
+ * Each case below is a viewport that was measured as broken. Opening a calendar
+ * writes nothing, so none of these touch the database.
+ */
+test.describe('the calendar opens where it can be reached', () => {
+  /** Fails with how far off screen it went, rather than just "false". */
+  async function expectFullyOnScreen(page: Page, label: string) {
+    const box = await page.getByRole('dialog').boundingBox();
+    expect(box, `${label}: the calendar should be rendered`).not.toBeNull();
+
+    const viewport = page.viewportSize();
+    expect(viewport).not.toBeNull();
+
+    const overflowBottom = Math.round(box!.y + box!.height - viewport!.height);
+    const overflowTop = Math.round(-box!.y);
+
+    expect(overflowBottom, `${label}: ran off the bottom`).toBeLessThanOrEqual(
+      0,
+    );
+    expect(overflowTop, `${label}: ran off the top`).toBeLessThanOrEqual(0);
+  }
+
+  for (const variant of VARIANTS) {
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 390, height: 844 },
+    ]) {
+      const label = `${variant} at ${viewport.width}x${viewport.height}`;
+
+      test(`the ${label} hero keeps its calendar on screen`, async ({
+        page,
+      }) => {
+        await page.setViewportSize(viewport);
+        await page.goto(`/en/preview/${variant}`);
+
+        await page.getByTestId('stay-search-checkin').click();
+        await expectFullyOnScreen(page, label);
+
+        // And the departure calendar too — it is a second popover on a second
+        // field, and only the first one was ever looked at by hand.
+        await page.getByTestId('stay-search-checkout').click();
+        await expectFullyOnScreen(page, `${label} (check-out)`);
+      });
+    }
+  }
+
+  test('the reserve flow keeps its calendar on screen on a short window', async ({
+    page,
+  }) => {
+    // 1440x620 — a 13-inch laptop with browser chrome. Measured at 271px below
+    // the fold before this was fixed.
+    await page.setViewportSize({ width: 1440, height: 620 });
+    await page.goto('/en/reserve');
+
+    await page.getByTestId('checkin-field').click();
+    await expectFullyOnScreen(page, 'reserve at 1440x620');
+  });
+
+  test('the reserve flow keeps its calendar on screen on a phone', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/en/reserve');
+
+    await page.getByTestId('checkin-field').click();
+    await expectFullyOnScreen(page, 'reserve at 390x844');
+  });
+
+  test('a flipped calendar still picks the day it was asked for', async ({
+    page,
+  }) => {
+    // Placement is presentation, but it is applied by the same component that
+    // handles the click. This proves moving the popover did not break using it.
+    await page.goto('/en/preview/still');
+
+    await page.getByTestId('stay-search-checkin').click();
+    await expectFullyOnScreen(page, 'still (before navigating)');
+    await navigateToMonth(page, CHECK_IN);
+    await page.getByTestId(`day-${CHECK_IN}`).click();
+    await page.getByTestId(`day-${CHECK_OUT}`).click();
+
+    await page.getByTestId('stay-search-submit').click();
+    await page.waitForURL(/\/en\/reserve\?/);
+    expect(new URL(page.url()).searchParams.get('checkIn')).toBe(CHECK_IN);
+  });
+});

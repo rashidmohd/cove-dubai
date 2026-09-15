@@ -23,6 +23,22 @@
   z-index: 50;
   padding: 1.2rem;
   box-shadow: 0 8px 28px rgba(28, 20, 16, 0.08);
+  /* Unset unless the calendar fits on neither side of its field — see
+     `placement.ts`. A phone in landscape is the case this exists for. */
+  max-height: var(--calendar-max-height, none);
+  overflow-y: auto;
+}
+
+/**
+ * Opened upwards, because there was not enough room below.
+ *
+ * Only the block axis moves. `inset-inline-start` is untouched, so the popover
+ * still hangs off the start edge of its field and still mirrors under RTL
+ * without a second rule (`arabic-rtl`).
+ */
+.above {
+  top: auto;
+  bottom: calc(100% + 6px);
 }
 
 .calHead {

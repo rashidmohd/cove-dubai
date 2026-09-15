@@ -25,9 +25,9 @@ at startup and exit with a readable message if anything required is missing. `se
 
 ```bash
 cd server && npm run typecheck && npm test     # 106 tests — hits the real database
-cd web    && npm run typecheck && npm test     # 29 tests — pure, no network
+cd web    && npm run typecheck && npm test     # 39 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
-cd web    && npx playwright test               # 24 e2e — needs the API running
+cd web    && npx playwright test               # 33 e2e — needs the API running
 ```
 
 The 7 admin e2e tests skip unless `E2E_ADMIN_PASSWORD` is set to the password of `admin@covedubai.local`, so the
@@ -380,6 +380,53 @@ the other two open on a pale panel and keep the solid bar.
 
 **Not done here:** the drafts share the home page's existing copy, so nothing new awaits translation except 12
 keys (`preview.*` and one photo caption). No variant has been chosen.
+
+#### The calendar now opens where it can be reached — including in the live booking flow (15 Sep 2026)
+
+The date picker was pinned below its field (`top: calc(100% + 6px)`), and every field we have sits low on the
+screen. Found on the new hero search, but **the shipping reserve flow had it too**, which is the part that
+mattered. Measured in Chrome before the fix, calendar 289px tall:
+
+| Surface | Viewport | Below the fold |
+|---|---|---|
+| `/preview/still` | 1440x900 | 224px — only the month header was visible |
+| `/preview/gallery` | 1440x900 | 246px |
+| **`/reserve`** | 1440x620 | **271px** |
+| **`/reserve`** | 390x844 | **57px** |
+
+A guest on a 13-inch laptop or any phone was being asked to scroll blind to reach the days, on the one journey
+that earns money. Because both surfaces already shared `CalendarPopover`, one fix covered both — `DatePicker.tsx`
+and `StaySearch.tsx` are untouched, which is what the extraction above was for.
+
+The popover now measures its field on open and flips above it when it does not fit below. The arithmetic is in
+`components/booking/placement.ts`, pure and tested apart from the DOM; the component measures and applies it in a
+**`useLayoutEffect`**, so the flip lands in the same frame the calendar appears in and is never seen as a jump.
+It re-measures on resize and scroll, since the reserve page can be scrolled with the picker open.
+
+Decisions worth knowing:
+
+- **Below is preferred and only given up when it does not fit.** It is what a date field is expected to do and it
+  leaves the field itself unobscured.
+- **The margin is 8px, and that number was measured, not chosen.** The reserve flow at 1440x900 clears the bottom
+  of the window by 18px. At a margin of 12 that case sits exactly on the boundary, where the field's fractional
+  pixel decides whether it flips — and flipping there throws the calendar over the step heading for no gain. It
+  still opens downwards, as it always has. The point was to rescue what was broken, not to move what worked.
+- **Nothing special-cases the fixed nav** on `/preview/still`. A flipped calendar could only slide under that bar
+  when the field is near the top of the screen — and then there is more room below, so it never flips. The rule
+  corrects for the nav without being told it exists.
+- **When it fits on neither side** (a phone in landscape) it takes the roomier side and scrolls internally, with
+  a floor so it can never be capped to an unusable sliver.
+
+Verified: 9 unit cases in `tests/calendar-placement.test.ts` built from the measured numbers, 9 new e2e cases in
+`e2e/home-search.spec.ts` asserting the open dialog lies fully within the viewport (both calendars, three drafts,
+two viewports, plus `/reserve` at 1440x620 and 390x844), and the 5 reserve tests that exercise the calendar
+without writing reservations. Re-measured afterwards: every case above opens fully on screen, and `/reserve` at
+1440x900 still opens downwards.
+
+> ⚠️ **Found while checking this, not caused by it: the Arabic weekday row is cramped.** In the 272px calendar,
+> `الأربعاء` / `الخميس` and their neighbours collide at 0.6875rem across seven columns — Arabic weekday names are
+> much longer than `WED`/`THU`. It predates this work and is equally visible in the reserve flow. Either the
+> calendar widens on `/ar` or the names shorten; both are a design call, not a bug fix.
 
 #### Rates now vary by day of week, not just by season (16 Aug 2026)
 
