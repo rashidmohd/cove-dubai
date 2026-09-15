@@ -38,7 +38,7 @@
 /* --- Eyebrow label ------------------------------------------------------- */
 
 .label {
-  font-size: 0.52rem;
+  font-size: 0.75rem;
   letter-spacing: 0.44em;
   text-indent: 0.44em;
   text-transform: uppercase;
@@ -87,10 +87,12 @@
 /* --- Body copy ----------------------------------------------------------- */
 
 .body {
-  font-size: 0.75rem;
-  line-height: 2.3;
+  font-size: 0.9375rem;
+  /* Was 2.3. At the old 12px that was 27.6px between baselines — enough gap
+     that the eye loses the line on the return sweep. */
+  line-height: 1.8;
   color: var(--fog);
-  font-weight: 200;
+  font-weight: 300;
   letter-spacing: 0.02em;
   max-width: 54ch;
 }
@@ -100,18 +102,18 @@
 }
 
 .kicker {
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--fog);
   margin-top: 0.9rem;
-  font-weight: 200;
+  font-weight: 300;
 }
 
 /* --- Quiet text link ----------------------------------------------------- */
 
 .textLink {
-  font-size: 0.56rem;
+  font-size: 0.75rem;
   letter-spacing: 0.22em;
   text-indent: 0.22em;
   text-transform: uppercase;
@@ -165,7 +167,7 @@
 }
 
 .statLabel {
-  font-size: 0.48rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.22em;
   text-indent: 0.22em;
   text-transform: uppercase;
@@ -214,7 +216,7 @@
   position: relative;
   z-index: 1;
   margin-top: 2rem;
-  font-size: 0.52rem;
+  font-size: 0.75rem;
   letter-spacing: 0.28em;
   text-indent: 0.28em;
   text-transform: uppercase;
@@ -263,11 +265,11 @@
 
 :global([lang='ar']) .label,
 :global([lang='ar']) .statLabel {
-  font-size: 0.8rem;
+  font-size: 0.9375rem;
 }
 
 :global([lang='ar']) .body {
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 @media (max-width: 900px) {

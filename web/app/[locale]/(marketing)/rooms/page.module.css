@@ -73,7 +73,7 @@
 }
 
 .roomCategory {
-  font-size: 0.48rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.28em;
   text-indent: 0.28em;
   text-transform: uppercase;
@@ -109,7 +109,7 @@
 }
 
 .specLabel {
-  font-size: 0.44rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.26em;
   text-indent: 0.26em;
   text-transform: uppercase;
@@ -118,7 +118,7 @@
 
 .specValue {
   margin: 0.35rem 0 0;
-  font-size: 0.78rem;
+  font-size: 0.9375rem;
   color: var(--ink);
   font-weight: 300;
 }
@@ -144,7 +144,7 @@
 }
 
 .priceLabel {
-  font-size: 0.46rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.26em;
   text-indent: 0.26em;
   text-transform: uppercase;
@@ -159,13 +159,13 @@
 }
 
 .pricePer {
-  font-size: 0.52rem;
+  font-size: 0.75rem;
   letter-spacing: 0.14em;
   color: var(--fog);
 }
 
 .reserve {
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
@@ -206,7 +206,7 @@
 
 :global([lang='ar']) .roomCategory,
 :global([lang='ar']) .specLabel {
-  font-size: 0.8rem;
+  font-size: 0.9375rem;
 }
 
 @media (max-width: 900px) {
@@ -247,7 +247,7 @@
 
 .amenitiesTitle {
   font-family: var(--b);
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   text-indent: var(--tracking-label);
@@ -268,7 +268,7 @@
 
 .amenityItem {
   font-family: var(--b);
-  font-size: 0.78rem;
+  font-size: 0.9375rem;
   color: var(--ink);
   position: relative;
 }

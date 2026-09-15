@@ -160,6 +160,48 @@ it is not application config): an R2 API token scoped to Object Read & Write on 
 (r2.dev or a custom domain), and a **CORS rule allowing PUT from the web origin** — without it the browser
 refuses the direct upload.
 
+#### The type scale — the UI sans was 30-40% too small (15 Sep 2026)
+
+The contrast pass below fixed colour. It could not fix size, and size was the larger half of the complaint.
+
+Measured across seven pages: **the entire UI sans (Jost) rendered between 6.4px and 12.8px.** Nothing in it
+exceeded 12.8px except the hero lede. A primary CTA at 9.9px, room prices at 9.3px, form field labels at
+7.7px, the "DUBAI" sub-mark at 6.4px, and body copy at **12px / weight 200 / line-height 2.3**. The serif
+headings (Cormorant, 16-88px) were never the problem and are untouched.
+
+**This came from the approved mockups** — `.body{font-size:0.75rem;line-height:2.3;font-weight:200}` is
+verbatim from `design/mockups/home.html`. It is a deliberate deviation from an approved design, taken on the
+client's instruction, and **is worth raising with them explicitly** rather than letting them discover it.
+
+Rather than nudge 101 individual declarations, the **scale** was remapped — a monotonic non-decreasing
+old->new table applied mechanically, so no two sizes ever swap order and the design's hierarchy survives
+exactly:
+
+| was | now | | was | now |
+|---|---|---|---|---|
+| 0.40-0.48rem (6.4-7.7px) | **11px** | | 0.68-0.72rem (10.9-11.5px) | **14px** |
+| 0.50-0.56rem (8.0-9.0px) | **12px** | | 0.74-0.82rem (11.8-13.1px) | **15px** |
+| 0.58-0.62rem (9.3-9.9px) | **13px** | | 0.85-0.95rem (13.6-15.2px) | **16px** |
+
+Nothing is pushed past 1rem, so the Cormorant headings keep their lead. **11px is the floor.** Also:
+`font-weight: 200` -> `300` in 7 places (Jost 200 breaks up at body size), and the three loose leadings
+(2.3, 2.1, 2.0) -> 1.8. The existing `[lang='ar']` overrides scale with everything else, so Arabic stays a
+step larger than English as designed.
+
+> ⚠️ **This broke the booking flow on phones, and the break was caught only by measuring.** `.steps` is a flex
+> row of items that cannot shrink below their own text; at the larger type its min-content went to 385px
+> against 342px of available phone column, forcing `.formSide` out to 433px and scrolling `/reserve`
+> sideways at 390px. Confirmed as newly introduced by stashing the change and re-measuring the baseline
+> clean. Fixed with tighter gutters and `flex-wrap` in the existing `max-width: 1000px` block. **The reserve
+> flow has exactly one breakpoint (1000px)** — it is tuned for tablet, not phone, and is the place any future
+> type or copy change will break first.
+
+Verified after: **no horizontal overflow at 1440 / 1024 / 768 / 390 / 360px** across 13 page/locale
+combinations, **0 contrast failures**, and the smallest text rendered anywhere is now **11px, up from 6.4px**.
+
+**Not done: the `/admin` panel.** It has its own visual language and its own small type, and was deliberately
+left out of scope — this pass covers the guest-facing site and the booking flow only.
+
 #### Text contrast on light surfaces — the accent is now bronze (15 Sep 2026)
 
 An audit of every text style on all seven pages, measured in the browser against each element's actual

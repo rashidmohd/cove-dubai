@@ -29,7 +29,7 @@
 }
 
 .eyebrow {
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   letter-spacing: var(--tracking-wide);
   text-indent: var(--tracking-wide);
   text-transform: uppercase;
@@ -69,7 +69,7 @@
 
 .cta {
   display: inline-block;
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
@@ -91,7 +91,7 @@
 }
 
 .ctaQuiet {
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
@@ -214,7 +214,7 @@
 
 .roomCategory {
   display: block;
-  font-size: 0.5rem;
+  font-size: 0.75rem;
   letter-spacing: 0.34em;
   text-indent: 0.34em;
   text-transform: uppercase;
@@ -232,7 +232,7 @@
 
 .roomPrice {
   display: block;
-  font-size: 0.58rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.14em;
   color: var(--gold-lt);
   margin-top: 0.5rem;
@@ -310,7 +310,7 @@
 
 .experienceNumber {
   font-family: var(--s);
-  font-size: 0.8rem;
+  font-size: 0.9375rem;
   color: var(--bronze);
   letter-spacing: 0.2em;
 }
@@ -341,7 +341,7 @@
 }
 
 .pressSource {
-  font-size: 0.52rem;
+  font-size: 0.75rem;
   letter-spacing: 0.28em;
   text-indent: 0.28em;
   text-transform: uppercase;
@@ -361,7 +361,7 @@
 
 .pressAward {
   margin-top: var(--space-4);
-  font-size: 0.58rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.16em;
   color: var(--fog);
 }
@@ -397,7 +397,7 @@
 
 .guestAttribution {
   margin-top: var(--space-6);
-  font-size: 0.52rem;
+  font-size: 0.75rem;
   letter-spacing: 0.24em;
   text-indent: 0.24em;
   text-transform: uppercase;
@@ -415,7 +415,7 @@
   text-transform: none;
   letter-spacing: 0;
   text-indent: 0;
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 @media (max-width: 900px) {

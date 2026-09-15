@@ -33,7 +33,7 @@
 .link {
   display: inline-block;
   margin-top: var(--space-12);
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
@@ -52,7 +52,7 @@
   text-transform: none;
   letter-spacing: 0;
   text-indent: 0;
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 @media (max-width: 900px) {

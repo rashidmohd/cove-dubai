@@ -33,7 +33,7 @@
 
 .body {
   font-family: var(--b);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: var(--line-height-base);
   color: var(--fog);
   margin-bottom: var(--space-8);
@@ -41,7 +41,7 @@
 
 .status {
   font-family: var(--b);
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   color: var(--fog);
@@ -51,7 +51,7 @@
   padding: var(--space-4);
   margin-bottom: var(--space-6);
   font-family: var(--b);
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--orange);
   background: rgba(184, 82, 40, 0.08);
   border: var(--border-hairline) solid rgba(184, 82, 40, 0.3);
@@ -62,7 +62,7 @@
   padding: var(--space-4);
   margin-bottom: var(--space-6);
   font-family: var(--b);
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--ink);
   background: rgba(196, 154, 82, 0.14);
   border: var(--border-hairline) solid rgba(196, 154, 82, 0.4);
@@ -84,7 +84,7 @@
 
 .rowLabel {
   font-family: var(--b);
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   color: var(--fog);
@@ -92,7 +92,7 @@
 
 .rowValue {
   font-family: var(--b);
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--ink);
   /* `end`, not `right` — follows the reading direction. */
   text-align: end;
@@ -111,7 +111,7 @@
 .confirm {
   padding: var(--space-4) var(--space-8);
   font-family: var(--b);
-  font-size: 0.68rem;
+  font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   text-indent: var(--tracking-label);
@@ -134,7 +134,7 @@
 
 .keep {
   font-family: var(--b);
-  font-size: 0.68rem;
+  font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   color: var(--ink);

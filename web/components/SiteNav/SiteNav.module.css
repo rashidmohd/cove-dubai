@@ -70,7 +70,7 @@
 }
 
 .city {
-  font-size: 0.4rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.6em;
   text-transform: uppercase;
   color: var(--label-on-dark);
@@ -87,7 +87,7 @@
 }
 
 .links a {
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.28em;
   /* The signature detail: tracking is added to the right of each glyph, which
      pushes the word off-centre. A matching indent pulls it back optically. */
@@ -117,7 +117,7 @@
 
 .reserveButton {
   font-family: var(--b);
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   font-weight: 300;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
@@ -142,7 +142,7 @@
 
 .langToggle {
   font-family: var(--b);
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   font-weight: 300;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
@@ -170,7 +170,7 @@
   text-transform: none;
   letter-spacing: 0;
   text-indent: 0;
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
 }
 
 @media (max-width: 1100px) {

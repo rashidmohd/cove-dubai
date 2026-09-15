@@ -27,7 +27,7 @@
 }
 
 .crumb {
-  font-size: 0.48rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
   text-transform: uppercase;
@@ -52,7 +52,7 @@
 }
 
 .pageLabel {
-  font-size: 0.5rem;
+  font-size: 0.75rem;
   letter-spacing: 0.44em;
   text-indent: 0.44em;
   text-transform: uppercase;
@@ -85,9 +85,9 @@
 }
 
 .pageSub {
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   color: var(--fog);
-  font-weight: 200;
+  font-weight: 300;
   margin: 1rem 0 3.5rem;
   line-height: 1.8;
 }
@@ -106,7 +106,7 @@
 .step {
   padding: 0 0 1.2rem;
   margin-inline-end: 3rem;
-  font-size: 0.52rem;
+  font-size: 0.75rem;
   letter-spacing: 0.22em;
   text-indent: 0.22em;
   text-transform: uppercase;
@@ -135,7 +135,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.46rem;
+  font-size: 0.6875rem;
   flex-shrink: 0;
   text-indent: 0;
 }
@@ -157,7 +157,7 @@
 }
 
 .fieldLabel {
-  font-size: 0.48rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
   text-transform: uppercase;
@@ -168,7 +168,7 @@
   border: 0.5px solid rgba(28, 20, 16, 0.12);
   padding: 0.9rem 1.1rem;
   font-family: var(--b);
-  font-size: 0.76rem;
+  font-size: 0.9375rem;
   font-weight: 300;
   color: var(--ink);
   background: var(--w);
@@ -225,7 +225,7 @@
 }
 
 .calMonth {
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   color: var(--ink);
 }
 
@@ -256,7 +256,7 @@
 }
 
 .calWeekdays span {
-  font-size: 0.48rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--fog);
@@ -271,7 +271,7 @@
 }
 
 .calDay {
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   color: var(--ink);
   text-align: center;
   padding: 0.38rem 0.1rem;
@@ -342,7 +342,7 @@
 }
 
 .counterValue {
-  font-size: 0.78rem;
+  font-size: 0.9375rem;
   color: var(--ink);
   min-width: 14px;
   text-align: center;
@@ -358,7 +358,7 @@
 /* --- Room list ----------------------------------------------------------- */
 
 .roomsLabel {
-  font-size: 0.48rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.32em;
   text-indent: 0.32em;
   text-transform: uppercase;
@@ -408,7 +408,7 @@
 }
 
 .roomCategory {
-  font-size: 0.48rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.28em;
   text-indent: 0.28em;
   text-transform: uppercase;
@@ -425,7 +425,7 @@
 }
 
 .roomMeta {
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   color: var(--fog);
 }
 
@@ -440,7 +440,7 @@
 }
 
 .roomPer {
-  font-size: 0.46rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--fog);
@@ -498,7 +498,7 @@
   border: 0.5px solid rgba(28, 20, 16, 0.12);
   padding: 0.9rem 1.1rem;
   font-family: var(--b);
-  font-size: 0.76rem;
+  font-size: 0.9375rem;
   font-weight: 300;
   color: var(--ink);
   background: var(--w);
@@ -530,13 +530,13 @@
 }
 
 .fieldError {
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   color: var(--orange);
   margin-top: 0.35rem;
 }
 
 .hint {
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   color: var(--fog);
   margin-top: 0.35rem;
 }
@@ -551,7 +551,7 @@
 }
 
 .btnPrimary {
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
@@ -575,7 +575,7 @@
 }
 
 .btnBack {
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
@@ -584,7 +584,7 @@
   border: none;
   cursor: pointer;
   font-family: var(--b);
-  font-weight: 200;
+  font-weight: 300;
   transition: color 0.3s;
 }
 
@@ -599,7 +599,7 @@
   background: rgba(184, 82, 40, 0.06);
   color: var(--ink);
   padding: 1rem 1.2rem;
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   line-height: 1.7;
   margin-bottom: 1.5rem;
 }
@@ -607,14 +607,14 @@
 .empty {
   padding: 2.5rem 0;
   color: var(--fog);
-  font-size: 0.78rem;
+  font-size: 0.9375rem;
   line-height: 1.9;
 }
 
 .loading {
   padding: 2.5rem 0;
   color: var(--fog);
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
@@ -661,12 +661,12 @@
   gap: 1rem;
   padding: 0.85rem 0;
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.07);
-  font-size: 0.68rem;
+  font-size: 0.875rem;
 }
 
 .sideKey {
   color: var(--link-on-dark);
-  font-weight: 200;
+  font-weight: 300;
 }
 
 .sideValue {
@@ -676,7 +676,7 @@
 
 .sideNote {
   display: block;
-  font-size: 0.56rem;
+  font-size: 0.75rem;
   color: var(--text-on-dark-muted);
   margin-top: 0.15rem;
 }
@@ -688,7 +688,7 @@
 }
 
 .sideTotalLabel {
-  font-size: 0.46rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
   text-transform: uppercase;
@@ -708,7 +708,7 @@
 }
 
 .sideTotalNote {
-  font-size: 0.58rem;
+  font-size: 0.8125rem;
   /* Mockup: rgba(255,255,255,0.2) — 2.1:1. This line states the pay-at-check-in
      policy, which the guest must actually be able to read. */
   color: var(--text-on-dark-muted);
@@ -718,7 +718,7 @@
 
 .sideEmpty {
   color: var(--text-on-dark-muted);
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   line-height: 1.9;
 }
 
@@ -746,11 +746,11 @@
 }
 
 .success p {
-  font-size: 0.74rem;
+  font-size: 0.9375rem;
   color: var(--fog);
-  line-height: 2;
+  line-height: 1.8;
   max-width: 380px;
-  font-weight: 200;
+  font-weight: 300;
 }
 
 .reference {
@@ -760,7 +760,7 @@
 
 .referenceLabel {
   display: block;
-  font-size: 0.46rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
   text-transform: uppercase;
@@ -803,7 +803,7 @@
 :global([lang='ar']) .fieldLabel,
 :global([lang='ar']) .roomsLabel,
 :global([lang='ar']) .roomCategory {
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
 }
 
 @media (max-width: 1000px) {
@@ -835,6 +835,20 @@
 
   .roomCheck {
     display: none;
+  }
+
+  /* The step rail is a flex row of items that cannot shrink below their text.
+     At the larger type its min-content is 385px, wider than a phone column,
+     so it was forcing the whole form side out to 433px and scrolling the page
+     sideways. Tighter gutters bring it inside, and wrapping means no future
+     translation can push it back out. */
+  .steps {
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
+  }
+
+  .step {
+    margin-inline-end: 1.5rem;
   }
 }
 
@@ -880,7 +894,7 @@
 .voucherLabel {
   display: block;
   font-family: var(--b);
-  font-size: 0.6rem;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   text-indent: var(--tracking-label);
@@ -898,7 +912,7 @@
   min-width: 0;
   padding: var(--space-3);
   font-family: var(--b);
-  font-size: 0.85rem;
+  font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--bone);
@@ -922,7 +936,7 @@
   flex: 0 0 auto;
   padding: var(--space-3) var(--space-4);
   font-family: var(--b);
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   color: var(--dark);
@@ -945,7 +959,7 @@
 .voucherError {
   margin-top: var(--space-3);
   font-family: var(--b);
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
   line-height: 1.5;
   /* Readable on the dark summary panel, unlike the light-surface --orange. */
   color: #e8a48a;
@@ -964,13 +978,13 @@
 
 .voucherAppliedText {
   font-family: var(--b);
-  font-size: 0.78rem;
+  font-size: 0.9375rem;
   color: var(--bronze);
 }
 
 .voucherRemove {
   font-family: var(--b);
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-label);
   color: var(--link-on-dark);
