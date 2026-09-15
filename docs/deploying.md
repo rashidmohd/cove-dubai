@@ -78,6 +78,13 @@ else, and specifically test that a page *reload* keeps you signed in — that is
 
 On AWS, both services sit behind one domain and this tightens back to `lax` with no code change.
 
+**`SameSite=None` is a workaround, not a cure.** `up.railway.app` is on the Public Suffix List, so the two
+services are cross-*site*, not merely cross-origin, and the cookie is a genuine third-party cookie. Chrome sends
+it once it is `None; Secure`; **Safari blocks it outright** and no configuration changes that. Staging on Railway
+subdomains is therefore Chrome-only for the admin panel. Putting both services on one registrable domain —
+`covedubai.com` and `api.covedubai.com` — makes the cookie same-site, works in every browser, and lets this
+tighten back to `lax`.
+
 ---
 
 ## First deploy, in order
