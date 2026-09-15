@@ -43,7 +43,9 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* Two, since "Still" was chosen and became the home page. `auto-fit` rather
+     than a fixed count so removing the last one does not leave a hole. */
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
   gap: var(--space-8);
   margin-top: var(--space-16);
   list-style: none;

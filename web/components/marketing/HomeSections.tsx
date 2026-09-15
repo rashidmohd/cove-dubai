@@ -1,11 +1,11 @@
 /**
  * The home page below the hero.
  *
- * The three hero treatments under `(marketing)/preview/` are a choice about the
- * first screen, not about the whole page. Everything after it — about, rooms,
- * facilities, the chef's band, experiences, press, guest voices — is the same
- * for all of them, and lives here so that comparing the heroes compares the
- * heroes rather than three drifting copies of a page.
+ * Choosing a hero was a choice about the first screen, not about the whole page.
+ * Everything after it — about, rooms, facilities, the chef's band, experiences,
+ * press, guest voices — is the same for the home page and for the drafts still
+ * under `(marketing)/preview/`, and lives here so a change to the rooms strip
+ * cannot land on one and miss the others.
  *
  * A Server Component, like the page it came from: the rooms strip reads live
  * room types, so editing a room in the admin panel updates every variant.

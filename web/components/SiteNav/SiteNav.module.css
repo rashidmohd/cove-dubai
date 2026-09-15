@@ -20,6 +20,45 @@
 }
 
 /**
+ * The gradient behind the transparent navigation.
+ *
+ * On the home page the bar floats over a photograph with no surface of its own,
+ * and the links were being carried entirely by the hero's scrim — which meant
+ * darkening the whole ceiling of the photograph just to keep seven nav items
+ * legible. The wrong thing was paying: the bar should bring its own ground.
+ *
+ * A gradient rather than a bar, because a hard edge under a full-bleed hero
+ * reads as a header the design does not have. It is deliberately taller than
+ * the nav so it has somewhere to fade out to.
+ *
+ * `z-index: -1` keeps it behind the links without any of them needing a stacking
+ * context of their own. It stays inside the nav's own context, so it cannot
+ * paint over the page.
+ */
+.nav:not(.navSolid)::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 190%;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(24, 14, 6, 0.75) 0%,
+    rgba(24, 14, 6, 0.45) 45%,
+    rgba(24, 14, 6, 0) 100%
+  );
+  transition: opacity var(--transition);
+}
+
+/* Once the bar has scrolled into its own solid background the gradient is
+   redundant, and would only darken it further. */
+.nav.scrolled::before {
+  opacity: 0;
+}
+
+/**
  * Interior pages.
  *
  * The home mockup fixes the nav so its full-bleed hero shows through; every

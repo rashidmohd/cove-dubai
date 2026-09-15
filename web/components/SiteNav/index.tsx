@@ -36,14 +36,15 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
 
   // The home page has a full-bleed hero designed to run behind a transparent,
-  // fixed nav. Interior pages do not, and a fixed bar there overlaps their
-  // content — so they get the sticky variant the interior mockups use.
+  // fixed nav — and that bar brings its own gradient, so its links stay legible
+  // whatever the photograph is doing underneath. Interior pages have no such
+  // hero, and a fixed bar there overlaps their content, so they get the sticky
+  // variant the interior mockups use.
   //
-  // `/preview/still` is a candidate home page built the same way: a dark
-  // photograph running to the top of the screen. The other two drafts are not —
-  // both open on a pale panel, where the transparent nav's light text would be
-  // unreadable — so they keep the solid bar.
-  const overlay = pathname === '/' || pathname === '/preview/still';
+  // The two remaining home page drafts under `/preview` both open on a pale
+  // panel, where the transparent nav's light text would be unreadable. They
+  // keep the solid bar.
+  const overlay = pathname === '/';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);

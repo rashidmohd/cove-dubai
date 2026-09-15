@@ -270,15 +270,11 @@
   },
   "preview": {
     "title": "Home page directions",
-    "intro": "Three treatments of the first screen, each with the stay search built in. Everything below the hero is identical, so what you are comparing is the hero. Pick one and the rest goes.",
-    "badge": "Draft",
+    "intro": "Still was chosen on 15 September 2026 and is now the home page. These are the two directions that were not taken, kept for reference. Everything below the hero is the same on all of them.",
+    "badge": "Not taken",
     "view": "Open",
-    "current": "The home page as it stands today",
+    "current": "See the home page as it is now",
     "variants": {
-      "still": {
-        "name": "Still",
-        "note": "One photograph, full screen, the search resting on it."
-      },
       "editorial": {
         "name": "Editorial",
         "note": "The room on one side, the words and the search on the other."

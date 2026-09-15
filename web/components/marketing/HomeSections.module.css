@@ -2,14 +2,13 @@
  * The home page below the hero.
  *
  * About, rooms, facilities, the chef's band, experiences, press and guest
- * voices — everything the three hero treatments in `(marketing)/preview/` have
- * in common. The rules are the existing home page's, unchanged.
+ * voices — everything the home page and the remaining drafts under
+ * `(marketing)/preview/` have in common.
  *
- * This is a copy, not yet a refactor: the live home page still owns its own
- * identical block. That is deliberate while the heroes are being chosen — the
- * page the client has already signed off must not move underneath them. When a
- * hero wins, the winner becomes the home page and this file's twin goes with
- * the losers.
+ * These rules were the home page's own until the hero was chosen (15 Sep 2026).
+ * They moved here whole, and the home page's stylesheet now holds nothing but
+ * its hero, so there is one copy of the section chrome rather than two drifting
+ * apart.
  */
 
 /* --- About --------------------------------------------------------------- */

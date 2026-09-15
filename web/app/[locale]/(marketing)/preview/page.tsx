@@ -1,12 +1,13 @@
 /**
- * The three home page directions, side by side.
+ * The home page directions that were not taken.
  *
  * A place to send the client, not a page of the site: nothing links here, and
- * it is not indexed. It exists so the heroes can be compared against each other
- * and against the home page as it stands, rather than described in an email.
+ * it is not indexed.
  *
- * When one wins it becomes `(marketing)/page.tsx` and this whole directory —
- * this file, the two losing variants, and `HomeSections` — goes with it.
+ * "Still" was chosen on 15 Sep 2026 and **is** `(marketing)/page.tsx` now, so it
+ * is no longer listed here — the link at the foot of the page goes to the real
+ * thing rather than to a copy of it. The two below are kept only so the choice
+ * can be revisited; when nobody needs them any more, this whole directory goes.
  */
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -22,7 +23,6 @@ import styles from './page.module.css';
 
 /** Each direction, with the photograph its own hero leads on. */
 const VARIANTS = [
-  { key: 'still', href: '/preview/still', photo: 'lobby', alt: 'lobby' },
   {
     key: 'editorial',
     href: '/preview/editorial',
