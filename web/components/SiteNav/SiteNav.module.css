@@ -16,7 +16,63 @@
   justify-content: space-between;
   align-items: center;
   padding: 2rem 5rem;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  /**
+   * Named properties, not `all`.
+   *
+   * `all` swept up `padding`, so every frame of the scroll transition ran
+   * layout on a fixed bar sitting over a full-bleed hero — the most expensive
+   * thing on the page to reflow, and squarely against the INP budget.
+   */
+  transition:
+    padding 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/**
+ * The solid bar, as a layer that can actually fade.
+ *
+ * This used to be `background` + `backdrop-filter` set directly on `.nav` and
+ * transitioned. Two problems, and together they are the reason the bar arrived
+ * rather than appeared:
+ *
+ *   - **`backdrop-filter` does not transition from `none`.** There is nothing
+ *     to interpolate towards, so the blur snapped on at full strength in one
+ *     frame while the colour behind it was still fading.
+ *   - The padding change ran at the same time, so the bar shrank as it
+ *     darkened. The eye read the movement, not the fade.
+ *
+ * Painting the surface onto its own layer and animating **opacity** fades the
+ * colour, the blur and the hairline together, as one thing. Opacity is also
+ * compositor-only, so the fade costs no layout.
+ *
+ * `z-index: -1` keeps it behind the links, inside the nav's own stacking
+ * context. It is declared after `::before` so the solid surface cross-fades
+ * over the gradient rather than under it.
+ */
+.nav::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  background: rgba(24, 14, 6, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 0.5px solid rgba(196, 154, 82, 0.18);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Faded in once the page has scrolled, and permanently on interior pages. */
+.nav.scrolled::after,
+.navSolid::after {
+  opacity: 1;
+}
+
+/* Interior pages sit a touch denser, as they did before this moved layers. */
+.navSolid::after {
+  background: rgba(24, 14, 6, 0.97);
+  backdrop-filter: blur(14px);
+  border-bottom-color: rgba(196, 154, 82, 0.15);
 }
 
 /**
@@ -70,18 +126,13 @@
 .navSolid {
   position: sticky;
   padding: 1.4rem 5rem;
-  background: rgba(24, 14, 6, 0.97);
-  backdrop-filter: blur(14px);
-  border-bottom: 0.5px solid rgba(196, 154, 82, 0.15);
   z-index: 200;
 }
 
 /* Applied once the page has scrolled. */
+/* Only the condense. The surface it fades in is on `.nav::after`. */
 .scrolled {
-  background: rgba(24, 14, 6, 0.92);
-  backdrop-filter: blur(16px);
   padding: 1.3rem 5rem;
-  border-bottom: 0.5px solid rgba(196, 154, 82, 0.18);
 }
 
 .brand {
