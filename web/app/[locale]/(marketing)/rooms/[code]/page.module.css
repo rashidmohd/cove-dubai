@@ -1,0 +1,265 @@
+/**
+ * A single room type.
+ *
+ * Shares the listing page's vocabulary — the same spec grid, the same amenity
+ * row, the same gold hairlines — because a guest arriving here from a room card
+ * should feel they opened that card rather than left the site. Logical
+ * properties throughout, so the whole page mirrors under RTL.
+ */
+
+/* --- Hero ---------------------------------------------------------------- */
+
+.hero {
+  position: relative;
+  width: 100%;
+  /* Wide, not tall: this sits directly under a fixed nav and the room's copy
+     should be reachable without a scroll on a laptop. */
+  aspect-ratio: 21 / 9;
+  min-height: 280px;
+  overflow: hidden;
+  /* The gradient is the loading and the failure state, as everywhere else — a
+     room with no photography still renders a considered block of colour. */
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.hero[data-swatch='img-suite'] {
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+.hero[data-swatch='img-terrace'] {
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+}
+.hero[data-swatch='img-corner'] {
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+.hero[data-swatch='img-studio'] {
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+/* --- Breadcrumb ---------------------------------------------------------- */
+
+.breadcrumb {
+  margin-bottom: var(--space-6);
+}
+
+.crumb {
+  font-size: 0.6875rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+  transition: color var(--transition);
+}
+
+.crumb:hover,
+.crumb:focus-visible {
+  color: var(--bronze);
+}
+
+/* An arrow that points back the way the reader came, in either direction.
+   `::before` sits on the start edge, so it mirrors with no RTL-specific rule —
+   but the glyph itself has to be flipped, since a left arrow means "forward"
+   in Arabic. */
+.crumb::before {
+  content: '←';
+  margin-inline-end: 0.5rem;
+  text-indent: 0;
+  display: inline-block;
+}
+
+[dir='rtl'] .crumb::before {
+  content: '→';
+}
+
+.description {
+  margin-top: var(--space-6);
+  max-width: 62ch;
+}
+
+/* --- Specifications ------------------------------------------------------ */
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin: var(--space-10) 0 0;
+  padding-top: var(--space-6);
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+}
+
+.spec {
+  min-width: 0;
+}
+
+.specLabel {
+  font-size: 0.6875rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.specValue {
+  margin: 0.35rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+  font-weight: 300;
+}
+
+/* --- Amenities ----------------------------------------------------------- */
+
+.amenities {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+}
+
+.amenitiesTitle {
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--fog);
+  margin-bottom: var(--space-3);
+}
+
+.amenityList {
+  display: flex;
+  flex-wrap: wrap;
+  padding-inline-start: 0;
+  gap: var(--space-2) var(--space-4);
+  list-style: none;
+}
+
+.amenityItem {
+  font-family: var(--b);
+  font-size: 0.9375rem;
+  color: var(--ink);
+  position: relative;
+}
+
+.amenityItem + .amenityItem::before {
+  content: '·';
+  position: absolute;
+  inset-inline-start: calc(var(--space-4) / -2);
+  transform: translateX(-50%);
+  color: var(--bronze);
+}
+
+[dir='rtl'] .amenityItem + .amenityItem::before {
+  transform: translateX(50%);
+}
+
+/* --- Price and action ---------------------------------------------------- */
+
+.stayCta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  margin-top: var(--space-10);
+  padding-top: var(--space-6);
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+}
+
+.stayPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.stayLabel {
+  font-size: 0.6875rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.stayAmount {
+  font-family: var(--s);
+  font-size: 1.75rem;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.stayPer {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--fog);
+}
+
+.stayAction {
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  padding: 0.9rem 2.2rem;
+  background: var(--bronze);
+  color: #fff;
+  transition: all var(--transition);
+}
+
+.stayAction:hover,
+.stayAction:focus-visible {
+  background: var(--dark);
+}
+
+/* --- Gallery ------------------------------------------------------------- */
+
+.galleryTitle {
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--fog);
+  margin-bottom: var(--space-6);
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.galleryItem {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .crumb,
+:global([lang='ar']) .specLabel,
+:global([lang='ar']) .amenitiesTitle,
+:global([lang='ar']) .galleryTitle,
+:global([lang='ar']) .stayLabel,
+:global([lang='ar']) .stayPer,
+:global([lang='ar']) .stayAction {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .specLabel,
+:global([lang='ar']) .amenitiesTitle,
+:global([lang='ar']) .galleryTitle {
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    aspect-ratio: 3 / 2;
+    min-height: 220px;
+  }
+}

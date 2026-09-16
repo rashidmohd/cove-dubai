@@ -149,6 +149,10 @@ Decisions taken here:
 
 #### Left undone in step 2
 
+- ~~**The deep link did not preselect the room.**~~ **Fixed 16 Sep 2026.** The link carried
+  `?room=<code>` from the start, but nothing in `useBookingState` read it, so every offer landed on step 1 with
+  no room chosen. Found while building the room detail page, which needs the same parameter. See
+  [`project-status.md`](project-status.md#room-detail-pages-16-sep-2026).
 - **No admin editing of rate plans**, so offers can only be created with SQL — the same gap vouchers had before
   step 1. This is the remaining work: `createRatePlan` / `updateRatePlan` / `deleteRatePlan` behind the seam,
   routes under `/admin/room-types/:code/rate-plans`, and a screen. It also closes the "no rate-plan editing" gap

@@ -126,3 +126,27 @@ function readAdults(raw: string | null): number | null {
   if (!Number.isInteger(value)) return null;
   return Math.min(MAX_ADULTS, Math.max(1, value));
 }
+
+/**
+ * A room type code handed over in a query string, or null.
+ *
+ * Lives beside the stay readers rather than with the API client because it
+ * answers the same question they do: what the reserve flow should start from
+ * when a link, not the guest, chose it. The offers page and the room detail
+ * page both deep-link a room this way.
+ *
+ * **Shape only — existence is not checked here.** Whether the hotel still sells
+ * this room, and whether it is free for the chosen nights, are the API's to
+ * answer, and the flow already drops a room that is not in the availability
+ * response. What this stops is an arbitrary string from a crafted URL reaching
+ * component state and `sessionStorage`: codes are slugs, so anything that is
+ * not slug-shaped was never a room and can be discarded before it travels.
+ */
+export function readRoomCode(raw: string | null): string | null {
+  if (raw === null) return null;
+
+  const value = raw.trim().toLowerCase();
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) && value.length <= 64
+    ? value
+    : null;
+}

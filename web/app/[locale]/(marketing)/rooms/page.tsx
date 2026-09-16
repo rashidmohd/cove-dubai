@@ -99,7 +99,10 @@ export default async function RoomsPage({
             <li key={room.code}>
               <Reveal delay={index * 120}>
                 <article className={styles.room}>
-                  <div className={styles.roomVisual} data-swatch={room.imageKey}>
+                  <div
+                    className={styles.roomVisual}
+                    data-swatch={room.imageKey}
+                  >
                     <Photo
                       photo={resolveRoomPhoto(
                         room,
@@ -207,9 +210,26 @@ export default async function RoomsPage({
                           {tCommon('perNight')}
                         </span>
                       </p>
-                      <Link href="/reserve" className={styles.reserve}>
-                        {t('reserve')}
-                      </Link>
+                      <div className={styles.roomActions}>
+                        {/* The quiet action of the pair: a guest still
+                            deciding wants the room, not the form. The filled
+                            button stays the one that starts a booking. */}
+                        <Link
+                          href={`/rooms/${room.code}`}
+                          className={styles.viewRoom}
+                        >
+                          {t('viewRoom')}
+                        </Link>
+                        <Link
+                          href={{
+                            pathname: '/reserve',
+                            query: { room: room.code },
+                          }}
+                          className={styles.reserve}
+                        >
+                          {t('reserve')}
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </article>

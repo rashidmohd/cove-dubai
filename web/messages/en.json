@@ -65,6 +65,7 @@
       "selectRoom": "Select",
       "selected": "Selected",
       "roomsLeft": "{count, plural, one {# room left} other {# rooms left}}",
+      "viewDetails": "View details",
       "noAvailability": "No rooms are available for those dates.",
       "changeDates": "Change dates"
     },
@@ -294,6 +295,12 @@
     "viewRoom": "View room",
     "reserve": "Reserve",
     "sleeps": "Sleeps {count}",
+    "detail": {
+      "allRooms": "All rooms",
+      "reserveThisRoom": "Reserve this room",
+      "forStay": "For your stay",
+      "gallery": "Gallery"
+    },
     "specLabels": {
       "size": "Size",
       "bed": "Bed",

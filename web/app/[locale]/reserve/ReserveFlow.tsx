@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { Link } from '@/i18n/navigation';
 import { ApiError, bookingApi } from '@/lib/api/client';
 import type {
   AvailableRoomType,
@@ -191,7 +192,22 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         roomsCount: state.roomsCount,
       })
       .then((available) => {
-        if (!cancelled) setRooms(available);
+        if (cancelled) return;
+        setRooms(available);
+
+        // The same check `searchAvailability` makes, because this path reaches
+        // step 2 without going through it: a restored session, or a link that
+        // named a room (`?room=`). Without it a room that has since sold out —
+        // or one a crafted URL invented — stays selected against a list that
+        // does not contain it, and "Continue" carries a phantom room into the
+        // guest's details, where the booking fails at the last step instead of
+        // the guest simply picking again here.
+        if (
+          state.roomTypeCode &&
+          !available.some((room) => room.code === state.roomTypeCode)
+        ) {
+          update({ roomTypeCode: null });
+        }
       })
       .catch((caught: unknown) => {
         if (!cancelled) setError(describeError(caught));
@@ -213,7 +229,9 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     state.adults,
     state.children,
     state.roomsCount,
+    state.roomTypeCode,
     rooms.length,
+    update,
     describeError,
   ]);
 
@@ -387,55 +405,96 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                   const selected = room.code === state.roomTypeCode;
                   return (
                     <li key={room.code}>
-                      <button
-                        type="button"
+                      {/* Card, then button — not one element doing both. The
+                          card carries the frame and the selected state; the
+                          button inside it selects the room and nothing else.
+                          A link cannot be nested inside a button, and the
+                          alternative — making the whole card a link — would
+                          take away the one-click selection this step exists
+                          for. */}
+                      <div
                         className={[
-                          styles.room,
-                          selected ? styles.roomSelected : null,
+                          styles.roomCard,
+                          selected ? styles.roomCardSelected : null,
                         ]
                           .filter(Boolean)
                           .join(' ')}
-                        onClick={() => update({ roomTypeCode: room.code })}
-                        aria-pressed={selected}
-                        data-testid={`room-${room.code}`}
                       >
-                        <span
-                          className={styles.roomSwatch}
-                          data-swatch={room.imageKey}
-                          aria-hidden="true"
-                        />
-                        <span>
-                          <span className={styles.roomCategory}>
-                            {room.category[locale]}
+                        <button
+                          type="button"
+                          className={[
+                            styles.room,
+                            selected ? styles.roomSelected : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          onClick={() => update({ roomTypeCode: room.code })}
+                          aria-pressed={selected}
+                          data-testid={`room-${room.code}`}
+                        >
+                          <span
+                            className={styles.roomSwatch}
+                            data-swatch={room.imageKey}
+                            aria-hidden="true"
+                          />
+                          <span>
+                            <span className={styles.roomCategory}>
+                              {room.category[locale]}
+                            </span>
+                            <span className={styles.roomName}>
+                              {room.name[locale]}
+                            </span>
+                            <span className={styles.roomMeta}>
+                              {t('step2.roomsLeft', {
+                                count: room.roomsAvailable,
+                              })}
+                            </span>
                           </span>
-                          <span className={styles.roomName}>
-                            {room.name[locale]}
+                          <span>
+                            <span className={styles.roomAmount}>
+                              {formatMoney(
+                                room.price.grandTotal,
+                                room.price.currency,
+                                locale,
+                              )}
+                            </span>
+                            <span className={styles.roomPer}>
+                              {nights}{' '}
+                              {nights === 1
+                                ? tCommon('night')
+                                : tCommon('nights')}
+                            </span>
                           </span>
-                          <span className={styles.roomMeta}>
-                            {t('step2.roomsLeft', {
-                              count: room.roomsAvailable,
-                            })}
+                          <span className={styles.roomCheck}>
+                            <span className={styles.checkMark} />
                           </span>
-                        </span>
-                        <span>
-                          <span className={styles.roomAmount}>
-                            {formatMoney(
-                              room.price.grandTotal,
-                              room.price.currency,
-                              locale,
-                            )}
-                          </span>
-                          <span className={styles.roomPer}>
-                            {nights}{' '}
-                            {nights === 1
-                              ? tCommon('night')
-                              : tCommon('nights')}
-                          </span>
-                        </span>
-                        <span className={styles.roomCheck}>
-                          <span className={styles.checkMark} />
-                        </span>
-                      </button>
+                        </button>
+
+                        {/* The stay travels with the link, so the room page can
+                          price these nights rather than quoting a nightly rate
+                          the guest has already moved past. Progress is held in
+                          `sessionStorage`, so coming back lands them exactly
+                          here — `booking-engine` requires that a guest who
+                          leaves to compare does not lose their dates. */}
+                        <Link
+                          href={{
+                            pathname: `/rooms/${room.code}`,
+                            query: {
+                              ...(state.checkIn && state.checkOut
+                                ? {
+                                    checkIn: state.checkIn,
+                                    checkOut: state.checkOut,
+                                  }
+                                : {}),
+                              adults: String(state.adults),
+                            },
+                          }}
+                          className={styles.roomDetails}
+                          data-testid={`room-details-${room.code}`}
+                        >
+                          {t('step2.viewDetails')}
+                        </Link>
+                      </div>
                     </li>
                   );
                 })}

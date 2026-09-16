@@ -12,15 +12,34 @@
 import type { MetadataRoute } from 'next';
 
 import { locales } from '@/i18n/routing';
+import { bookingApi } from '@/lib/api/client';
 import { publicConfig } from '@/lib/config';
 
 /** Indexable marketing routes, relative to the locale segment. */
 const ROUTES = ['', '/about', '/rooms', '/offers', '/dining'] as const;
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const base = publicConfig.siteUrl.replace(/\/$/, '');
+/**
+ * Room pages, which are the listing's children rather than fixed routes.
+ *
+ * Read from the API so a room added in the admin panel is listed without an
+ * edit here — the same reason the Rooms page has no hardcoded room list. A
+ * failure yields the fixed routes alone: an incomplete sitemap costs some
+ * crawl depth, while throwing would serve none at all.
+ */
+async function roomRoutes(): Promise<string[]> {
+  try {
+    const roomTypes = await bookingApi.getRoomTypes();
+    return roomTypes.map((room) => `/rooms/${room.code}`);
+  } catch {
+    return [];
+  }
+}
 
-  return ROUTES.flatMap((route) =>
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const base = publicConfig.siteUrl.replace(/\/$/, '');
+  const routes = [...ROUTES, ...(await roomRoutes())];
+
+  return routes.flatMap((route) =>
     locales.map((locale) => ({
       url: `${base}/${locale}${route}`,
       changeFrequency: 'monthly' as const,

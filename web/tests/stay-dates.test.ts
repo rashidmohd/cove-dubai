@@ -14,6 +14,7 @@ import {
   addDays,
   isStayDate,
   isoFromParts,
+  readRoomCode,
   readStayQuery,
 } from '../lib/stay-dates';
 
@@ -147,5 +148,50 @@ describe('readStayQuery', () => {
     expect(
       readStayQuery(query('checkIn=nonsense&adults=4'), TODAY),
     ).toMatchObject({ checkIn: null, checkOut: null, adults: 4 });
+  });
+});
+
+/**
+ * The room a link names — the offers page and the room detail page both deep
+ * link one, so this is the same kind of front door as `readStayQuery` above:
+ * the value comes from a URL, and what it refuses matters most.
+ */
+describe('readRoomCode', () => {
+  it('reads a room code a deep link produced', () => {
+    expect(readRoomCode('cove-suite')).toBe('cove-suite');
+    expect(readRoomCode('studio-room')).toBe('studio-room');
+  });
+
+  it('has nothing to read when the link named no room', () => {
+    expect(readRoomCode(null)).toBeNull();
+    expect(readRoomCode('')).toBeNull();
+    expect(readRoomCode('   ')).toBeNull();
+  });
+
+  it('normalises the shape a hand-typed URL arrives in', () => {
+    expect(readRoomCode('  Cove-Suite  ')).toBe('cove-suite');
+  });
+
+  it('refuses anything that was never a room code', () => {
+    // Slugs only. Each of these would otherwise reach component state and
+    // `sessionStorage` on the strength of a crafted link alone.
+    for (const raw of [
+      '../admin',
+      'cove suite',
+      'cove_suite',
+      '<script>',
+      'cove/suite',
+      'cove--suite',
+      '-cove-suite',
+      'cove-suite-',
+      'room?a=1',
+    ]) {
+      expect(readRoomCode(raw)).toBeNull();
+    }
+  });
+
+  it('refuses a code longer than any room would have', () => {
+    expect(readRoomCode('a'.repeat(64))).toBe('a'.repeat(64));
+    expect(readRoomCode('a'.repeat(65))).toBeNull();
   });
 });

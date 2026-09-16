@@ -1,6 +1,6 @@
 # Project status
 
-**Last updated:** 15 September 2026
+**Last updated:** 16 September 2026
 **Phase 1 progress:** milestones M0–M7 complete · **not yet deployed to Railway**
 **In flight:** vouchers, offers, and guest accounts — see [`promotions-and-accounts.md`](promotions-and-accounts.md)
 
@@ -25,9 +25,9 @@ at startup and exit with a readable message if anything required is missing. `se
 
 ```bash
 cd server && npm run typecheck && npm test     # 106 tests — hits the real database
-cd web    && npm run typecheck && npm test     # 39 tests — pure, no network
+cd web    && npm run typecheck && npm test     # 44 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
-cd web    && npx playwright test               # 33 e2e — needs the API running
+cd web    && npx playwright test               # 37 e2e — needs the API running
 ```
 
 The 7 admin e2e tests skip unless `E2E_ADMIN_PASSWORD` is set to the password of `admin@covedubai.local`, so the
@@ -531,6 +531,7 @@ browser.
 /[locale]                 home
 /[locale]/about
 /[locale]/rooms           reads live room types from the API
+/[locale]/rooms/[code]    one room: description, specs, amenities, gallery
 /[locale]/offers          advertised rate plans, from the API
 /[locale]/dining
 /[locale]/coming-soon     stands in for Wellness, Experiences, Members
@@ -796,6 +797,60 @@ Measured against the live hero rather than judged by eye. `SiteNav.module.css` c
 
 ---
 
+## Room detail pages (16 Sep 2026)
+
+`/[locale]/rooms/[code]` — the page a guest reaches by clicking a room. Until now there was nowhere to read
+about a room: the Rooms page was one long listing, and **step 2 of the booking flow showed a room as a name, a
+category, a rooms-left count and a price, with no way to find out anything more before committing to it.**
+
+| Piece | Where |
+|---|---|
+| Page | `web/app/[locale]/(marketing)/rooms/[code]/page.tsx` |
+| Price + CTA | `…/[code]/StayCta.tsx` — the only client-side part |
+| Entry points | the Rooms listing (`View room`), and every card in reserve step 2 (`View details`) |
+| Tests | `e2e/room-detail.spec.ts` (4), `tests/stay-dates.test.ts` (+5 unit) |
+
+**No server change was needed.** `AvailableRoomType extends RoomType` and `checkAvailability` already loads
+`WITH_AMENITIES`, so the booking flow was fetching every room's description, occupancy, amenities and
+photographs and discarding them. This is a front-end change against data that was already on the wire.
+
+Decisions worth knowing:
+
+- **The page is statically prerendered in both locales**, like the listing — 8 pages, revalidated hourly, and in
+  the sitemap. A room page is the most valuable thing a hotel has to show a searcher, and reading `searchParams`
+  on the server would have opted the whole route out of prerendering. So the stay-specific price is the *only*
+  client-side piece, and it renders as a Suspense fallback carrying the "from" rate — meaning the static HTML
+  has a real price and a working reserve link rather than a hole.
+- **The stay travels with the link.** A guest who clicks through from step 2 has already chosen dates, so the
+  page quotes *those nights* (`GET /api/rates`) rather than dropping them back to a nightly rate they have moved
+  past. Arriving from the Rooms page, where nobody has picked dates, it shows the "from" rate instead. The e2e
+  suite reads `data-mode="stay" | "from"` to tell the two apart, rather than matching text.
+- **Leaving the flow is safe by design.** Progress is already in `sessionStorage` — `booking-engine` requires a
+  guest who leaves to compare not to lose their dates — so the detour costs nothing and "Reserve this room"
+  lands back on the room list with the room selected.
+- **Specs still come from the message files.** Size, bed, view, bathroom and floor are `rooms.specs.<code>.*`
+  copy, guarded by `t.has()`, exactly as on the listing. This is the *known* weakness: they are keyed by room
+  code and invisible to the admin panel, so **a room type added in the admin panel shows no specs at all**. It
+  was left alone deliberately rather than migrated on spec — see the open item below.
+- **The card in step 2 is now a card, not a button.** A link cannot be nested inside a button, and making the
+  whole card a link would have taken away the one-click selection the step exists for. The frame and the
+  selected state moved to a wrapping `div`; the `<button>` inside it still carries `data-testid="room-<code>"`
+  and `aria-pressed`, so the Playwright suite drives it unchanged.
+
+> 🐛 **`?room=` was doing nothing, and had never worked.** The offers page has linked into the booking flow with
+> `query: { room: offer.roomTypeCode }` since 18 Aug — "a link into the booking flow with the room preselected" —
+> but nothing in `useBookingState` ever read the parameter. Offers deep-linked to step 1 with no room chosen.
+> Now read and validated (`readRoomCode`), which is what makes "Reserve this room" work and fixes offers as a
+> side effect.
+
+> 🐛 **A sold-out room could survive into step 3.** `searchAvailability` clears a `roomTypeCode` the availability
+> response does not contain, but the *other* path into step 2 — the effect that re-fetches after a restored
+> session, and now after a `?room=` link — did not. A guest restoring a session whose room had since sold out
+> kept it selected and could press Continue, failing at the booking instead of picking again. The same guard now
+> runs on both paths.
+
+---
+
 ## Open items for the client
 
 None of these block development.
@@ -805,6 +860,7 @@ None of these block development.
 | **Tourism Dirham amount** | Placeholder **AED 20**/room/night. Depends on the property's DET classification. Now changeable from **Admin → Settings** by an ADMIN, and it takes effect on the next quote — pricing reads it per request, so no deploy and no restart. Verified end to end: 20 → 15 changed a live quote immediately, and the change is audited with its before and after value. Bookings already taken keep the price they were quoted. Still **must be confirmed before launch**. |
 | **"Forty-eight rooms" copy** | The site reads 106, but that is a number substituted into the client's prose. The About story and footer tagline need re-wording properly. |
 | **Arabic translations** | 2 of 441 keys — the admin panel and amenities added the rest. Deliberate: brand copy is never machine-translated. `npm run check:translations` prints the exact checklist. **The 19 seeded amenity names also need Arabic** — they live in the database, not the message files, so they are edited in Admin → Amenities rather than in `ar.json`. **The transactional emails need Arabic too**, and those live in `server/src/emails/templates.ts` — the one place Arabic copy is not in a message file. |
+| **Room specs (size, bed, view)** | Marketing copy in `messages/`, keyed by room code, not database fields — so **a room type added in the admin panel shows no specs** on either the Rooms page or its own page. Fine for the four seeded rooms, wrong the moment the hotel adds a fifth. Giving `RoomType` the columns is a migration plus admin editing plus moving the existing copy out of the message files; it was not done on spec because the shape a future PMS expects is a guess (`pms-readiness`). **Decide before the hotel starts adding rooms.** |
 | **Amenity list** | 19 seeded from the mockups' room specs, against OpenTravel RMA codes. The hotel should review which rooms have what, and add anything missing — it is all editable in the panel. |
 | **Arabic numerals** | Western (1234) applied consistently. Switch the single constant in `web/lib/format.ts` if the client wants Arabic-Indic. |
 | **Arabic font** | Almarai, pending confirmation (skill lists Almarai or Cairo). |

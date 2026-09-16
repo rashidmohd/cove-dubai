@@ -164,6 +164,35 @@
   color: var(--fog);
 }
 
+/* The two actions on a card, kept together so they wrap as a pair when the
+   footer runs out of room rather than the price stranding one of them. */
+.roomActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+/* The quiet half of the pair — `cove-design-system` allows exactly two kinds of
+   button, a filled gold CTA and a text/underline quiet one, and a second filled
+   button beside Reserve would compete with it for the same glance. */
+.viewRoom {
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding-bottom: 0.3rem;
+  border-bottom: 0.5px solid rgba(28, 20, 16, 0.3);
+  transition: all var(--transition);
+}
+
+.viewRoom:hover,
+.viewRoom:focus-visible {
+  color: var(--bronze);
+  border-bottom-color: var(--bronze);
+}
+
 .reserve {
   font-size: 0.8125rem;
   letter-spacing: 0.2em;
@@ -198,6 +227,7 @@
 :global([lang='ar']) .specLabel,
 :global([lang='ar']) .priceLabel,
 :global([lang='ar']) .pricePer,
+:global([lang='ar']) .viewRoom,
 :global([lang='ar']) .reserve {
   text-transform: none;
   letter-spacing: 0;

@@ -22,7 +22,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import { readStayQuery, todayInDubai } from '@/lib/stay-dates';
+import { readRoomCode, readStayQuery, todayInDubai } from '@/lib/stay-dates';
 import type { Locale } from '@/lib/api/types';
 
 export type Step = 1 | 2 | 3;
@@ -108,7 +108,14 @@ function restore(): BookingState {
  * Because that replaces the stay, it also drops the room chosen against the old
  * one: a room selected for different dates may not even be available for these.
  *
- * Validation lives in `readStayQuery` — it is pure, and it is tested.
+ * `?room=` then names a room to start from — the offers page and the room
+ * detail page both link in that way. It is applied *after* the stay for exactly
+ * the reason above: a new stay clears the old room, and the room this link
+ * carries was chosen against the dates it carries, so it must survive that
+ * clearing rather than be swept up by it.
+ *
+ * Validation lives in `readStayQuery` and `readRoomCode` — both pure, and both
+ * tested.
  */
 function applyStayFromParams(
   state: BookingState,
@@ -124,6 +131,23 @@ function applyStayFromParams(
     next.checkOut = stay.checkOut;
     next.roomTypeCode = null;
     next.step = 1;
+  }
+
+  const room = readRoomCode(params.get('room'));
+  if (room) {
+    next.roomTypeCode = room;
+
+    // A link carrying both a stay and a room has settled step 1 already: the
+    // guest picked those dates and then chose a room against them, so opening
+    // on the date picker asks a question they have answered. With only a room
+    // — the offers page, which has no dates to give — step 1 is still where
+    // they have to start, and the room simply arrives pre-selected.
+    //
+    // Nothing is taken on trust by doing this. Step 2 re-checks availability
+    // for these dates, and the guard there drops a room the API does not offer,
+    // so a stale or invented link lands on the room list rather than carrying a
+    // phantom room into the guest's details.
+    if (next.checkIn && next.checkOut) next.step = 2;
   }
 
   return next;
