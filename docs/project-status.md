@@ -25,7 +25,7 @@ at startup and exit with a readable message if anything required is missing. `se
 
 ```bash
 cd server && npm run typecheck && npm test     # 106 tests — hits the real database
-cd web    && npm run typecheck && npm test     # 44 tests — pure, no network
+cd web    && npm run typecheck && npm test     # 50 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
 cd web    && npx playwright test               # 39 e2e — needs the API running
 ```
@@ -859,6 +859,43 @@ Decisions worth knowing:
 > says. Setting `display: grid` unconditionally left an invisible full-viewport box in the flow after the dialog
 > closed, swallowing clicks meant for the room list behind it. The layout is scoped to `.detailDialog[open]`.
 > Caught by the e2e suite, not by looking at it — the box is transparent.
+
+---
+
+## Reserve step 2 contrast pass (16 Sep 2026)
+
+Prompted by a look at the room list, and measured rather than judged by eye. Two of the three findings were not
+cosmetic.
+
+| | before | after |
+|---|---|---|
+| Step not yet reached | `rgba(28,20,16,.45)` — **2.94:1, failed AA** | `--fog`, **5.11:1** |
+| "View details" | `--fog` 5.11:1 / 4.50:1 on a selected card | `--bronze`, **5.27:1 / 4.64:1** |
+| Its underline | `rgba(28,20,16,.2)` — **1.53:1, failed the 3:1 UI floor** | solid `--bronze`, **5.27:1** |
+
+- **The stepper's idle state failed AA outright** at 0.75rem, and had since the flow was built — tuned by eye as
+  a translucent black, which is exactly the failure mode `tests/contrast.test.ts` was written for. It is now
+  `--fog`, a token, so the test covers it.
+- **Idle is deliberately *not* `--bronze`.** `.stepDone` is already bronze; giving both the same colour would
+  erase the only thing the control says — which steps are behind you and which are ahead. The progression is
+  now bronze (done) → `--ink` with a filled bronze badge (current) → `--fog` (ahead).
+- **The current step's number is filled**, white on `--bronze` at 5.52:1. With three states carried by text
+  colour alone the active one was the quietest of the three, since `--ink` just reads as ordinary text.
+- **No alpha below 1 clears 3:1 for the underline** on either surface — measured at 0.3 through 0.7, the best
+  being 2.91:1 on `--w`. It is the only thing marking that control as pressable, so it is solid.
+
+> 🐛 **"View details" was rendering as a grey box.** It was a link until the details moved into a dialog, and a
+> `button` brings the UA's `ButtonFace` background and a full border with it. Nothing reset them, so a quiet
+> text button rendered as a washed-out box that read as *disabled*.
+
+> 🐛 **The room card's three lines were rendering as one** — "Studio Room44 rooms left". `.roomCategory`,
+> `.roomName` and `.roomMeta` are `<span>`s and were never given `display: block`, so their `margin-bottom` did
+> nothing: margins do not apply to inline boxes. **Pre-existing**, from when the card was first built against
+> the mockup, where those three are `div`s.
+
+`tests/contrast.test.ts` now asserts the light surfaces too — `--fog`, `--bronze` and `--bronze-dk` on both
+`--w` and the `--linen` of a selected card, plus that hover *darkens* on a light ground rather than lightening
+(the mirror of the trap already noted for links on dark).
 
 ---
 

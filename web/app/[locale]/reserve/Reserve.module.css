@@ -110,7 +110,11 @@
   letter-spacing: 0.22em;
   text-indent: 0.22em;
   text-transform: uppercase;
-  color: rgba(28, 20, 16, 0.45);
+  /* Was rgba(28, 20, 16, 0.45) — 2.94:1 on --w, which fails AA outright at
+     0.75rem. --fog is 5.11:1 and is the token the rest of the site uses for
+     quiet text, so a step you have not reached yet is legible without
+     competing with the one you are on. */
+  color: var(--fog);
   border-bottom: 1.5px solid transparent;
   transition: all 0.3s;
   display: flex;
@@ -123,6 +127,19 @@
   border-bottom-color: var(--bronze);
 }
 
+/* The current step's number is filled rather than outlined. With three states
+   carried by text colour alone the active one was the quietest of the three —
+   --ink reads as "ordinary text", while done was warm and idle was grey. White
+   on --bronze is 5.52:1. */
+.stepActive .stepNum {
+  background: var(--bronze);
+  border-color: var(--bronze);
+  color: #fff;
+}
+
+/* Deliberately NOT --bronze on the idle step as well: done is already bronze,
+   and giving both the same colour would erase the only thing this control
+   says — which steps are behind you and which are still ahead. */
 .stepDone {
   color: var(--bronze);
 }
@@ -313,24 +330,42 @@
 
 /* The room's own page. Quiet, and set apart from the tick on the other edge so
    that a guest reaching for "select" does not land on "leave". */
+/* The room's own details. Quiet next to the card itself, which is the control
+   that actually chooses the room — but it has to read as pressable.
+
+   These resets are load-bearing: this was a link until the details moved into
+   a dialog, and a `button` brings the UA's grey `ButtonFace` background and a
+   full border with it. Left alone it rendered as a washed-out grey box that
+   looked disabled rather than like the quiet text button it is.
+
+   --bronze rather than --fog: 5.27:1 on --w and 4.64:1 on the --linen of a
+   selected card, against --fog's 5.11 and a bare 4.50. Warmer, more legible,
+   and the colour this site already uses to mean "interactive". */
 .roomDetails {
   display: inline-block;
   margin-inline-start: 1.2rem;
   margin-bottom: 1.1rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--b);
   font-size: 0.6875rem;
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   text-transform: uppercase;
-  color: var(--fog);
-  border-bottom: 0.5px solid rgba(28, 20, 16, 0.2);
-  padding-bottom: 0.2rem;
+  color: var(--bronze);
+  /* Solid, not a hairline tint. The underline is the only thing marking this
+     as a control, so it is a UI component and owes 3:1 — and every alpha below
+     1 measured under 3:1 on both surfaces. */
+  border-bottom: 1px solid var(--bronze);
+  padding-bottom: 0.25rem;
   transition: all var(--transition);
 }
 
 .roomDetails:hover,
 .roomDetails:focus-visible {
-  color: var(--bronze);
-  border-bottom-color: var(--bronze);
+  color: var(--bronze-dk);
+  border-bottom-color: var(--bronze-dk);
 }
 
 :global([lang='ar']) .roomDetails {
@@ -347,6 +382,10 @@
 }
 
 .roomCategory {
+  /* A `span` by default: without this the category, name and rooms-left run
+     together on one line, and the margins below do nothing — margins do not
+     apply to inline boxes. */
+  display: block;
   font-size: 0.6875rem;
   letter-spacing: 0.28em;
   text-indent: 0.28em;
@@ -356,6 +395,10 @@
 }
 
 .roomName {
+  /* A `span` by default: without this the category, name and rooms-left run
+     together on one line, and the margins below do nothing — margins do not
+     apply to inline boxes. */
+  display: block;
   font-family: var(--s);
   font-size: 1rem;
   font-weight: 300;
@@ -364,6 +407,10 @@
 }
 
 .roomMeta {
+  /* A `span` by default: without this the category, name and rooms-left run
+     together on one line, and the margins below do nothing — margins do not
+     apply to inline boxes. */
+  display: block;
   font-size: 0.8125rem;
   color: var(--fog);
 }

@@ -22,9 +22,7 @@ const tokensCss = readFileSync(
 type Rgb = [number, number, number];
 
 function readToken(name: string): string {
-  const match = tokensCss.match(
-    new RegExp(`--${name}:\\s*([^;]+);`),
-  );
+  const match = tokensCss.match(new RegExp(`--${name}:\\s*([^;]+);`));
   if (!match?.[1]) throw new Error(`Token --${name} not found in tokens.css`);
   return match[1].trim();
 }
@@ -68,6 +66,14 @@ function contrastRatio(a: Rgb, b: Rgb): number {
   const la = relativeLuminance(a);
   const lb = relativeLuminance(b);
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/** Contrast of one opaque token against another. */
+function ratioOn(tokenName: string, surfaceName: string): number {
+  return contrastRatio(
+    parseHex(readToken(tokenName)),
+    parseHex(readToken(surfaceName)),
+  );
 }
 
 /** Contrast of a token against the dark background. */
@@ -128,9 +134,53 @@ describe('the accent colours the design system reserves', () => {
   it('keeps ink readable on every light surface', () => {
     const ink = parseHex(readToken('ink'));
     for (const surface of ['w', 'linen', 'bone'] as const) {
-      expect(contrastRatio(ink, parseHex(readToken(surface)))).toBeGreaterThanOrEqual(
-        AA_NORMAL,
-      );
+      expect(
+        contrastRatio(ink, parseHex(readToken(surface))),
+      ).toBeGreaterThanOrEqual(AA_NORMAL);
     }
+  });
+});
+
+/**
+ * The reserve flow's light surfaces.
+ *
+ * The booking flow sits on --w, and a selected room card on --linen — the
+ * darker of the two, so it is the one that decides whether a colour passes.
+ * These are asserted because the flow had a real failure here: the step you
+ * had not reached yet was set in `rgba(28, 20, 16, 0.45)`, which measures
+ * 2.94:1 and fails AA at 0.75rem. It was tuned by eye and nothing complained.
+ */
+describe('the reserve flow on light surfaces meets WCAG 2.1 AA', () => {
+  it.each([
+    ['fog', 'the step not yet reached, and card meta'],
+    ['bronze', 'the View details button, and completed steps'],
+    ['bronze-dk', 'their hover'],
+  ])('--%s (%s) clears AA on --w and --linen', (token) => {
+    expect(ratioOn(token, 'w')).toBeGreaterThanOrEqual(AA_NORMAL);
+    expect(ratioOn(token, 'linen')).toBeGreaterThanOrEqual(AA_NORMAL);
+  });
+
+  it('darkens the quiet button on hover rather than lightening it', () => {
+    // Same trap as the links on dark, mirrored: on a light ground the hover
+    // must be *darker* than the resting state, or hovering reduces contrast.
+    expect(ratioOn('bronze-dk', 'w')).toBeGreaterThan(ratioOn('bronze', 'w'));
+    expect(ratioOn('bronze-dk', 'linen')).toBeGreaterThan(
+      ratioOn('bronze', 'linen'),
+    );
+  });
+
+  it('keeps white legible on a filled bronze step badge', () => {
+    const white: Rgb = [255, 255, 255];
+    expect(
+      contrastRatio(white, parseHex(readToken('bronze'))),
+    ).toBeGreaterThanOrEqual(AA_NORMAL);
+  });
+
+  it('keeps the completed and upcoming steps distinguishable', () => {
+    // --bronze marks a step behind you and --fog one ahead. They are close in
+    // luminance by design (both are quiet), so what separates them is hue —
+    // and if someone ever tunes one to match the other the control stops
+    // saying anything at all.
+    expect(readToken('bronze')).not.toBe(readToken('fog'));
   });
 });
