@@ -763,6 +763,39 @@ reloading the page**. On AWS both services sit behind one domain and it tightens
 
 ---
 
+## Header contrast pass (16 Sep 2026) — one item needs the client's sign-off
+
+Measured against the live hero rather than judged by eye. `SiteNav.module.css` carries the reasoning inline.
+
+| | before | after |
+|---|---|---|
+| Nav links | 8.1–9.9:1 | unchanged, but set in Jost **400** rather than the inherited 300 |
+| Reserve button | 3.72:1 — **failed AA** | **7.33:1** |
+
+- **Reserve is now a filled gold CTA** (`--dark` on `--gold`, hover `--gold-lt` at 9.13:1). ⚠️ **This departs
+  from the approved mockup**, where `.nbtn` is `background: transparent` with a gold border, and
+  `cove-design-system` says the mockup wins on a disagreement — **so this needs the client's confirmation.**
+  Two reasons it was still the right call: the outlined version failed AA at 3.72:1 and only passed on /ar
+  because the bar mirrors onto a darker part of the same photograph; and a filled button's contrast owes nothing
+  to the image behind it. Worth noting the system and the mockup already contradicted each other —
+  `cove-design-system` permits "two kinds only, a filled gold CTA and a text/underline quiet button", and the
+  outlined gold button was a third. **If the client prefers the outlined look, it needs a scrim behind it** —
+  `rgba(24, 14, 6, 0.25)` measured 4.79:1, which is the version that was in place before this.
+- **Nav links moved from weight 300 to 400.** Nominal contrast was flattering them: at 13px/300/0.28em over a
+  photograph, the average pixel actually drawing a letter sat at luminance 112 of 255 — under half the white it
+  was nominally set in. 400 lays down 16% more ink and lifts that to 127. Within the system (Jost 200/300/400)
+  and already in the `next/font` subset, so it costs no extra download.
+- **The nav's scroll transition now fades.** The solid bar (colour, blur, hairline) moved onto `.nav::after` and
+  animates **opacity**. Previously `transition: all` swept up `padding`, so the bar collapsed as it darkened,
+  and `backdrop-filter` cannot transition from `none` so the blur snapped on in one frame. Opacity is
+  compositor-only, so the fade also stopped running layout on every frame of a scroll.
+
+> ⚠️ **Everything above except the Reserve button is tuned to a placeholder hero.** The nav-link weight and the
+> gradient were measured against the image currently on the home page. **Re-measure when the client's
+> photography lands.** The filled button is the one element that will not need it.
+
+---
+
 ## Open items for the client
 
 None of these block development.

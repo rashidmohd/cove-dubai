@@ -226,6 +226,30 @@
   gap: 1.5rem;
 }
 
+/**
+ * The primary call to action — a filled gold CTA.
+ *
+ * This was an outlined button: gold label on `transparent`, borrowing the hero
+ * photograph for its ground. Measured on the current hero it sat at **3.72:1**
+ * against the lightest pixel behind its glyphs, under the 4.5:1 that 13px text
+ * needs, and it only passed on /ar because the bar mirrors onto a darker part
+ * of the same image. A local scrim lifted it to 4.79:1 — but still a number
+ * that belonged to one photograph rather than to the design.
+ *
+ * Filled, it is **7.33:1** and owes nothing to whatever is behind it. That
+ * independence is the point: the client's photography is still outstanding, and
+ * every other legibility value in this file will need re-measuring when it
+ * lands. This one will not.
+ *
+ * It also resolves a contradiction. `cove-design-system` allows two kinds of
+ * button — "a filled gold CTA and a text/underline quiet button" — and the
+ * outlined gold variant was a third the system does not describe.
+ *
+ * **This departs from the approved mockup**, where `.nbtn` is
+ * `background: transparent` with a gold border. The mockup normally wins; this
+ * is a deliberate, recorded exception for contrast, flagged in
+ * docs/project-status.md for the client to confirm.
+ */
 .reserveButton {
   font-family: var(--b);
   font-size: 0.8125rem;
@@ -234,52 +258,29 @@
   text-indent: 0.2em;
   text-transform: uppercase;
   padding: 0.7rem 1.8rem;
-  border: 0.5px solid rgba(196, 154, 82, 0.45);
-  color: var(--gold-lt);
-  background: transparent;
+  border: 0.5px solid var(--gold);
+  /* --dark on --gold is 7.33:1. White on --gold is 2.60:1 and was rejected. */
+  color: var(--dark);
+  background: var(--gold);
   cursor: pointer;
-  transition: all 0.35s;
+  transition:
+    background 0.35s,
+    border-color 0.35s,
+    color 0.35s;
 }
 
 /**
- * A scrim behind the Reserve button on the overlay nav.
+ * Hover brightens the fill, as `cove-design-system` prescribes ("hover shifts
+ * colour to --gold-lt"). It cannot fill on hover any more — it is already
+ * filled — and darkening would read as recessed rather than active.
  *
- * The button is the one item in the bar still borrowing the photograph for its
- * ground: gold label, transparent fill. Measured on the current hero it sits at
- * **3.72:1** against the lightest pixel behind its glyphs — below the 4.5:1 that
- * 13px text needs. It passes on /ar only because the bar mirrors and the button
- * lands on a darker part of the same image, which is luck rather than design.
- *
- * So it brings its own ground, exactly as the nav gradient above does.
- *
- * 0.25 is not arbitrary. AA is cleared at 0.179 on this photograph; 0.20 would
- * pass by 0.02 and is really a measurement of one placeholder image. 0.25 is
- * still imperceptible over a dark hero and leaves room for the client's real
- * photography to be a little brighter. **Re-measure when that lands.**
- *
- * Only on the overlay nav — `.navSolid` and `.scrolled` already give the bar a
- * dark surface of its own, and a second one would read as a box round the
- * button.
+ * --dark on --gold-lt is 9.13:1.
  */
-.nav:not(.navSolid) .reserveButton {
-  background: rgba(24, 14, 6, 0.25);
-}
-
 .reserveButton:hover,
 .reserveButton:focus-visible {
-  background: var(--gold);
-  /* White on --gold is 2.60:1. On the dark nav the fill should stay bright —
-     a bronze one would read as recessed rather than hovered — so the label
-     darkens instead: --dark on --gold is 7.33:1. */
+  background: var(--gold-lt);
   color: var(--dark);
-  border-color: var(--gold);
-}
-
-/* Restated at the scrim's specificity. Without this the scoped rule above wins
-   on hover too and the button never lights up. */
-.nav:not(.navSolid) .reserveButton:hover,
-.nav:not(.navSolid) .reserveButton:focus-visible {
-  background: var(--gold);
+  border-color: var(--gold-lt);
 }
 
 .langToggle {
