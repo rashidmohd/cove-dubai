@@ -148,6 +148,18 @@
   color: #fff;
 }
 
+/* The completed step's tick, drawn rather than typed — see the note at its call
+   site. Physical `border-left`, not `border-inline-start`: a tick is a mark, not
+   a layout direction, so it must read identically in Arabic rather than being
+   mirrored into a backwards one. */
+.stepTick {
+  width: 7px;
+  height: 4px;
+  border-left: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg) translateY(-1px);
+}
+
 .stepActive .stepNum {
   background: var(--ink);
   border-color: var(--ink);
@@ -470,9 +482,14 @@
 .checkMark {
   width: 8px;
   height: 5px;
-  border-inline-start: 1px solid #fff;
+  /* A tick, not a layout mirror: it must read the same in both directions.
+     That was the intent here from the start, but `border-inline-start` is
+     precisely what breaks it — under RTL it resolves to the *right* border, so
+     the shape became a right-plus-bottom corner and rotating it -45° drew a
+     ">" chevron rather than a tick. Physical `border-left` is the one case
+     where a logical property is wrong. */
+  border-left: 1px solid #fff;
   border-bottom: 1px solid #fff;
-  /* A tick, not a layout mirror: it reads the same in both directions. */
   transform: rotate(-45deg) translateY(-1px);
   opacity: 0;
   transition: opacity 0.2s;

@@ -601,7 +601,16 @@ function StepIndicator({ current }: { current: Step }) {
             aria-current={active ? 'step' : undefined}
           >
             <span className={styles.stepNum} aria-hidden="true">
-              {done ? '✓' : item.step}
+              {/* A drawn tick, not the character U+2713. The `next/font`
+                  faces are subset to `latin`, whose unicode-range stops well
+                  short of the Dingbats block — and unicode-range decides
+                  which characters a face is used for at all — so a literal ✓
+                  is never set in Jost. It falls through to whatever symbol
+                  font the OS happens to supply, which is Apple Symbols on
+                  one machine and Segoe UI Symbol on the next. Drawn, it is
+                  the same mark everywhere, and it matches the selection tick
+                  on the room cards below. */}
+              {done ? <span className={styles.stepTick} /> : item.step}
             </span>
             {item.label}
           </li>

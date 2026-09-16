@@ -25,7 +25,7 @@ at startup and exit with a readable message if anything required is missing. `se
 
 ```bash
 cd server && npm run typecheck && npm test     # 106 tests — hits the real database
-cd web    && npm run typecheck && npm test     # 50 tests — pure, no network
+cd web    && npm run typecheck && npm test     # 51 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
 cd web    && npx playwright test               # 39 e2e — needs the API running
 ```
@@ -41,7 +41,10 @@ Playwright drives the **system Chrome** (`channel: 'chrome'`): its bundled Chrom
 ARM. On CI, set `E2E_USE_SYSTEM_CHROME=false` to use the bundled browser.
 
 The e2e suite writes **real reservations** to the shared database under `@e2e-test.invalid`. It does not clean up
-after itself. Remove them and release their inventory with the SQL in [Cleaning up test bookings](#cleaning-up-test-bookings)
+after itself. **`reserve.spec.ts` books the Cove Suite, of which the hotel has eight** — so eight runs exhaust it
+for the suite's dates and the room vanishes from availability. The failure that follows is confusing, because it
+surfaces in whatever *other* test happened to reference that room rather than in the one that consumed it.
+`room-detail.spec.ts` therefore keys on the Studio Room (44 of them) even though it books nothing. Remove them and release their inventory with the SQL in [Cleaning up test bookings](#cleaning-up-test-bookings)
 — deleting the rows alone leaves those nights permanently consumed.
 
 ---
@@ -870,23 +873,47 @@ cosmetic.
 | | before | after |
 |---|---|---|
 | Step not yet reached | `rgba(28,20,16,.45)` — **2.94:1, failed AA** | `--fog`, **5.11:1** |
+| Step badges | circles, `border-radius: 50%` | **squares**, like the selection tick below them |
 | "View details" | `--fog` 5.11:1 / 4.50:1 on a selected card | `--bronze`, **5.27:1 / 4.64:1** |
 | Its underline | `rgba(28,20,16,.2)` — **1.53:1, failed the 3:1 UI floor** | solid `--bronze`, **5.27:1** |
 
 - **The stepper's idle state failed AA outright** at 0.75rem, and had since the flow was built — tuned by eye as
   a translucent black, which is exactly the failure mode `tests/contrast.test.ts` was written for. It is now
   `--fog`, a token, so the test covers it.
-- **Idle is deliberately *not* `--bronze`.** `.stepDone` is already bronze; giving both the same colour would
-  erase the only thing the control says — which steps are behind you and which are ahead. The progression is
-  now bronze (done) → `--ink` with a filled bronze badge (current) → `--fog` (ahead).
-- **The current step's number is filled**, white on `--bronze` at 5.52:1. With three states carried by text
-  colour alone the active one was the quietest of the three, since `--ink` just reads as ordinary text.
+- **Idle is deliberately *not* `--bronze`.** `.stepDone` is bronze; giving both the same colour would erase the
+  only thing the control says — which steps are behind you and which are ahead.
+- **The step badges are square.** `cove-design-system` asks for minimal radius (`--radius` is 2px) and warns off
+  rounded pills, and this was the only `border-radius: 50%` on any guest-facing surface — the selection tick on
+  the room cards directly below it was already a sharp square.
+- **Filled for where you have been and where you are, outlined for what is ahead**, so the progression reads
+  from the shapes before any colour is interpreted — which is all someone who cannot separate bronze from
+  grey-brown has to go on. Done is filled `--bronze` with a white tick (5.52:1); the current step is filled
+  `--ink` with a white number (18.15:1); what is ahead is a hairline outline in `--fog`.
+- **The current step is the darkest mark, not the accent one.** Bronze is this site's accent and pulls the eye,
+  so making a *completed* step bronze and the current step bronze as well would have left the underline doing
+  all the work of saying where you are.
 - **No alpha below 1 clears 3:1 for the underline** on either surface — measured at 0.3 through 0.7, the best
   being 2.91:1 on `--w`. It is the only thing marking that control as pressable, so it is solid.
 
 > 🐛 **"View details" was rendering as a grey box.** It was a link until the details moved into a dialog, and a
 > `button` brings the UA's `ButtonFace` background and a full border with it. Nothing reset them, so a quiet
 > text button rendered as a washed-out box that read as *disabled*.
+
+> 🐛 **The completed step's tick was a fallback-font glyph.** It was the literal character `✓` (U+2713), and
+> the `next/font` faces are subset to `latin`, whose `unicode-range` stops well short of the Dingbats block.
+> Since `unicode-range` decides which characters a face is used for at all, Jost was **never** used to draw it —
+> the browser fell through to whatever symbol font the OS supplies, so the mark was Apple Symbols on one machine
+> and Segoe UI Symbol on the next. Measured, not assumed: `✓` renders at an identical width under `Jost` and
+> under a deliberately non-existent family, while letters and digits differ. It is now drawn in CSS, like the
+> selection tick on the room cards.
+
+> 🐛 **The room card's selection tick was a ">" in Arabic.** `.checkMark` is drawn with
+> `border-inline-start` + `border-bottom` rotated -45°, and under RTL the inline-start border resolves to the
+> *right* one — so the shape became a right-plus-bottom corner and drew a chevron rather than a tick. The
+> comment directly above it claimed "a tick, not a layout mirror: it reads the same in both directions", which
+> is what it was *for*, not what it did. Physical `border-left` is the one case here where a logical property is
+> the wrong tool: a tick is a mark, not a reading direction. **Pre-existing**, and invisible unless you look at
+> `/ar` with a room selected.
 
 > 🐛 **The room card's three lines were rendering as one** — "Studio Room44 rooms left". `.roomCategory`,
 > `.roomName` and `.roomMeta` are `<span>`s and were never given `display: block`, so their `margin-bottom` did
