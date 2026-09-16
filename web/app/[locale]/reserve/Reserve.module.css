@@ -937,3 +937,222 @@
 .voucherRemove:hover {
   color: var(--link-on-dark-hover);
 }
+
+/* --- Room detail dialog ----------------------------------------------------
+ * A native `<dialog>`, so the browser owns the focus trap, Escape and the top
+ * layer. Only its appearance is styled here.
+ */
+
+.detailDialog {
+  /* The element fills the viewport so a click anywhere outside the card lands
+     on it — that is what dismisses the dialog. `max-width`/`max-height` are
+     reset because the UA stylesheet caps a dialog at the viewport minus its
+     own margins, which would leave a strip the backdrop click cannot reach. */
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: var(--space-6);
+  border: 0;
+  background: transparent;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The layout is scoped to `[open]` — and that is load-bearing, not tidiness.
+   The UA stylesheet hides a closed dialog with `dialog:not([open]) { display:
+   none }`, but *any* author `display` beats a UA rule whatever the specificity
+   says, so setting it unconditionally leaves a closed dialog laid out: an
+   invisible full-viewport box sitting in the flow, swallowing clicks meant for
+   the room list behind it.
+
+   Grid rather than flex: `place-items` centres the card on both axes, and a
+   card taller than the viewport still scrolls rather than being clipped at the
+   top the way a flex-centred child is. */
+.detailDialog[open] {
+  display: grid;
+  place-items: center;
+}
+
+.detailDialog::backdrop {
+  background: rgba(24, 14, 6, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.detailCard {
+  position: relative;
+  width: min(640px, 100%);
+  background: var(--w);
+  text-align: start;
+  /* The card scrolls, not the page behind it. */
+  max-height: calc(100dvh - var(--space-12));
+  overflow-y: auto;
+}
+
+.detailClose {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  /* Logical, so it sits on the trailing edge in both directions. */
+  inset-inline-end: var(--space-3);
+  z-index: 1;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--w);
+  background: rgba(24, 14, 6, 0.45);
+  border: 0;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.detailClose:hover,
+.detailClose:focus-visible {
+  background: rgba(24, 14, 6, 0.75);
+}
+
+.detailVisual {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  /* The gradient is the loading and the failure state at once, as everywhere
+     else — a room with no photography still renders. */
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.detailVisual[data-swatch='img-suite'] {
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+.detailVisual[data-swatch='img-terrace'] {
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+}
+.detailVisual[data-swatch='img-corner'] {
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+.detailVisual[data-swatch='img-studio'] {
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.detailBody {
+  padding: var(--space-8);
+}
+
+.detailCategory {
+  font-size: 0.6875rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 0.4rem;
+}
+
+.detailName {
+  font-family: var(--s);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 300;
+  color: var(--ink);
+  line-height: 1.1;
+  margin-bottom: var(--space-5);
+}
+
+.detailFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+}
+
+.detailPrice {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.detailPriceLabel {
+  font-size: 0.6875rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.detailAmount {
+  font-family: var(--s);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.detailPer {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--fog);
+}
+
+.detailAction {
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  padding: 0.9rem 2.2rem;
+  background: var(--bronze);
+  color: #fff;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--b);
+  transition: all var(--transition);
+}
+
+.detailAction:hover,
+.detailAction:focus-visible {
+  background: var(--dark);
+}
+
+:global([lang='ar']) .detailCategory,
+:global([lang='ar']) .detailPriceLabel,
+:global([lang='ar']) .detailPer,
+:global([lang='ar']) .detailAction {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .detailCategory {
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 700px) {
+  .detailDialog {
+    padding: 0;
+  }
+
+  .detailCard {
+    width: 100%;
+    max-height: 100dvh;
+  }
+
+  .detailBody {
+    padding: var(--space-6);
+  }
+
+  .detailFooter {
+    /* Full-width action on a phone: side by side, the price and the button
+       each get too little room and the button stops looking pressable. */
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .detailAction {
+    text-align: center;
+  }
+}

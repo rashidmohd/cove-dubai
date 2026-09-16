@@ -14,7 +14,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
-import { Link } from '@/i18n/navigation';
 import { ApiError, bookingApi } from '@/lib/api/client';
 import type {
   AvailableRoomType,
@@ -28,6 +27,7 @@ import { Confirmation } from './Confirmation';
 import { DatePicker } from './DatePicker';
 import { GuestDetails } from './GuestDetails';
 import { StaySummary } from './StaySummary';
+import { RoomDetailDialog } from './RoomDetailDialog';
 import { useBookingState, type Step } from './useBookingState';
 import styles from './Reserve.module.css';
 
@@ -43,6 +43,15 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reservation, setReservation] = useState<Reservation | null>(null);
+
+  /**
+   * The room whose details are open, by code.
+   *
+   * The code rather than the room itself, so a refreshed availability response
+   * cannot leave the dialog showing a stale price while the list behind it
+   * shows the current one.
+   */
+  const [detailCode, setDetailCode] = useState<string | null>(null);
 
   /**
    * The discount the guest has applied, if any.
@@ -470,30 +479,20 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                           </span>
                         </button>
 
-                        {/* The stay travels with the link, so the room page can
-                          price these nights rather than quoting a nightly rate
-                          the guest has already moved past. Progress is held in
-                          `sessionStorage`, so coming back lands them exactly
-                          here — `booking-engine` requires that a guest who
-                          leaves to compare does not lose their dates. */}
-                        <Link
-                          href={{
-                            pathname: `/rooms/${room.code}`,
-                            query: {
-                              ...(state.checkIn && state.checkOut
-                                ? {
-                                    checkIn: state.checkIn,
-                                    checkOut: state.checkOut,
-                                  }
-                                : {}),
-                              adults: String(state.adults),
-                            },
-                          }}
+                        {/* Opens in place rather than navigating. A guest
+                            comparing rooms is mid-decision, and sending them
+                            to another page ends the comparison and makes them
+                            find their way back. The room page still exists for
+                            searchers and shared links; this is the same
+                            content without the round trip. */}
+                        <button
+                          type="button"
                           className={styles.roomDetails}
+                          onClick={() => setDetailCode(room.code)}
                           data-testid={`room-details-${room.code}`}
                         >
                           {t('step2.viewDetails')}
-                        </Link>
+                        </button>
                       </div>
                     </li>
                   );
@@ -525,6 +524,23 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                 {t('continue')}
               </button>
             </div>
+
+            {/* Resolved from the current `rooms` rather than held in state, so
+                the dialog always shows the same price the row behind it does.
+                A code whose room is no longer in the list — it sold out while
+                the dialog was open — resolves to null, which closes it rather
+                than leaving a price nobody can still book on screen. */}
+            <RoomDetailDialog
+              room={rooms.find((room) => room.code === detailCode) ?? null}
+              locale={locale}
+              nights={nights}
+              selected={detailCode === state.roomTypeCode}
+              onSelect={() => {
+                update({ roomTypeCode: detailCode });
+                setDetailCode(null);
+              }}
+              onDismiss={() => setDetailCode(null)}
+            />
           </>
         )}
 

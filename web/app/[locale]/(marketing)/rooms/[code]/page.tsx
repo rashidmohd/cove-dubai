@@ -18,31 +18,25 @@
  * files, exactly as on the listing — see the note there for why they are not
  * database fields in Phase 1.
  */
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import {
-  BodyText,
   Photo,
   Reveal,
   Section,
   SectionHeading,
   SectionLabel,
 } from '@/components/marketing';
+import { RoomDetailBody } from '@/components/RoomDetail';
 import { Link } from '@/i18n/navigation';
 import { isLocale, locales } from '@/i18n/routing';
 import { bookingApi } from '@/lib/api/client';
+import { formatMoney } from '@/lib/format';
 import { resolveRoomPhoto } from '@/lib/media';
-import type { Locale, RoomType } from '@/lib/api/types';
-import { StayCta, StayCtaFallback } from './StayCta';
+import type { RoomType } from '@/lib/api/types';
 import styles from './page.module.css';
-
-const SPEC_KEYS = ['size', 'bed', 'view', 'bathroom', 'floor'] as const;
-
-/** See the listing page: measurements and ranges must not be bidi-reordered. */
-const LTR_SPEC_KEYS = new Set<string>(['size', 'floor']);
 
 /**
  * One room type, or null.
@@ -144,79 +138,36 @@ export default async function RoomDetailPage({
           <SectionHeading as="h1">
             <bdi data-testid="room-detail-name">{room.name[locale]}</bdi>
           </SectionHeading>
-          <BodyText className={styles.description}>
-            <bdi>{room.description[locale]}</bdi>
-          </BodyText>
+          {/* Description, specs and amenities are the same substance the
+              booking flow's detail dialog shows, so they are one component
+              rather than two that drift. */}
+          <RoomDetailBody room={room} locale={locale} />
 
-          <dl className={styles.specs}>
-            {SPEC_KEYS.map((key) => {
-              // Optional, as on the listing: a room added in the admin panel
-              // has no copy here until the client writes it, and a missing
-              // spec must not render rather than throw.
-              const value = t.has(`specs.${room.code}.${key}`)
-                ? t(`specs.${room.code}.${key}`)
-                : null;
-              if (!value) return null;
+          {/* Server-rendered, so the page ships no JavaScript for its own
+              price and stays wholly static.
 
-              return (
-                <div key={key} className={styles.spec}>
-                  <dt className={styles.specLabel}>{t(`specLabels.${key}`)}</dt>
-                  <dd className={styles.specValue}>
-                    <bdi
-                      {...(LTR_SPEC_KEYS.has(key)
-                        ? { dir: 'ltr' as const }
-                        : {})}
-                    >
-                      {value}
-                    </bdi>
-                  </dd>
-                </div>
-              );
-            })}
-            <div className={styles.spec}>
-              <dt className={styles.specLabel}>{tCommon('adults')}</dt>
-              <dd className={styles.specValue}>
-                {t('sleeps', { count: room.maxOccupancy })}
-              </dd>
-            </div>
-          </dl>
+              It quotes the nightly rate rather than a total, because nobody
+              arriving here has chosen dates: the booking flow answers "what do
+              my nights cost" in its own detail dialog, without sending anyone
+              to this page. This page is for a searcher, and `?room=` carries
+              the choice into the flow when they act on it. */}
+          <div className={styles.stayCta} data-testid="stay-cta">
+            <p className={styles.stayPrice}>
+              <span className={styles.stayLabel}>{t('from')}</span>
+              <span className={styles.stayAmount}>
+                {formatMoney(room.baseRate, tCommon('currency'), locale)}
+              </span>
+              <span className={styles.stayPer}>{tCommon('perNight')}</span>
+            </p>
 
-          {/* `?? []` is load-bearing here for the same reason as the listing:
-              this response is cached for an hour and the two services deploy
-              independently, so one predating the field is a normal state. */}
-          {(room.amenities ?? []).length > 0 ? (
-            <div className={styles.amenities}>
-              <h2 className={styles.amenitiesTitle}>{t('amenitiesTitle')}</h2>
-              <ul className={styles.amenityList}>
-                {(room.amenities ?? []).map((amenity) => (
-                  <li key={amenity.code} className={styles.amenityItem}>
-                    <bdi>{amenity.name[locale]}</bdi>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {/* The fallback is what the static HTML carries: the "from" rate and
-              a working reserve link. `StayCta` replaces it in the browser when
-              the URL names a stay, with the real total for those nights. A
-              guest arriving without dates never sees a flash — the two render
-              the same shape. */}
-          <Suspense
-            fallback={
-              <StayCtaFallback
-                roomCode={room.code}
-                baseRate={room.baseRate}
-                locale={locale as Locale}
-              />
-            }
-          >
-            <StayCta
-              roomCode={room.code}
-              baseRate={room.baseRate}
-              locale={locale as Locale}
-            />
-          </Suspense>
+            <Link
+              href={{ pathname: '/reserve', query: { room: room.code } }}
+              className={styles.stayAction}
+              data-testid="reserve-this-room"
+            >
+              {t('detail.reserveThisRoom')}
+            </Link>
+          </div>
         </Reveal>
       </Section>
 

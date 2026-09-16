@@ -1,11 +1,15 @@
 /**
- * The room detail page, and the path a guest takes to reach it mid-booking.
+ * Room detail, on both surfaces.
  *
  * The gap this closes: step 2 lists rooms by name and price alone, and a guest
- * who wants to know what they are choosing had nowhere to go. What matters here
- * is not that a page exists but that the *stay survives the detour* — the room
- * page must price the nights the guest already chose, and coming back must not
- * cost them their dates or their place in the flow.
+ * who wants to know what they are choosing had nowhere to go.
+ *
+ * There are two answers, and they are not alternatives. **In the booking flow
+ * it is a dialog** — a guest comparing rooms is mid-decision, and navigating
+ * away ends the comparison. **On the marketing site it is a page**, because a
+ * room page is the strongest thing a hotel has to show a searcher and a modal
+ * has no URL. Both render the same `RoomDetailBody`, so what is tested here is
+ * largely that neither surface shows less than the other.
  *
  * Read-only: nothing here books, so unlike `reserve.spec.ts` it leaves no rows
  * behind and consumes no inventory.
@@ -51,58 +55,90 @@ async function reachRoomList(page: Page, locale: 'en' | 'ar' = 'en') {
   });
 }
 
-test.describe('room detail', () => {
-  test('carries the stay from the room list onto the room page', async ({
+test.describe('room detail in the booking flow', () => {
+  test('opens the details in place, without leaving step 2', async ({
     page,
   }) => {
     await reachRoomList(page);
+    const url = page.url();
 
     await page.getByTestId('room-details-cove-suite').click();
 
-    await expect(page).toHaveURL(new RegExp(`/en/rooms/cove-suite`));
+    const dialog = page.getByTestId('room-detail-dialog');
+    await expect(dialog).toBeVisible();
     await expect(page.getByTestId('room-detail-name')).toBeVisible();
 
-    // The point of the whole exercise: the guest left a priced list, so the
-    // room page must quote *their* nights rather than dropping them back to a
-    // nightly "from" rate they have already moved past.
-    const cta = page.getByTestId('stay-cta');
-    await expect(cta).toHaveAttribute('data-mode', 'stay', { timeout: 20_000 });
+    // The point of a dialog over a page: the guest has not gone anywhere.
+    expect(page.url()).toBe(url);
 
-    // And the detail that was missing from the card is actually here.
-    await expect(page.getByText('96 m²')).toBeVisible();
+    // The detail that was missing from the card is actually here.
+    await expect(dialog.getByText('96 m²')).toBeVisible();
+
+    // And it quotes the stay, not a nightly rate — the card behind it already
+    // priced these nights and the dialog must not disagree with it.
+    const cardPrice = await page.getByTestId('room-cove-suite').textContent();
+    const dialogPrice = await page
+      .getByTestId('room-detail-amount')
+      .textContent();
+    expect(cardPrice).toContain(dialogPrice?.trim());
   });
 
-  test('returns to the flow with the room chosen and the dates intact', async ({
-    page,
-  }) => {
+  test('selects the room and returns to the list', async ({ page }) => {
     await reachRoomList(page);
     await page.getByTestId('room-details-terrace-room').click();
-    await expect(page.getByTestId('room-detail-name')).toBeVisible();
+    await page.getByTestId('room-detail-select').click();
 
-    await page.getByTestId('reserve-this-room').click();
+    await expect(page.getByTestId('room-detail-dialog')).toBeHidden();
 
-    // Straight back to the room list — not to the date picker, which the guest
-    // has already answered — with the room they were reading about selected.
     const room = page.getByTestId('room-terrace-room');
-    await expect(room).toBeVisible({ timeout: 20_000 });
     await expect(room).toHaveAttribute('aria-pressed', 'true');
-
-    // Dates survived the round trip, so the flow can be completed from here.
     await expect(page.getByTestId('continue-to-details')).toBeEnabled();
   });
 
-  test('shows a nightly rate when no stay has been chosen yet', async ({
+  test('closes on Escape without choosing anything', async ({ page }) => {
+    await reachRoomList(page);
+    await page.getByTestId('room-details-studio-room').click();
+    await expect(page.getByTestId('room-detail-dialog')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+
+    await expect(page.getByTestId('room-detail-dialog')).toBeHidden();
+    // Looking is not choosing.
+    await expect(page.getByTestId('room-studio-room')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  test('mirrors in Arabic', async ({ page }) => {
+    await reachRoomList(page, 'ar');
+    await page.getByTestId('room-details-cove-suite').click();
+
+    await expect(page.getByTestId('room-detail-dialog')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    // `arabic-rtl`: a measurement must not be bidi-reordered into "m² 96".
+    await expect(
+      page.getByTestId('room-detail-dialog').getByText('96 m²'),
+    ).toBeVisible();
+  });
+});
+
+test.describe('room detail page', () => {
+  test('is reachable from the listing and leads into the flow', async ({
     page,
   }) => {
-    // The other way in: the Rooms listing, where nobody has picked dates.
     await page.goto('/en/rooms');
     await page.getByRole('link', { name: 'View room' }).first().click();
 
+    await expect(page).toHaveURL(/\/en\/rooms\/[a-z-]+$/);
     await expect(page.getByTestId('room-detail-name')).toBeVisible();
-    await expect(page.getByTestId('stay-cta')).toHaveAttribute(
-      'data-mode',
-      'from',
-    );
+    await expect(page.getByTestId('stay-cta')).toBeVisible();
+
+    // `?room=` is what makes the choice survive into the booking flow — it
+    // silently did nothing until 16 Sep 2026, so it is asserted rather than
+    // assumed.
+    await page.getByTestId('reserve-this-room').click();
+    await expect(page).toHaveURL(/\/reserve\?room=/);
   });
 
   test('mirrors in Arabic', async ({ page }) => {

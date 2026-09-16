@@ -1,0 +1,112 @@
+/**
+ * Room detail — the shared body rendered on the room page and in the booking
+ * flow's detail dialog.
+ *
+ * Ported from the Rooms listing's spec and amenity blocks so all three read as
+ * one thing. Logical properties throughout, so it mirrors under RTL wherever it
+ * is placed.
+ */
+
+.description {
+  font-family: var(--b);
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--ink);
+  max-width: 62ch;
+}
+
+/* --- Specifications ------------------------------------------------------ */
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin: var(--space-8) 0 0;
+  padding-top: var(--space-6);
+  border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+}
+
+.spec {
+  min-width: 0;
+}
+
+.specLabel {
+  font-size: 0.6875rem;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.specValue {
+  margin: 0.35rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+  font-weight: 300;
+}
+
+/* --- Amenities -------------------------------------------------------------
+ * Quieter than the specs above them: the specs are what distinguishes one room
+ * from another, while amenities are the reassurance that the expected things
+ * are there. A plain wrapped list rather than a grid of icons — we have no icon
+ * set, and inventing one would mean inventing brand assets.
+ */
+
+.amenities {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+}
+
+.amenitiesTitle {
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--fog);
+  margin-bottom: var(--space-3);
+}
+
+.amenityList {
+  display: flex;
+  flex-wrap: wrap;
+  /* `list-style: none` does not remove the browser's default list indent, and
+     without this the amenities sit ~40px inside their own heading. */
+  padding-inline-start: 0;
+  gap: var(--space-2) var(--space-4);
+  list-style: none;
+}
+
+.amenityItem {
+  font-family: var(--b);
+  font-size: 0.9375rem;
+  color: var(--ink);
+  position: relative;
+}
+
+/* A hairline dot between items, on the side the reading direction starts from,
+   so it mirrors in Arabic without a direction-specific rule. */
+.amenityItem + .amenityItem::before {
+  content: '·';
+  position: absolute;
+  inset-inline-start: calc(var(--space-4) / -2);
+  transform: translateX(-50%);
+  color: var(--bronze);
+}
+
+[dir='rtl'] .amenityItem + .amenityItem::before {
+  transform: translateX(50%);
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .specLabel,
+:global([lang='ar']) .amenitiesTitle {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+  font-size: 0.9375rem;
+}

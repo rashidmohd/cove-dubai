@@ -27,7 +27,7 @@ at startup and exit with a readable message if anything required is missing. `se
 cd server && npm run typecheck && npm test     # 106 tests — hits the real database
 cd web    && npm run typecheck && npm test     # 44 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
-cd web    && npx playwright test               # 37 e2e — needs the API running
+cd web    && npx playwright test               # 39 e2e — needs the API running
 ```
 
 The 7 admin e2e tests skip unless `E2E_ADMIN_PASSWORD` is set to the password of `admin@covedubai.local`, so the
@@ -532,6 +532,7 @@ browser.
 /[locale]/about
 /[locale]/rooms           reads live room types from the API
 /[locale]/rooms/[code]    one room: description, specs, amenities, gallery
+                          (in the booking flow the same detail is a dialog, not this page)
 /[locale]/offers          advertised rate plans, from the API
 /[locale]/dining
 /[locale]/coming-soon     stands in for Wellness, Experiences, Members
@@ -797,57 +798,67 @@ Measured against the live hero rather than judged by eye. `SiteNav.module.css` c
 
 ---
 
-## Room detail pages (16 Sep 2026)
+## Room detail — a dialog in the flow, a page for search (16 Sep 2026)
 
-`/[locale]/rooms/[code]` — the page a guest reaches by clicking a room. Until now there was nowhere to read
-about a room: the Rooms page was one long listing, and **step 2 of the booking flow showed a room as a name, a
-category, a rooms-left count and a price, with no way to find out anything more before committing to it.**
+Until now there was nowhere to read about a room: the Rooms page was one long listing, and **step 2 of the
+booking flow showed a room as a name, a category, a rooms-left count and a price, with no way to find out
+anything more before committing to it.**
 
-| Piece | Where |
-|---|---|
-| Page | `web/app/[locale]/(marketing)/rooms/[code]/page.tsx` |
-| Price + CTA | `…/[code]/StayCta.tsx` — the only client-side part |
-| Entry points | the Rooms listing (`View room`), and every card in reserve step 2 (`View details`) |
-| Tests | `e2e/room-detail.spec.ts` (4), `tests/stay-dates.test.ts` (+5 unit) |
+There are two answers, and they are deliberately not alternatives:
+
+| | Where | Why this shape |
+|---|---|---|
+| **Dialog** | `web/app/[locale]/reserve/RoomDetailDialog.tsx` | A guest comparing rooms is mid-decision. Navigating away ends the comparison and makes them find their way back. |
+| **Page** | `web/app/[locale]/(marketing)/rooms/[code]/` | A modal has no URL. A room page is the strongest thing a hotel has to show a searcher, and it is shareable. |
+| **Shared body** | `web/components/RoomDetail/` | Description, specs and amenities rendered once, so the two surfaces cannot drift apart. |
+
+Entry points: **View details** on every card in reserve step 2 (opens the dialog), and **View room** on the Rooms
+listing (goes to the page). Tests: `e2e/room-detail.spec.ts` (6), `tests/stay-dates.test.ts` (+5 unit).
 
 **No server change was needed.** `AvailableRoomType extends RoomType` and `checkAvailability` already loads
 `WITH_AMENITIES`, so the booking flow was fetching every room's description, occupancy, amenities and
-photographs and discarding them. This is a front-end change against data that was already on the wire.
+photographs and discarding them. The dialog fetches nothing at all — it is a different view of data the step
+already holds, and the price it shows is the total the card behind it already quoted.
 
 Decisions worth knowing:
 
-- **The page is statically prerendered in both locales**, like the listing — 8 pages, revalidated hourly, and in
-  the sitemap. A room page is the most valuable thing a hotel has to show a searcher, and reading `searchParams`
-  on the server would have opted the whole route out of prerendering. So the stay-specific price is the *only*
-  client-side piece, and it renders as a Suspense fallback carrying the "from" rate — meaning the static HTML
-  has a real price and a working reserve link rather than a hole.
-- **The stay travels with the link.** A guest who clicks through from step 2 has already chosen dates, so the
-  page quotes *those nights* (`GET /api/rates`) rather than dropping them back to a nightly rate they have moved
-  past. Arriving from the Rooms page, where nobody has picked dates, it shows the "from" rate instead. The e2e
-  suite reads `data-mode="stay" | "from"` to tell the two apart, rather than matching text.
-- **Leaving the flow is safe by design.** Progress is already in `sessionStorage` — `booking-engine` requires a
-  guest who leaves to compare not to lose their dates — so the detour costs nothing and "Reserve this room"
-  lands back on the room list with the room selected.
-- **Specs still come from the message files.** Size, bed, view, bathroom and floor are `rooms.specs.<code>.*`
-  copy, guarded by `t.has()`, exactly as on the listing. This is the *known* weakness: they are keyed by room
-  code and invisible to the admin panel, so **a room type added in the admin panel shows no specs at all**. It
-  was left alone deliberately rather than migrated on spec — see the open item below.
-- **The card in step 2 is now a card, not a button.** A link cannot be nested inside a button, and making the
-  whole card a link would have taken away the one-click selection the step exists for. The frame and the
-  selected state moved to a wrapping `div`; the `<button>` inside it still carries `data-testid="room-<code>"`
-  and `aria-pressed`, so the Playwright suite drives it unchanged.
+- **The dialog is a native `<dialog>` with `showModal()`**, as the admin panel's `ConfirmDialog` is. That brings
+  the focus trap, the Escape key and top-layer stacking with no library, which is most of what WCAG 2.1 AA asks
+  of a modal. Escape is intercepted (`onCancel`) so the close goes through React state rather than the element
+  closing itself while React still believes a room is open.
+- **The open room is held as a code, not an object**, and resolved from the current availability list on each
+  render — so a refreshed response cannot leave the dialog quoting a price the row behind it has stopped showing,
+  and a room that sells out while the dialog is open closes it rather than leaving an unbookable price on screen.
+- **The page is statically prerendered in both locales** — 8 pages, revalidated hourly, in the sitemap with
+  canonical and hreflang. It ships **no JavaScript of its own**: its price is the nightly "from" rate, rendered
+  on the server, because nobody reaching that page has chosen dates. "What do my nights cost" is the dialog's
+  question, and it answers it without a page load.
+- **Specs still come from the message files** — `rooms.specs.<code>.*`, guarded by `t.has()`. Now read through
+  `lib/room-specs.ts` so the listing, the page and the dialog cannot disagree about which specs exist or which
+  read left-to-right. This is the *known* weakness: they are keyed by room code and invisible to the admin panel,
+  so **a room type added in the admin panel shows no specs at all**. See the open item below.
+- **The card in step 2 is now a card, not a button.** A control cannot be nested inside a button, and making the
+  whole card a link would have taken away the one-click selection the step exists for. The frame and the selected
+  state moved to a wrapping `div`; the `<button>` inside it still carries `data-testid="room-<code>"` and
+  `aria-pressed`, so the Playwright suite drives it unchanged.
 
 > 🐛 **`?room=` was doing nothing, and had never worked.** The offers page has linked into the booking flow with
 > `query: { room: offer.roomTypeCode }` since 18 Aug — "a link into the booking flow with the room preselected" —
 > but nothing in `useBookingState` ever read the parameter. Offers deep-linked to step 1 with no room chosen.
-> Now read and validated (`readRoomCode`), which is what makes "Reserve this room" work and fixes offers as a
-> side effect.
+> Now read and validated (`readRoomCode`), which is what makes the room page's reserve button work and fixes
+> offers as a side effect.
 
 > 🐛 **A sold-out room could survive into step 3.** `searchAvailability` clears a `roomTypeCode` the availability
 > response does not contain, but the *other* path into step 2 — the effect that re-fetches after a restored
 > session, and now after a `?room=` link — did not. A guest restoring a session whose room had since sold out
 > kept it selected and could press Continue, failing at the booking instead of picking again. The same guard now
 > runs on both paths.
+
+> ⚠️ **An author `display` on a `<dialog>` keeps it laid out when closed.** The UA stylesheet hides one with
+> `dialog:not([open]) { display: none }`, but *any* author `display` beats a UA rule whatever the specificity
+> says. Setting `display: grid` unconditionally left an invisible full-viewport box in the flow after the dialog
+> closed, swallowing clicks meant for the room list behind it. The layout is scoped to `.detailDialog[open]`.
+> Caught by the e2e suite, not by looking at it — the box is transparent.
 
 ---
 

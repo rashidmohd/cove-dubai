@@ -28,22 +28,10 @@ import { Link } from '@/i18n/navigation';
 import { isLocale } from '@/i18n/routing';
 import { bookingApi } from '@/lib/api/client';
 import { formatMoney } from '@/lib/format';
+import { LTR_SPEC_KEYS, SPEC_KEYS } from '@/lib/room-specs';
 import { resolveRoomPhoto } from '@/lib/media';
 import type { RoomType } from '@/lib/api/types';
 import styles from './page.module.css';
-
-const SPEC_KEYS = ['size', 'bed', 'view', 'bathroom', 'floor'] as const;
-
-/**
- * Specs whose value is a measurement or a numeric range rather than prose.
- *
- * These are always read left-to-right, whatever the page language. Left to
- * inherit the Arabic page's direction, bidi reordering displays "42 m²" as
- * "m² 42" and — worse — the floor range "2 – 6" as "6 – 2", which is not a
- * styling problem but wrong information. The stored values are correct; only
- * the rendering direction needs pinning.
- */
-const LTR_SPEC_KEYS = new Set<string>(['size', 'floor']);
 
 export async function generateMetadata({
   params,
