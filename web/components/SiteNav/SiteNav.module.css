@@ -169,6 +169,30 @@
   transition: all 0.35s;
 }
 
+/**
+ * A scrim behind the Reserve button on the overlay nav.
+ *
+ * The button is the one item in the bar still borrowing the photograph for its
+ * ground: gold label, transparent fill. Measured on the current hero it sits at
+ * **3.72:1** against the lightest pixel behind its glyphs — below the 4.5:1 that
+ * 13px text needs. It passes on /ar only because the bar mirrors and the button
+ * lands on a darker part of the same image, which is luck rather than design.
+ *
+ * So it brings its own ground, exactly as the nav gradient above does.
+ *
+ * 0.25 is not arbitrary. AA is cleared at 0.179 on this photograph; 0.20 would
+ * pass by 0.02 and is really a measurement of one placeholder image. 0.25 is
+ * still imperceptible over a dark hero and leaves room for the client's real
+ * photography to be a little brighter. **Re-measure when that lands.**
+ *
+ * Only on the overlay nav — `.navSolid` and `.scrolled` already give the bar a
+ * dark surface of its own, and a second one would read as a box round the
+ * button.
+ */
+.nav:not(.navSolid) .reserveButton {
+  background: rgba(24, 14, 6, 0.25);
+}
+
 .reserveButton:hover,
 .reserveButton:focus-visible {
   background: var(--gold);
@@ -177,6 +201,13 @@
      darkens instead: --dark on --gold is 7.33:1. */
   color: var(--dark);
   border-color: var(--gold);
+}
+
+/* Restated at the scrim's specificity. Without this the scoped rule above wins
+   on hover too and the button never lights up. */
+.nav:not(.navSolid) .reserveButton:hover,
+.nav:not(.navSolid) .reserveButton:focus-visible {
+  background: var(--gold);
 }
 
 .langToggle {
