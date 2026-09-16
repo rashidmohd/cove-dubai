@@ -42,7 +42,16 @@ async function navigateToMonth(page: Page, isoDate: string) {
   }
 }
 
-/** Walk step 1 and land on the room list. */
+/**
+ * Walk step 1 and land on the room list.
+ *
+ * Keyed on Studio Room — 44 of them — rather than the Cove Suite, of which the
+ * hotel has eight. Nothing in this file books, but `reserve.spec.ts` does, and
+ * it books the Cove Suite: eight runs exhaust it for these dates and every test
+ * that merely *looked* at that room starts failing for a reason that has
+ * nothing to do with it. A read-only test should not depend on the scarcest
+ * room in the building.
+ */
 async function reachRoomList(page: Page, locale: 'en' | 'ar' = 'en') {
   await page.goto(`/${locale}/reserve`);
   await page.getByTestId('checkin-field').click();
@@ -50,7 +59,7 @@ async function reachRoomList(page: Page, locale: 'en' | 'ar' = 'en') {
   await page.getByTestId(`day-${CHECK_IN}`).click();
   await page.getByTestId(`day-${CHECK_OUT}`).click();
   await page.getByTestId('check-availability').click();
-  await expect(page.getByTestId('room-cove-suite')).toBeVisible({
+  await expect(page.getByTestId('room-studio-room')).toBeVisible({
     timeout: 20_000,
   });
 }
@@ -62,7 +71,7 @@ test.describe('room detail in the booking flow', () => {
     await reachRoomList(page);
     const url = page.url();
 
-    await page.getByTestId('room-details-cove-suite').click();
+    await page.getByTestId('room-details-studio-room').click();
 
     const dialog = page.getByTestId('room-detail-dialog');
     await expect(dialog).toBeVisible();
@@ -72,11 +81,11 @@ test.describe('room detail in the booking flow', () => {
     expect(page.url()).toBe(url);
 
     // The detail that was missing from the card is actually here.
-    await expect(dialog.getByText('96 m²')).toBeVisible();
+    await expect(dialog.getByText('42 m²')).toBeVisible();
 
     // And it quotes the stay, not a nightly rate — the card behind it already
     // priced these nights and the dialog must not disagree with it.
-    const cardPrice = await page.getByTestId('room-cove-suite').textContent();
+    const cardPrice = await page.getByTestId('room-studio-room').textContent();
     const dialogPrice = await page
       .getByTestId('room-detail-amount')
       .textContent();
@@ -97,14 +106,14 @@ test.describe('room detail in the booking flow', () => {
 
   test('closes on Escape without choosing anything', async ({ page }) => {
     await reachRoomList(page);
-    await page.getByTestId('room-details-studio-room').click();
+    await page.getByTestId('room-details-corner-suite').click();
     await expect(page.getByTestId('room-detail-dialog')).toBeVisible();
 
     await page.keyboard.press('Escape');
 
     await expect(page.getByTestId('room-detail-dialog')).toBeHidden();
     // Looking is not choosing.
-    await expect(page.getByTestId('room-studio-room')).toHaveAttribute(
+    await expect(page.getByTestId('room-corner-suite')).toHaveAttribute(
       'aria-pressed',
       'false',
     );
@@ -112,13 +121,13 @@ test.describe('room detail in the booking flow', () => {
 
   test('mirrors in Arabic', async ({ page }) => {
     await reachRoomList(page, 'ar');
-    await page.getByTestId('room-details-cove-suite').click();
+    await page.getByTestId('room-details-studio-room').click();
 
     await expect(page.getByTestId('room-detail-dialog')).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     // `arabic-rtl`: a measurement must not be bidi-reordered into "m² 96".
     await expect(
-      page.getByTestId('room-detail-dialog').getByText('96 m²'),
+      page.getByTestId('room-detail-dialog').getByText('42 m²'),
     ).toBeVisible();
   });
 });

@@ -169,10 +169,13 @@ describe('the reserve flow on light surfaces meets WCAG 2.1 AA', () => {
     );
   });
 
-  it('keeps white legible on a filled bronze step badge', () => {
+  it.each([
+    ['bronze', 'the completed step badge'],
+    ['ink', 'the current step badge'],
+  ])('keeps white legible on a filled --%s badge (%s)', (token) => {
     const white: Rgb = [255, 255, 255];
     expect(
-      contrastRatio(white, parseHex(readToken('bronze'))),
+      contrastRatio(white, parseHex(readToken(token))),
     ).toBeGreaterThanOrEqual(AA_NORMAL);
   });
 

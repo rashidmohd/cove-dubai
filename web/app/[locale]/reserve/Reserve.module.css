@@ -127,27 +127,43 @@
   border-bottom-color: var(--bronze);
 }
 
-/* The current step's number is filled rather than outlined. With three states
-   carried by text colour alone the active one was the quietest of the three —
-   --ink reads as "ordinary text", while done was warm and idle was grey. White
-   on --bronze is 5.52:1. */
-.stepActive .stepNum {
+/* Three states, three distinguishable marks, rather than three shades of one.
+ *
+ *   done    filled --bronze, white tick      (white on bronze, 5.52:1)
+ *   active  filled --ink, white number       (white on ink, 18.15:1)
+ *   ahead   hairline outline, --fog
+ *
+ * Filled for what is behind you and where you are; an empty outline for what
+ * is not yet reached — so the progression reads from the shapes alone, before
+ * any colour is interpreted, which is what someone who cannot separate bronze
+ * from grey-brown is left with.
+ *
+ * The current step is the darkest mark rather than the accent one: bronze is
+ * this site's accent and pulls the eye, so making a *completed* step bronze
+ * and the current step bronze too would have left the underline doing all the
+ * work of saying where you are. */
+.stepDone .stepNum {
   background: var(--bronze);
   border-color: var(--bronze);
   color: #fff;
 }
 
-/* Deliberately NOT --bronze on the idle step as well: done is already bronze,
-   and giving both the same colour would erase the only thing this control
-   says — which steps are behind you and which are still ahead. */
+.stepActive .stepNum {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
 .stepDone {
   color: var(--bronze);
 }
 
+/* Square, like the selection tick on the room cards below it. `cove-design-system`
+   asks for minimal radius and warns off rounded pills, and this circle was the
+   only one on any guest-facing surface. */
 .stepNum {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
   border: 0.5px solid currentColor;
   display: flex;
   align-items: center;
