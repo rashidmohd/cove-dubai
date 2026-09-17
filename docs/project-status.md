@@ -933,12 +933,24 @@ stacked on top of each other, and the second one hid the first.
 
 ### 1. The booking flow never rendered a photograph at all
 
+*(and the slot it would have rendered into was swatch-sized — see below)*
+
 Step 2's room card drew `<span class="roomSwatch" data-swatch={imageKey}>` — the mockup's CSS gradient, and
 nothing else. **Every other surface already rendered the real photograph**: the home page, the Rooms listing,
 the Offers page, the room page and the detail dialog all call `resolveRoomPhoto` + `Photo`. The availability
 response has carried `images` the whole time; this one card discarded them. Now fixed, with the gradient kept
 underneath as the loading and failure state and `aria-hidden` retained so the alt text does not get read into
 the button's accessible name ahead of the room's own name.
+
+The slot was also **56×56**, straight from the mockup — where it held a CSS *gradient*, because the mockups
+have no photography at all. A 16:9 room photograph cropped to a 56px square shows a patch of wall: it read as a
+colour chip rather than as a picture of the room being chosen. It is now **144×96 (3:2)**, dropping to 104px wide
+at the ≤1000px breakpoint, set with `aspect-ratio` so the two sizes cannot drift. This departs from the mockup
+knowingly — `cove-design-system` says the mockup wins on a disagreement, but the mockup never depicted a
+photograph here, so there is nothing to disagree with.
+
+While doing it: **the mobile grid track and the swatch had already drifted apart** — a 40px column holding a
+56px image, so the image, not the track, was deciding the column width.
 
 ### 2. Every uploaded photograph 404s at the public origin — **config, not code**
 
@@ -974,6 +986,13 @@ are scoped to `cove-dev`.
 >    rooms render their gradient. Attempting the copy was correctly refused as a shared-resource change.
 > 2. **Railway carries the same two variables** and will have the same fault. Fix them there before the client
 >    sees staging, or every photograph they upload will silently fail to appear.
+
+> ⚠️ **A 404 photograph shows the browser's broken-image glyph**, it does not fall back cleanly to the gradient
+> underneath. `Photo`'s own docstring claims the gradient is "the loading state and the failure state at once",
+> and that holds when there is *no* photograph — `resolveRoomPhoto` returns null and no `<img>` is rendered — but
+> not when a URL exists and fails. Harmless once the keys above are fixed, and very visible until then, more so
+> now the slot is 144px rather than 56px. Closing it properly means an `onError` handler, which would make
+> `Photo` a Client Component on every marketing page; not worth it to paper over a misconfiguration.
 
 > 🐛 **The upload path reports success either way.** The presigned PUT genuinely succeeds — the object is
 > created, just under a key nobody will ask for — so the admin panel showed a green result and a thumbnail

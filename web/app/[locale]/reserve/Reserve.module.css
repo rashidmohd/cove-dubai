@@ -337,7 +337,7 @@
 
 .room {
   display: grid;
-  grid-template-columns: 56px 1fr auto 20px;
+  grid-template-columns: 144px 1fr auto 20px;
   align-items: center;
   gap: 1.2rem;
   padding: 1.2rem;
@@ -403,9 +403,19 @@
   font-size: 0.8125rem;
 }
 
+/* Wide, not square, and no longer thumbnail-sized.
+ *
+ * The mockup's 56px square was a *swatch* — it held a CSS gradient, because the
+ * mockups have no photography at all. A room photograph is 16:9 off the camera,
+ * and a 56px square crop of one shows a patch of wall: it read as a colour chip
+ * rather than as a picture of the room being chosen. 3:2 keeps most of the
+ * frame and sits closer to how the same photograph is shown everywhere else.
+ *
+ * `aspect-ratio` rather than a second magic number, so the two stay in step
+ * when the width changes at the breakpoint below. */
 .roomSwatch {
-  width: 56px;
-  height: 56px;
+  width: 144px;
+  aspect-ratio: 3 / 2;
   flex-shrink: 0;
   /* `Photo` fills its slot, so the slot has to be its containing block and has
      to clip the crop. The gradient below shows through until the photograph
@@ -853,8 +863,15 @@
     grid-template-columns: 1fr;
   }
 
+  /* The track and the image must be the same number, or the image decides the
+     column width and the row silently widens. They had already drifted apart
+     here — a 40px track holding a 56px swatch. */
   .room {
-    grid-template-columns: 40px 1fr auto;
+    grid-template-columns: 104px 1fr auto;
+  }
+
+  .roomSwatch {
+    width: 104px;
   }
 
   .roomCheck {

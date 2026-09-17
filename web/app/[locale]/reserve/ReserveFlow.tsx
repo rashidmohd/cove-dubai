@@ -467,7 +467,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                                 locale,
                                 tPhoto('room', { name: room.name[locale] }),
                               )}
-                              sizes="56px"
+                              sizes="(max-width: 1000px) 104px, 144px"
                             />
                           </span>
                           <span>
