@@ -944,10 +944,17 @@ the button's accessible name ahead of the room's own name.
 
 The slot was also **56×56**, straight from the mockup — where it held a CSS *gradient*, because the mockups
 have no photography at all. A 16:9 room photograph cropped to a 56px square shows a patch of wall: it read as a
-colour chip rather than as a picture of the room being chosen. It is now **144×96 (3:2)**, dropping to 104px wide
-at the ≤1000px breakpoint, set with `aspect-ratio` so the two sizes cannot drift. This departs from the mockup
+colour chip rather than as a picture of the room being chosen. It is now **200×113**, dropping to 104px wide
+at the ≤1000px breakpoint, set with `aspect-ratio` so the two sizes cannot drift. **16:9 is the photographs' own
+ratio** — the uploads are 2821×1596 — so the slot crops nothing and the room is shown as it was shot; it also
+keeps the card shorter than a taller ratio would at the same width. This departs from the mockup
 knowingly — `cove-design-system` says the mockup wins on a disagreement, but the mockup never depicted a
 photograph here, so there is nothing to disagree with.
+
+**"View details" moved to the trailing edge**, under the price rather than under the photograph — the wider
+image left a column of dead space on that side, and the price is the last thing read before deciding whether to
+look closer. The card is a flex column and the control uses `align-self: flex-end`, so it follows the reading
+direction and needs no RTL rule of its own.
 
 While doing it: **the mobile grid track and the swatch had already drifted apart** — a 40px column holding a
 56px image, so the image, not the track, was deciding the column width.
