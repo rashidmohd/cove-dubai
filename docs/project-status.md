@@ -926,6 +926,62 @@ cosmetic.
 
 ---
 
+## Room photographs were never reaching the site (16 Sep 2026)
+
+Reported as "the search result is not showing the image I uploaded in the admin". It was two separate faults
+stacked on top of each other, and the second one hid the first.
+
+### 1. The booking flow never rendered a photograph at all
+
+Step 2's room card drew `<span class="roomSwatch" data-swatch={imageKey}>` — the mockup's CSS gradient, and
+nothing else. **Every other surface already rendered the real photograph**: the home page, the Rooms listing,
+the Offers page, the room page and the detail dialog all call `resolveRoomPhoto` + `Photo`. The availability
+response has carried `images` the whole time; this one card discarded them. Now fixed, with the gradient kept
+underneath as the loading and failure state and `aria-hidden` retained so the alt text does not get read into
+the button's accessible name ahead of the room's own name.
+
+### 2. Every uploaded photograph 404s at the public origin — **config, not code**
+
+```
+MEDIA_ENDPOINT=https://<account>.r2.cloudflarestorage.com/cove-dev   ← trailing path segment
+MEDIA_BUCKET=r2-cove-dev                                            ← not the real bucket
+```
+
+R2's S3 API is path-style, so the first segment after the host **is the bucket**. With `/cove-dev` already on
+the endpoint, the SDK appended `MEDIA_BUCKET` as the first segment of the *object key*. Every upload landed at
+`r2-cove-dev/room-types/<uuid>.jpg` in a bucket actually named `cove-dev`, while `MediaAsset.storageKey` stored
+`room-types/<uuid>.jpg`. `publicUrlFor` joins the public origin to that key, so every URL the site emits is
+wrong by exactly one path segment.
+
+Measured, not inferred:
+
+| | |
+|---|---|
+| `assets-dev.covehotels.ae/images/room.jpg` | **200** — the custom domain is correctly wired to `cove-dev` |
+| `assets-dev.covehotels.ae/r2-cove-dev/room-types/<uuid>.jpg` | **200** — the photograph is there, and public |
+| `assets-dev.covehotels.ae/room-types/<uuid>.jpg` | **404** — the URL the site actually builds |
+
+A `ListObjectsV2` on `cove-dev` shows the 19 seeded `images/*` objects alongside 5 uploads all carrying the
+stray `r2-cove-dev/` prefix. `HeadObject` on bucket `r2-cove-dev` is a 403 — it does not exist; the credentials
+are scoped to `cove-dev`.
+
+**`server/.env` is corrected** (endpoint without the path segment, bucket `cove-dev`; previous file kept as
+`.env.bak-media-fix`). That fixes *future* uploads, and needs an API restart to take effect.
+
+> ⚠️ **Two things are still outstanding.**
+> 1. **The 5 existing objects are at the wrong key** and need copying from `r2-cove-dev/room-types/…` to
+>    `room-types/…` — or simply re-uploading in the admin panel once the API is restarted. Until then those
+>    rooms render their gradient. Attempting the copy was correctly refused as a shared-resource change.
+> 2. **Railway carries the same two variables** and will have the same fault. Fix them there before the client
+>    sees staging, or every photograph they upload will silently fail to appear.
+
+> 🐛 **The upload path reports success either way.** The presigned PUT genuinely succeeds — the object is
+> created, just under a key nobody will ask for — so the admin panel showed a green result and a thumbnail
+> sourced from the same broken URL. Worth a follow-up: `addRoomTypeImage` could `HeadObject` the key it just
+> signed, so a misconfigured origin fails at upload rather than silently months later.
+
+---
+
 ## Open items for the client
 
 None of these block development.

@@ -205,6 +205,7 @@ export default async function RoomsPage({
                         <Link
                           href={`/rooms/${room.code}`}
                           className={styles.viewRoom}
+                          data-testid={`view-room-${room.code}`}
                         >
                           {t('viewRoom')}
                         </Link>

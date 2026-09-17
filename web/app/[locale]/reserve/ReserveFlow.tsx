@@ -27,6 +27,8 @@ import { Confirmation } from './Confirmation';
 import { DatePicker } from './DatePicker';
 import { GuestDetails } from './GuestDetails';
 import { StaySummary } from './StaySummary';
+import { Photo } from '@/components/marketing';
+import { resolveRoomPhoto } from '@/lib/media';
 import { RoomDetailDialog } from './RoomDetailDialog';
 import { useBookingState, type Step } from './useBookingState';
 import styles from './Reserve.module.css';
@@ -35,6 +37,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
   const t = useTranslations('reserve');
   const tErrors = useTranslations('errors');
   const tCommon = useTranslations('common');
+  const tPhoto = useTranslations('photos');
 
   const { state, update, updateGuest, clear, restored } =
     useBookingState(locale);
@@ -441,11 +444,32 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                           aria-pressed={selected}
                           data-testid={`room-${room.code}`}
                         >
+                          {/* The hotel's photograph of the room, as every
+                              other surface shows it. The availability response
+                              already carries `images` — this slot rendered
+                              only the mockup's gradient, so a photograph
+                              uploaded in the admin panel appeared everywhere
+                              except the one screen where a guest is choosing.
+
+                              The gradient stays underneath as the loading and
+                              failure state, and `aria-hidden` stays because
+                              the room's name is right beside it: the alt text
+                              would otherwise be read into this button's
+                              accessible name ahead of the name itself. */}
                           <span
                             className={styles.roomSwatch}
                             data-swatch={room.imageKey}
                             aria-hidden="true"
-                          />
+                          >
+                            <Photo
+                              photo={resolveRoomPhoto(
+                                room,
+                                locale,
+                                tPhoto('room', { name: room.name[locale] }),
+                              )}
+                              sizes="56px"
+                            />
+                          </span>
                           <span>
                             <span className={styles.roomCategory}>
                               {room.category[locale]}

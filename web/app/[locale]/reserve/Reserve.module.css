@@ -407,6 +407,11 @@
   width: 56px;
   height: 56px;
   flex-shrink: 0;
+  /* `Photo` fills its slot, so the slot has to be its containing block and has
+     to clip the crop. The gradient below shows through until the photograph
+     loads, and stays if there is none. */
+  position: relative;
+  overflow: hidden;
 }
 
 .roomCategory {

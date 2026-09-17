@@ -124,11 +124,18 @@ test.describe('reserve flow (English)', () => {
     await page.goto('/en/reserve');
     await chooseDates(page, CHECK_IN, isoDaysFromNow(DAYS_AHEAD + 1));
 
-    await page.getByTestId('room-studio-room').click();
+    // Whichever room is offered first, not a named one: this test is about
+    // form validation and does not care which room it is. Studio Room was
+    // withdrawn in the admin panel on 16 Sep 2026 and this line failed with it,
+    // which told us nothing about guest details. The select controls are the
+    // ones carrying `aria-pressed`; "View details" does not.
+    await page.locator('button[aria-pressed]').first().click();
     await page.getByTestId('continue-to-details').click();
 
     await page.getByTestId('confirm-reservation').click();
-    await expect(page.getByText('This field is required.').first()).toBeVisible();
+    await expect(
+      page.getByText('This field is required.').first(),
+    ).toBeVisible();
 
     await page.getByTestId('guest-firstName').fill('A');
     await page.getByTestId('guest-lastName').fill('B');
