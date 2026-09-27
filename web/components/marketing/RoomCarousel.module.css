@@ -1,0 +1,120 @@
+/*
+ * Fills its slot the same way a single `Photo` does: absolutely, over the
+ * gradient the slot already paints. The slot keeps its own size, so adding
+ * photographs cannot change the card's layout.
+ */
+.carousel {
+  position: absolute;
+  inset: 0;
+}
+
+.track {
+  display: flex;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  /* Swiping is the control on a phone; a scrollbar across the photograph
+     would only be noise. */
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .track {
+    scroll-behavior: smooth;
+  }
+}
+
+.slide {
+  position: relative;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* --- Arrows ---------------------------------------------------------------
+ * Hidden until the card is hovered or a control inside it has focus, so the
+ * photograph reads as a photograph first. On touch screens there is no hover
+ * and swiping is the gesture, so they stay out of the way entirely.
+ */
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(253, 250, 245, 0.88);
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--transition),
+    background var(--transition);
+}
+
+.previous {
+  inset-inline-start: var(--space-4);
+}
+
+.next {
+  inset-inline-end: var(--space-4);
+}
+
+/* The chevron is drawn pointing right; "previous" points back, and in Arabic
+   both flip with the reading direction. */
+.previous svg {
+  transform: scaleX(-1);
+}
+
+:global([dir='rtl']) .previous svg {
+  transform: none;
+}
+
+:global([dir='rtl']) .next svg {
+  transform: scaleX(-1);
+}
+
+.carousel:hover .arrow:not(:disabled),
+.carousel:focus-within .arrow:not(:disabled) {
+  opacity: 1;
+}
+
+.arrow:hover,
+.arrow:focus-visible {
+  background: #fff;
+}
+
+.arrow:disabled {
+  cursor: default;
+}
+
+@media (hover: none) {
+  .arrow {
+    display: none;
+  }
+}
+
+.counter {
+  position: absolute;
+  inset-block-end: var(--space-4);
+  inset-inline-end: var(--space-4);
+  margin: 0;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: #fff;
+  background: rgba(28, 20, 16, 0.45);
+  pointer-events: none;
+}

@@ -152,3 +152,28 @@ export function resolveRoomPhoto(
   if (!name) return null;
   return propertyPhoto(name, fallbackAlt);
 }
+
+/**
+ * The first `limit` photographs of a room type's gallery, for a card that lets
+ * a guest look around without leaving the list.
+ *
+ * Falls back to the single `resolveRoomPhoto` stand-in when nothing has been
+ * uploaded, so a room type without a gallery still shows one picture.
+ */
+export function resolveRoomPhotos(
+  room: Pick<RoomType, 'imageKey'> & { images?: RoomImage[] },
+  locale: Locale,
+  fallbackAlt: string,
+  limit: number,
+): Photograph[] {
+  const uploaded = (room.images ?? []).slice(0, limit).map((image) => ({
+    url: image.url,
+    alt: image.alt[locale],
+    width: image.width,
+    height: image.height,
+  }));
+  if (uploaded.length > 0) return uploaded;
+
+  const fallback = resolveRoomPhoto(room, locale, fallbackAlt);
+  return fallback ? [fallback] : [];
+}

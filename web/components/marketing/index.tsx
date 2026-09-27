@@ -11,6 +11,7 @@ import styles from './Marketing.module.css';
 
 export { Reveal } from './Reveal';
 export { Photo } from './Photo';
+export { RoomCarousel } from './RoomCarousel';
 // `HomeSections` is deliberately NOT re-exported here: it builds itself out of
 // this file's own components, so a barrel entry would make the module import
 // itself. Pages import it from '@/components/marketing/HomeSections' directly.

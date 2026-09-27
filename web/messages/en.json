@@ -295,6 +295,11 @@
     "viewRoom": "View room",
     "reserve": "Reserve",
     "sleeps": "Sleeps {count}",
+    "carousel": {
+      "previous": "Previous photograph",
+      "next": "Next photograph",
+      "slide": "Photograph {index} of {total}"
+    },
     "detail": {
       "allRooms": "All rooms",
       "reserveThisRoom": "Reserve this room",

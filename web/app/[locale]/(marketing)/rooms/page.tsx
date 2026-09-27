@@ -17,8 +17,8 @@ import { notFound } from 'next/navigation';
 
 import {
   BodyText,
-  Photo,
   Reveal,
+  RoomCarousel,
   Section,
   SectionHeading,
   SectionLabel,
@@ -29,9 +29,12 @@ import { isLocale } from '@/i18n/routing';
 import { bookingApi } from '@/lib/api/client';
 import { formatMoney } from '@/lib/format';
 import { LTR_SPEC_KEYS, SPEC_KEYS } from '@/lib/room-specs';
-import { resolveRoomPhoto } from '@/lib/media';
+import { resolveRoomPhotos } from '@/lib/media';
 import type { RoomType } from '@/lib/api/types';
 import styles from './page.module.css';
+
+/** Enough to look around a room from the list; the full gallery is on its page. */
+const CARD_PHOTO_LIMIT = 5;
 
 export async function generateMetadata({
   params,
@@ -91,13 +94,21 @@ export default async function RoomsPage({
                     className={styles.roomVisual}
                     data-swatch={room.imageKey}
                   >
-                    <Photo
-                      photo={resolveRoomPhoto(
+                    <RoomCarousel
+                      photos={resolveRoomPhotos(
                         room,
                         locale,
                         tPhoto('room', { name: room.name[locale] }),
+                        CARD_PHOTO_LIMIT,
                       )}
                       sizes="(max-width: 900px) 100vw, 50vw"
+                      label={room.name[locale]}
+                      labels={{
+                        previous: t('carousel.previous'),
+                        next: t('carousel.next'),
+                        // Placeholders left for the client component to fill.
+                        slide: t.raw('carousel.slide') as string,
+                      }}
                     />
                   </div>
 
