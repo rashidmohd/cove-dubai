@@ -26,8 +26,6 @@ import {
   Photo,
   Reveal,
   Section,
-  SectionHeading,
-  SectionLabel,
 } from '@/components/marketing';
 import { RoomDetailBody } from '@/components/RoomDetail';
 import { Link } from '@/i18n/navigation';
@@ -122,26 +120,23 @@ export default async function RoomDetailPage({
 
   return (
     <>
-      <div className={styles.hero} data-swatch={room.imageKey}>
+      {/* The name, price and the way in sit on the photograph, so the first
+          screen says which room this is rather than showing an anonymous
+          interior. The shade is a separate layer so the photograph itself is
+          never dimmed above the fold line of the text. */}
+      <header className={styles.hero} data-swatch={room.imageKey}>
         <Photo photo={photo} sizes="100vw" priority />
-      </div>
+        <div className={styles.heroShade} aria-hidden="true" />
 
-      <Section tone="light">
-        <Reveal>
-          <nav className={styles.breadcrumb} aria-label={t('title')}>
-            <Link href="/rooms" className={styles.crumb}>
-              {t('detail.allRooms')}
-            </Link>
-          </nav>
-
-          <SectionLabel>{room.category[locale]}</SectionLabel>
-          <SectionHeading as="h1">
-            <bdi data-testid="room-detail-name">{room.name[locale]}</bdi>
-          </SectionHeading>
-          {/* Description, specs and amenities are the same substance the
-              booking flow's detail dialog shows, so they are one component
-              rather than two that drift. */}
-          <RoomDetailBody room={room} locale={locale} />
+        <div className={styles.heroContent}>
+          <div className={styles.heroTitle}>
+            <p className={styles.heroCategory}>
+              <bdi>{room.category[locale]}</bdi>
+            </p>
+            <h1 className={styles.heroName}>
+              <bdi data-testid="room-detail-name">{room.name[locale]}</bdi>
+            </h1>
+          </div>
 
           {/* Server-rendered, so the page ships no JavaScript for its own
               price and stays wholly static.
@@ -168,6 +163,21 @@ export default async function RoomDetailPage({
               {t('detail.reserveThisRoom')}
             </Link>
           </div>
+        </div>
+      </header>
+
+      <Section tone="light" className={styles.body}>
+        <Reveal>
+          <nav className={styles.breadcrumb} aria-label={t('title')}>
+            <Link href="/rooms" className={styles.crumb}>
+              {t('detail.allRooms')}
+            </Link>
+          </nav>
+
+          {/* Description, specs and amenities are the same substance the
+              booking flow's detail dialog shows, so they are one component
+              rather than two that drift. */}
+          <RoomDetailBody room={room} locale={locale} />
         </Reveal>
       </Section>
 

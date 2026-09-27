@@ -43,6 +43,18 @@ async function navigateToMonth(page: Page, isoDate: string) {
 }
 
 /**
+ * A room whose copy includes a size, for the checks that a measurement renders
+ * (and is not bidi-reordered in Arabic). Only The Cove Suite has one until the
+ * client supplies specs for the Deluxe rooms; falls back to the first room so
+ * the test fails on the missing size rather than on a missing room.
+ */
+const ROOM_WITH_SIZE = 'cove-suite';
+
+function roomWithSize(codes: string[]): string {
+  return codes.includes(ROOM_WITH_SIZE) ? ROOM_WITH_SIZE : codes[0]!;
+}
+
+/**
  * Walk step 1 and return the room codes the hotel is actually offering.
  *
  * **Nothing here names a room.** Two different things have already broken this
@@ -82,7 +94,7 @@ test.describe('room detail in the booking flow', () => {
   test('opens the details in place, without leaving step 2', async ({
     page,
   }) => {
-    const [code] = await reachRoomList(page);
+    const code = roomWithSize(await reachRoomList(page));
     const url = page.url();
 
     await page.getByTestId(`room-details-${code}`).click();
@@ -136,7 +148,7 @@ test.describe('room detail in the booking flow', () => {
   });
 
   test('mirrors in Arabic', async ({ page }) => {
-    const [code] = await reachRoomList(page, 'ar');
+    const code = roomWithSize(await reachRoomList(page, 'ar'));
     await page.getByTestId(`room-details-${code}`).click();
 
     await expect(page.getByTestId('room-detail-dialog')).toBeVisible();
@@ -173,7 +185,11 @@ test.describe('room detail page', () => {
     // depend on a particular room still being on sale — any of them can be
     // withdrawn in the admin panel, and an withdrawn room's page is a 404.
     await page.goto('/ar/rooms');
-    await page.locator('[data-testid^="view-room-"]').first().click();
+    const sized = page.getByTestId(`view-room-${ROOM_WITH_SIZE}`);
+    await ((await sized.count())
+      ? sized
+      : page.locator('[data-testid^="view-room-"]').first()
+    ).click();
 
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.getByTestId('room-detail-name')).toBeVisible();
