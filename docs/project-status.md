@@ -951,10 +951,13 @@ keeps the card shorter than a taller ratio would at the same width. This departs
 knowingly — `cove-design-system` says the mockup wins on a disagreement, but the mockup never depicted a
 photograph here, so there is nothing to disagree with.
 
-**"View details" moved to the trailing edge**, under the price rather than under the photograph — the wider
-image left a column of dead space on that side, and the price is the last thing read before deciding whether to
-look closer. The card is a flex column and the control uses `align-self: flex-end`, so it follows the reading
-direction and needs no RTL rule of its own.
+**"View details" moved to the trailing edge and out of the flow**, so it sits *level with* the photograph rather
+than stacked under it. In the flow it added its own row, and the card ran ~45px past the bottom of the image with
+the whole strip below it empty. Absolutely positioned at the card's own 1.2rem inset, its baseline lands on the
+bottom edge of the photograph opposite, and price → nights → details read as one group: **195px → 153px per card,
+so the card is now exactly as tall as its photograph.** `inset-inline-end` follows the reading direction, so
+Arabic needs no rule of its own. Below 1000px it returns to the flow — the photograph is 104px there, so there is
+no dead strip to reclaim and the price column is close enough that an absolute control would land on top of it.
 
 While doing it: **the mobile grid track and the swatch had already drifted apart** — a 40px column holding a
 56px image, so the image, not the track, was deciding the column width.
@@ -1078,3 +1081,29 @@ COMMIT;
 
 The database currently holds **one real reservation** (`CV-2026-581047`, Studio Room, 20–21 Aug 2026) made by the
 client from the live UI. Leave it alone.
+
+## Three room types, with the client's photography (27 Sep 2026)
+
+The hotel sells **three room types**, matching the photography folders the client supplied under `images/`
+(git-ignored): **Deluxe King Room** (`deluxe-king-room`), **Deluxe Twin Room** (`deluxe-twin-room`) and
+**The Cove Suite** (`cove-suite`, unchanged). Studio, Terrace and Corner Suite are **deactivated, not deleted**
+(`RETIRED_ROOM_TYPE_CODES` in the seed), so the Studio's existing reservation keeps its room type.
+
+> ⚠️ **Placeholders for the client to confirm:** both Deluxe rooms are AED 1,200, sleep 2 and have 49 rooms each
+> (49 + 49 + 8 = 106). Their descriptions only describe what the renders show, and their specs list the bed
+> alone — size, view, bathroom and floor are not known, and a spec with no message key is simply not rendered.
+
+**Photography is in the database, staging only.** 20 room photographs were uploaded to `cove-dev` as
+`room-types/<uuid>.jpg` and attached as `MediaAsset` + `RoomTypeImage` rows: 5 King, 5 Twin, 10 Suite (hero is
+the living room). Alt text is English in both languages, per `arabic-rtl`. This replaces the Cove Suite's old
+row, which pointed at one of the five mis-keyed objects described above; the other four belong to the retired
+types and were left alone. Every URL was checked at `assets-dev.covehotels.ae` (200). **Production will need the
+same upload** — through the admin gallery once CORS is set, or by the same direct put.
+
+**Facilities folder:** every slot except the pool already has a sharper (2821px) copy of the same render, so only
+the pool changed — the September renders show a redesigned pool deck. `pool` / `poolTerrace` now point at
+`images/pool-3.jpg` / `pool-4.jpg` (1755×1170). The gradient fallbacks are re-keyed `img-king` / `img-twin` /
+`img-suite`.
+
+Deployed web instances cache the room list for an hour (`revalidate: 3600`), so the new rooms appear on staging
+within the hour or on redeploy.

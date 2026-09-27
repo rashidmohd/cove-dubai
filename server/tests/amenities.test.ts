@@ -158,7 +158,7 @@ describe('the guest-facing API', () => {
       }),
     );
 
-    const roomTypeCode = 'studio-room';
+    const roomTypeCode = 'deluxe-king-room';
     const before = await currentAmenityCodes(roomTypeCode);
 
     await fetch(
@@ -371,7 +371,7 @@ describe('managing the vocabulary', () => {
 describe('assigning amenities to a room type', () => {
   it('replaces the list wholesale', async () => {
     const session = await signIn(ADMIN_EMAIL);
-    const roomTypeCode = 'studio-room';
+    const roomTypeCode = 'deluxe-king-room';
     const before = await currentAmenityCodes(roomTypeCode);
 
     const response = await fetch(
@@ -403,7 +403,7 @@ describe('assigning amenities to a room type', () => {
 
   it('rejects an unknown code without changing anything', async () => {
     const session = await signIn(ADMIN_EMAIL);
-    const roomTypeCode = 'terrace-room';
+    const roomTypeCode = 'deluxe-twin-room';
     const before = await currentAmenityCodes(roomTypeCode);
 
     const response = await fetch(
@@ -424,7 +424,7 @@ describe('assigning amenities to a room type', () => {
 
   it('records who changed a room type’s amenities', async () => {
     const session = await signIn(ADMIN_EMAIL);
-    const roomTypeCode = 'studio-room';
+    const roomTypeCode = 'deluxe-king-room';
     const before = await currentAmenityCodes(roomTypeCode);
 
     await fetch(

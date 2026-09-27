@@ -72,8 +72,10 @@ export const PROPERTY_PHOTOS = {
   liftLobby: { key: 'images/lift-lobby.jpg', ...LANDSCAPE },
   restaurant: { key: 'images/restaurant.jpg', ...LANDSCAPE },
   restaurantTables: { key: 'images/restaurant-2.jpg', ...LANDSCAPE },
-  pool: { key: 'images/pool-1.jpg', ...LANDSCAPE },
-  poolTerrace: { key: 'images/pool-2.jpg', ...LANDSCAPE },
+  // The pool was redesigned in the September 2026 renders, which are smaller
+  // than the rest of the set.
+  pool: { key: 'images/pool-3.jpg', width: 1755, height: 1170 },
+  poolTerrace: { key: 'images/pool-4.jpg', width: 1755, height: 1170 },
   gym: { key: 'images/gym.jpg', ...LANDSCAPE },
   gymStudio: { key: 'images/gym-3.jpg', ...LANDSCAPE },
   roomTwin: { key: 'images/room.jpg', ...LANDSCAPE },
@@ -94,9 +96,8 @@ export type PropertyPhotoName = keyof typeof PROPERTY_PHOTOS;
  * room look" channel, and the gradients are keyed the same way.
  */
 const ROOM_PHOTO_BY_IMAGE_KEY: Record<string, PropertyPhotoName> = {
-  'img-studio': 'roomDesk',
-  'img-terrace': 'roomPendant',
-  'img-corner': 'roomKing',
+  'img-king': 'roomPendant',
+  'img-twin': 'roomTwin',
   'img-suite': 'suiteLounge',
 };
 

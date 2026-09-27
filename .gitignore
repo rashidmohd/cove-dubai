@@ -40,3 +40,6 @@ npm-debug.log*
 # Playwright
 /web/test-results/
 /web/playwright-report/
+
+# Local source photos (16MB) — not part of the app
+/images/

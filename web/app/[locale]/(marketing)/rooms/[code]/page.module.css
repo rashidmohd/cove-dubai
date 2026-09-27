@@ -25,16 +25,12 @@
 .hero[data-swatch='img-suite'] {
   background: linear-gradient(150deg, #c8a87c, #6a3a16);
 }
-.hero[data-swatch='img-terrace'] {
+.hero[data-swatch='img-king'] {
   background: linear-gradient(150deg, #d0c0a4, #a49070);
 }
-.hero[data-swatch='img-corner'] {
+.hero[data-swatch='img-twin'] {
   background: linear-gradient(150deg, #b8c4c0, #7a9898);
 }
-.hero[data-swatch='img-studio'] {
-  background: linear-gradient(150deg, #c4b8a4, #9a9080);
-}
-
 /* --- Breadcrumb ---------------------------------------------------------- */
 
 .breadcrumb {

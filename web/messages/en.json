@@ -309,33 +309,18 @@
       "floor": "Floor"
     },
     "specs": {
+      "deluxe-king-room": {
+        "bed": "King"
+      },
+      "deluxe-twin-room": {
+        "bed": "Twin"
+      },
       "cove-suite": {
         "size": "96 m²",
         "bed": "King",
         "view": "City & private terrace",
         "bathroom": "Soaking tub & rain shower",
         "floor": "8 – 10"
-      },
-      "corner-suite": {
-        "size": "72 m²",
-        "bed": "King",
-        "view": "Dual aspect · City",
-        "bathroom": "Soaking tub & shower",
-        "floor": "5 – 9"
-      },
-      "terrace-room": {
-        "size": "58 m²",
-        "bed": "King or twin",
-        "view": "Garden & terrace",
-        "bathroom": "Walk-in shower",
-        "floor": "3 – 7"
-      },
-      "studio-room": {
-        "size": "42 m²",
-        "bed": "Queen",
-        "view": "City",
-        "bathroom": "Walk-in shower",
-        "floor": "2 – 6"
       }
     },
     "help": {
@@ -728,7 +713,7 @@
     "lobby": "The lobby lounge, seating arranged beneath a coral chandelier",
     "reception": "The reception desk, in pale stone and warm oak",
     "liftLobby": "The lift lobby, lined in marble and brushed bronze",
-    "pool": "The pool terrace at dusk, loungers set back from the water",
+    "pool": "The pool deck, loungers beneath green parasols beside the plunge pool",
     "gym": "The fitness floor, the city beyond full-height glass",
     "roomInterior": "A king room, the bed set against a panelled wall",
     "loom": "The Loom, laid for dinner beneath its sculpted ceiling",

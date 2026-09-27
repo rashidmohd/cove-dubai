@@ -323,11 +323,9 @@
 .roomCard {
   border: 0.5px solid rgba(28, 20, 16, 0.08);
   transition: all 0.25s;
-  /* A column, so the details control can be pushed to the trailing edge with
-     `align-self` rather than a margin someone has to keep in step with the
-     card's padding. */
-  display: flex;
-  flex-direction: column;
+  /* The positioning context for the details control, which is lifted out of
+     the flow so it sits *level with* the photograph rather than under it. */
+  position: relative;
 }
 
 .roomCard:hover {
@@ -375,14 +373,21 @@
    selected card, against --fog's 5.11 and a bare 4.50. Warmer, more legible,
    and the colour this site already uses to mean "interactive". */
 .roomDetails {
-  /* The trailing edge, under the price rather than under the photograph. The
-     taller image left a column of empty space on that side, and the eye is
-     already there: the price is the last thing read before deciding whether to
-     look closer. `align-self` on the cross axis, so it follows the reading
-     direction and needs no RTL rule of its own. */
-  align-self: flex-end;
-  margin-inline-end: 1.2rem;
-  margin-bottom: 1.1rem;
+  /* Level with the photograph, not stacked beneath it.
+   *
+   * In the flow this control added its own row, so the card ran a good 45px
+   * past the bottom of the image and the whole strip below the photograph was
+   * empty. Taken out of the flow it costs no height at all: the card is exactly
+   * as tall as its photograph, and this sits in the space beside it that was
+   * blank anyway.
+   *
+   * `bottom` and `inset-inline-end` both match the card's 1.2rem padding, so
+   * its baseline lands on the bottom edge of the photograph opposite — they
+   * read as one line rather than two near-misses. `inset-inline-end` follows
+   * the reading direction, so Arabic needs no rule of its own. */
+  position: absolute;
+  bottom: 1.2rem;
+  inset-inline-end: 1.2rem;
   background: none;
   border: 0;
   cursor: pointer;
@@ -888,6 +893,18 @@
     width: 104px;
   }
 
+  /* Back into the flow. At this width the photograph is 104px wide and the card
+     has no empty strip to reclaim, while the price column is close enough that
+     an absolutely positioned control would sit on top of it. */
+  .roomDetails {
+    position: static;
+    display: block;
+    margin-inline-start: auto;
+    margin-inline-end: 1.2rem;
+    margin-bottom: 1.1rem;
+    width: fit-content;
+  }
+
   .roomCheck {
     display: none;
   }
@@ -922,16 +939,12 @@
   background: linear-gradient(150deg, #c8a87c, #6a3a16);
 }
 
-.roomSwatch[data-swatch='img-terrace'] {
+.roomSwatch[data-swatch='img-king'] {
   background: linear-gradient(150deg, #d0c0a4, #a49070);
 }
 
-.roomSwatch[data-swatch='img-corner'] {
+.roomSwatch[data-swatch='img-twin'] {
   background: linear-gradient(150deg, #b8c4c0, #7a9898);
-}
-
-.roomSwatch[data-swatch='img-studio'] {
-  background: linear-gradient(150deg, #c4b8a4, #9a9080);
 }
 
 /* --- Discount code ---------------------------------------------------------
@@ -1144,16 +1157,12 @@
 .detailVisual[data-swatch='img-suite'] {
   background: linear-gradient(150deg, #c8a87c, #6a3a16);
 }
-.detailVisual[data-swatch='img-terrace'] {
+.detailVisual[data-swatch='img-king'] {
   background: linear-gradient(150deg, #d0c0a4, #a49070);
 }
-.detailVisual[data-swatch='img-corner'] {
+.detailVisual[data-swatch='img-twin'] {
   background: linear-gradient(150deg, #b8c4c0, #7a9898);
 }
-.detailVisual[data-swatch='img-studio'] {
-  background: linear-gradient(150deg, #c4b8a4, #9a9080);
-}
-
 .detailBody {
   padding: var(--space-8);
 }

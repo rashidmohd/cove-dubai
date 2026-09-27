@@ -357,7 +357,7 @@ describe('the guest-facing preview', () => {
   it('prices the stay with the discount and reconciles', async () => {
     const response = await preview({
       code,
-      roomTypeCode: 'studio-room',
+      roomTypeCode: 'deluxe-king-room',
       checkIn,
       checkOut,
     });
@@ -385,8 +385,8 @@ describe('the guest-facing preview', () => {
   });
 
   it('does not consume a redemption', async () => {
-    await preview({ code, roomTypeCode: 'studio-room', checkIn, checkOut });
-    await preview({ code, roomTypeCode: 'studio-room', checkIn, checkOut });
+    await preview({ code, roomTypeCode: 'deluxe-king-room', checkIn, checkOut });
+    await preview({ code, roomTypeCode: 'deluxe-king-room', checkIn, checkOut });
 
     const voucher = await prisma.voucher.findFirstOrThrow({ where: { code } });
     expect(voucher.redemptionCount).toBe(0);
@@ -395,7 +395,7 @@ describe('the guest-facing preview', () => {
   it('reports an unknown code as not found', async () => {
     const response = await preview({
       code: `${PREFIX}-NOPE`,
-      roomTypeCode: 'studio-room',
+      roomTypeCode: 'deluxe-king-room',
       checkIn,
       checkOut,
     });
@@ -407,7 +407,7 @@ describe('the guest-facing preview', () => {
     // It is a guest-facing endpoint on the public booking flow.
     const response = await preview({
       code,
-      roomTypeCode: 'studio-room',
+      roomTypeCode: 'deluxe-king-room',
       checkIn,
       checkOut,
     });

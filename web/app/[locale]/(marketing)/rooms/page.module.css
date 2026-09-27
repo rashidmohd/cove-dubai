@@ -52,16 +52,12 @@
 .roomVisual[data-swatch='img-suite'] {
   background: linear-gradient(150deg, #c8a87c, #6a3a16);
 }
-.roomVisual[data-swatch='img-terrace'] {
+.roomVisual[data-swatch='img-king'] {
   background: linear-gradient(150deg, #d0c0a4, #a49070);
 }
-.roomVisual[data-swatch='img-corner'] {
+.roomVisual[data-swatch='img-twin'] {
   background: linear-gradient(150deg, #b8c4c0, #7a9898);
 }
-.roomVisual[data-swatch='img-studio'] {
-  background: linear-gradient(150deg, #c4b8a4, #9a9080);
-}
-
 .roomBody {
   padding-block: var(--space-12);
   padding-inline: 0 var(--space-12);

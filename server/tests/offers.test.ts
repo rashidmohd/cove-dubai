@@ -63,7 +63,7 @@ async function cleanUp(): Promise<void> {
 
 beforeAll(async () => {
   const roomType = await prisma.roomType.findUniqueOrThrow({
-    where: { code: 'studio-room' },
+    where: { code: 'deluxe-king-room' },
   });
   roomTypeId = roomType.id;
   baseRate = roomType.baseRateAed.toNumber();
@@ -179,7 +179,7 @@ describe('what the card needs', () => {
       (offer) => offer.name.en === `${PREFIX} LINKED`,
     );
     // A code, never a row id — the same rule every shape crossing the seam obeys.
-    expect(found?.roomTypeCode).toBe('studio-room');
+    expect(found?.roomTypeCode).toBe('deluxe-king-room');
   });
 
   it('carries the day-of-week restriction', async () => {

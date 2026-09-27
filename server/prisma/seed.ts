@@ -21,50 +21,39 @@ const prisma = new PrismaClient();
 const INVENTORY_HORIZON_DAYS = 550;
 
 /**
- * The four room types, with copy and rates taken from design/mockups/rooms.html
- * and design/mockups/reserve.html.
+ * The three room types the hotel sells: Deluxe King, Deluxe Twin and The Cove
+ * Suite, matching the photography folders the client supplied (27 Sep 2026).
  *
- * Room counts total 106, matching the hotel described in CLAUDE.md. Note that
- * the mockup copy currently tells guests "Forty-eight rooms" — that sentence is
- * stale and is flagged for the client to reword; it lives in the message files,
- * not here.
+ * The Cove Suite's copy and rate are from design/mockups/rooms.html. The two
+ * Deluxe rooms have no mockup copy yet, so their descriptions describe only
+ * what the renders show, and their rate, occupancy and room count are
+ * PLACEHOLDERS for the client to confirm (docs/project-status.md). Room counts
+ * total 106, matching the hotel described in CLAUDE.md.
  */
 const ROOM_TYPES = [
   {
-    code: 'studio-room',
-    nameEn: 'Studio Room',
-    categoryEn: 'Classic',
+    code: 'deluxe-king-room',
+    nameEn: 'Deluxe King Room',
+    categoryEn: 'Deluxe',
     descriptionEn:
-      'The smallest room in the hotel. Also the most considered. Nothing was left in that did not need to be there.',
-    baseRateAed: '980.00',
+      'A king bed, a lounge chair by the window and a walk-in wardrobe, in warm neutrals with a single note of colour.',
+    baseRateAed: '1200.00',
     maxOccupancy: 2,
-    totalRooms: 44,
-    imageKey: 'img-studio',
+    totalRooms: 49,
+    imageKey: 'img-king',
     sortOrder: 1,
   },
   {
-    code: 'terrace-room',
-    nameEn: 'Terrace Room',
+    code: 'deluxe-twin-room',
+    nameEn: 'Deluxe Twin Room',
     categoryEn: 'Deluxe',
     descriptionEn:
-      'A private terrace where the morning coffee tastes different. The room itself is generous without being excessive.',
-    baseRateAed: '1400.00',
-    maxOccupancy: 3,
-    totalRooms: 34,
-    imageKey: 'img-terrace',
+      'Two beds side by side, a vanity desk and a walk-in wardrobe, in soft olive and sand.',
+    baseRateAed: '1200.00',
+    maxOccupancy: 2,
+    totalRooms: 49,
+    imageKey: 'img-twin',
     sortOrder: 2,
-  },
-  {
-    code: 'corner-suite',
-    nameEn: 'Corner Suite',
-    categoryEn: 'Premium',
-    descriptionEn:
-      'Two walls of glass. The city on one side, stillness on the other. A room that earns its corner.',
-    baseRateAed: '1800.00',
-    maxOccupancy: 4,
-    totalRooms: 20,
-    imageKey: 'img-corner',
-    sortOrder: 3,
   },
   {
     code: 'cove-suite',
@@ -76,9 +65,16 @@ const ROOM_TYPES = [
     maxOccupancy: 4,
     totalRooms: 8,
     imageKey: 'img-suite',
-    sortOrder: 4,
+    sortOrder: 3,
   },
 ] as const;
+
+/**
+ * Room types the hotel no longer sells. They are deactivated rather than
+ * deleted: a reservation made against one keeps its room type, and deleting
+ * would cascade through its inventory and rate history.
+ */
+const RETIRED_ROOM_TYPE_CODES = ['studio-room', 'terrace-room', 'corner-suite'];
 
 /**
  * Operational values the hotel can change without a deploy.
@@ -165,26 +161,19 @@ const AMENITIES = [
 ] as const;
 
 /**
- * Which amenities each room type has, matching the specs in the mockups —
- * the Cove Suite's terrace and soaking tub, the Studio's walk-in shower.
+ * Which amenities each room type has. The Cove Suite's terrace and soaking
+ * tub are from the mockups; the Deluxe rooms' list is what their renders show.
  */
 const ROOM_TYPE_AMENITIES: Record<string, string[]> = {
-  'studio-room': [
+  'deluxe-king-room': [
     'air-conditioning', 'safe', 'minibar', 'coffee-tea-maker', 'desk',
     'blackout-curtains', 'television', 'wifi', 'telephone', 'hairdryer',
-    'rain-shower', 'iron', 'housekeeping-daily',
+    'bathrobe', 'rain-shower', 'iron', 'housekeeping-daily', 'room-service',
   ],
-  'terrace-room': [
+  'deluxe-twin-room': [
     'air-conditioning', 'safe', 'minibar', 'coffee-tea-maker', 'desk',
-    'balcony', 'blackout-curtains', 'television', 'wifi', 'telephone',
-    'hairdryer', 'bathrobe', 'rain-shower', 'iron', 'housekeeping-daily',
-    'room-service',
-  ],
-  'corner-suite': [
-    'air-conditioning', 'safe', 'minibar', 'coffee-tea-maker', 'desk',
-    'soundproofed', 'blackout-curtains', 'television', 'wifi', 'telephone',
-    'hairdryer', 'bathrobe', 'slippers', 'soaking-tub', 'rain-shower',
-    'iron', 'housekeeping-daily', 'room-service',
+    'blackout-curtains', 'television', 'wifi', 'telephone', 'hairdryer',
+    'bathrobe', 'rain-shower', 'iron', 'housekeeping-daily', 'room-service',
   ],
   'cove-suite': [
     'air-conditioning', 'safe', 'minibar', 'coffee-tea-maker', 'desk',
@@ -295,6 +284,14 @@ async function seedRoomTypesAndRates() {
   }
 }
 
+async function retireRoomTypes() {
+  const { count } = await prisma.roomType.updateMany({
+    where: { code: { in: RETIRED_ROOM_TYPE_CODES }, isActive: true },
+    data: { isActive: false },
+  });
+  if (count > 0) console.log(`  deactivated ${count} retired room type(s)`);
+}
+
 async function seedInventory() {
   const roomTypes = await prisma.roomType.findMany();
 
@@ -365,6 +362,7 @@ async function main() {
 
   console.log('- room types and rate plans');
   await seedRoomTypesAndRates();
+  await retireRoomTypes();
 
   console.log('- amenities');
   await seedAmenities();
@@ -380,18 +378,20 @@ async function main() {
   await seedAdminUser();
 
   const [types, inventory, settings, amenities] = await Promise.all([
-    prisma.roomType.count(),
+    prisma.roomType.count({ where: { isActive: true } }),
     prisma.roomTypeInventory.count(),
     prisma.setting.count(),
     prisma.amenity.count(),
   ]);
-  const totalRooms = (await prisma.roomType.findMany()).reduce(
+  const totalRooms = (
+    await prisma.roomType.findMany({ where: { isActive: true } })
+  ).reduce(
     (sum, r) => sum + r.totalRooms,
     0,
   );
 
   console.log(
-    `\nDone. ${types} room types (${totalRooms} rooms), ` +
+    `\nDone. ${types} active room types (${totalRooms} rooms), ` +
       `${inventory} inventory rows, ${amenities} amenities, ${settings} settings.`,
   );
 }

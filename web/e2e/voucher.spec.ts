@@ -62,7 +62,7 @@ async function chooseDatesAndRoom(page: Page) {
   await page.getByTestId(`day-${CHECK_OUT}`).click();
   await page.getByTestId('check-availability').click();
 
-  await page.getByTestId('room-studio-room').click();
+  await page.getByTestId('room-deluxe-king-room').click();
 }
 
 /**

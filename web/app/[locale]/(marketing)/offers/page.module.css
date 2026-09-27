@@ -60,16 +60,12 @@
 .visual[data-swatch='img-suite'] {
   background: linear-gradient(150deg, #c8a87c, #6a3a16);
 }
-.visual[data-swatch='img-terrace'] {
+.visual[data-swatch='img-king'] {
   background: linear-gradient(150deg, #d0c0a4, #a49070);
 }
-.visual[data-swatch='img-corner'] {
+.visual[data-swatch='img-twin'] {
   background: linear-gradient(150deg, #b8c4c0, #7a9898);
 }
-.visual[data-swatch='img-studio'] {
-  background: linear-gradient(150deg, #c4b8a4, #9a9080);
-}
-
 /* The saving, on the image. Gold on dark ink rather than the reverse: a
    discount badge in the brand's accent reads as a mark of quality, and a red
    sale flash would be the wrong hotel entirely. */
