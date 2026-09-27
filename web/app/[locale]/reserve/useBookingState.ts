@@ -130,25 +130,23 @@ function applyStayFromParams(
     next.checkIn = stay.checkIn;
     next.checkOut = stay.checkOut;
     next.roomTypeCode = null;
-    next.step = 1;
+    // A link carrying a stay has settled step 1 already: the guest picked
+    // those dates and pressed "Check availability" to get here. Landing them on
+    // the date picker with the dates filled in made them press it a second
+    // time. Step 2 fetches availability for these dates as soon as it opens,
+    // with no rooms loaded, so the room list simply arrives.
+    next.step = 2;
   }
 
+  // `?room=` then pre-selects a room. With only a room — the offers page,
+  // which has no dates to give — step 1 is still where the guest starts.
+  //
+  // Nothing is taken on trust by doing this. Step 2 re-checks availability for
+  // the dates, and the guard there drops a room the API does not offer, so a
+  // stale or invented link lands on the room list rather than carrying a
+  // phantom room into the guest's details.
   const room = readRoomCode(params.get('room'));
-  if (room) {
-    next.roomTypeCode = room;
-
-    // A link carrying both a stay and a room has settled step 1 already: the
-    // guest picked those dates and then chose a room against them, so opening
-    // on the date picker asks a question they have answered. With only a room
-    // — the offers page, which has no dates to give — step 1 is still where
-    // they have to start, and the room simply arrives pre-selected.
-    //
-    // Nothing is taken on trust by doing this. Step 2 re-checks availability
-    // for these dates, and the guard there drops a room the API does not offer,
-    // so a stale or invented link lands on the room list rather than carrying a
-    // phantom room into the guest's details.
-    if (next.checkIn && next.checkOut) next.step = 2;
-  }
+  if (room) next.roomTypeCode = room;
 
   return next;
 }

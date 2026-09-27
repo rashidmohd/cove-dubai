@@ -83,7 +83,14 @@ test.describe('home page stay search', () => {
       expect(url.searchParams.get('checkOut')).toBe(CHECK_OUT);
       expect(url.searchParams.get('adults')).toBe('3');
 
-      // And it is actually in the form, not merely in the address bar.
+      // One press is enough: the flow opens on the room list, already
+      // searched, rather than on a date form waiting for a second press.
+      await expect(
+        page.locator('[data-testid^="room-details-"]').first(),
+      ).toBeVisible({ timeout: 20_000 });
+
+      // And the stay is actually in the form, not merely in the address bar.
+      await page.getByRole('button', { name: 'Back' }).click();
       await expect(page.getByTestId('checkin-field')).not.toContainText(
         'Select date',
       );
@@ -114,6 +121,12 @@ test.describe('home page stay search', () => {
       `/en/reserve?checkIn=${CHECK_IN}&checkOut=${CHECK_OUT}&adults=4`,
     );
 
+    // A valid stay goes straight to the searched room list.
+    await expect(
+      page.locator('[data-testid^="room-details-"]').first(),
+    ).toBeVisible({ timeout: 20_000 });
+
+    await page.getByRole('button', { name: 'Back' }).click();
     await expect(page.getByTestId('checkin-field')).not.toContainText(
       'Select date',
     );
