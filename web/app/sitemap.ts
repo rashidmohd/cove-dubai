@@ -6,7 +6,7 @@
  * than as duplicates competing with each other (`arabic-rtl`).
  *
  * The reserve flow and the coming-soon placeholder are excluded: one is a form
- * and the other is a stub standing in for three unbuilt pages, so neither is
+ * and the other is a stub standing in for the unbuilt pages, so neither is
  * worth a searcher's click.
  */
 import type { MetadataRoute } from 'next';
@@ -16,7 +16,14 @@ import { bookingApi } from '@/lib/api/client';
 import { publicConfig } from '@/lib/config';
 
 /** Indexable marketing routes, relative to the locale segment. */
-const ROUTES = ['', '/about', '/rooms', '/offers', '/dining'] as const;
+const ROUTES = [
+  '',
+  '/about',
+  '/rooms',
+  '/offers',
+  '/dining',
+  '/wellness',
+] as const;
 
 /**
  * Room pages, which are the listing's children rather than fixed routes.

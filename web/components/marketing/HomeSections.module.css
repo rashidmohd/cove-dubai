@@ -326,3 +326,29 @@
     bottom: -1.5rem;
   }
 }
+
+/* A facility tile is a link to the page that shows more of it. Quiet, like the
+   room cards: the photograph eases in and the name takes the accent, and there
+   is no underline or arrow competing with the picture. */
+.facilityLink {
+  display: block;
+  color: inherit;
+}
+
+.facilityLink img {
+  transition: transform var(--transition);
+}
+
+.facilityLink:hover img,
+.facilityLink:focus-visible img {
+  transform: scale(1.03);
+}
+
+.facilityLink:hover .facilityName,
+.facilityLink:focus-visible .facilityName {
+  color: var(--bronze);
+}
+
+.facilityName {
+  transition: color var(--transition);
+}

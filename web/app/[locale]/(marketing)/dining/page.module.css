@@ -86,6 +86,19 @@
   text-align: end;
 }
 
+/* --- Gallery ------------------------------------------------------------ */
+
+.galleryTitle {
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--fog);
+  margin-bottom: var(--space-6);
+}
+
 /* --- Chef's Table -------------------------------------------------------- */
 
 .private {
@@ -110,7 +123,8 @@
 
 :global([lang='ar']) .venueKind,
 :global([lang='ar']) .factLabel,
-:global([lang='ar']) .venueName {
+:global([lang='ar']) .venueName,
+:global([lang='ar']) .galleryTitle {
   text-transform: none;
   letter-spacing: 0;
   text-indent: 0;

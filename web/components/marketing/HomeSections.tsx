@@ -37,14 +37,19 @@ import styles from './HomeSections.module.css';
  * The parts of the building that are not a room and not a restaurant.
  *
  * `key` addresses the copy, `photo` the photograph — they differ where the
- * better shot of a space is not the one named after it.
+ * better shot of a space is not the one named after it. `href` is the page
+ * that shows more of it.
  */
 const FACILITIES = [
-  { key: 'pool', photo: 'pool' },
-  { key: 'gym', photo: 'gymStudio' },
-  { key: 'entrance', photo: 'entrance' },
-  { key: 'liftLobby', photo: 'liftLobby' },
-] as const satisfies ReadonlyArray<{ key: string; photo: PropertyPhotoName }>;
+  { key: 'pool', photo: 'pool', href: '/wellness' },
+  { key: 'gym', photo: 'gymStudio', href: '/wellness' },
+  { key: 'entrance', photo: 'entrance', href: '/about' },
+  { key: 'liftLobby', photo: 'liftLobby', href: '/about' },
+] as const satisfies ReadonlyArray<{
+  key: string;
+  photo: PropertyPhotoName;
+  href: string;
+}>;
 
 export async function HomeSections({
   locale,
@@ -180,25 +185,29 @@ export async function HomeSections({
           {FACILITIES.map((facility, index) => (
             <li key={facility.key}>
               <Reveal delay={index * 120}>
-                <figure className={styles.facility}>
-                  <div className={styles.facilityVisual}>
-                    <Photo
-                      photo={propertyPhoto(
-                        facility.photo,
-                        tPhoto(facility.key),
-                      )}
-                      sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 25vw"
-                    />
-                  </div>
-                  <figcaption>
-                    <h3 className={styles.facilityName}>
-                      {t(`facilities.items.${facility.key}Name`)}
-                    </h3>
-                    <BodyText>
-                      {t(`facilities.items.${facility.key}Body`)}
-                    </BodyText>
-                  </figcaption>
-                </figure>
+                {/* The whole tile is the link; its name is the heading
+                    inside, so no separate label is needed. */}
+                <Link href={facility.href} className={styles.facilityLink}>
+                  <figure className={styles.facility}>
+                    <div className={styles.facilityVisual}>
+                      <Photo
+                        photo={propertyPhoto(
+                          facility.photo,
+                          tPhoto(facility.key),
+                        )}
+                        sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                      />
+                    </div>
+                    <figcaption>
+                      <h3 className={styles.facilityName}>
+                        {t(`facilities.items.${facility.key}Name`)}
+                      </h3>
+                      <BodyText>
+                        {t(`facilities.items.${facility.key}Body`)}
+                      </BodyText>
+                    </figcaption>
+                  </figure>
+                </Link>
               </Reveal>
             </li>
           ))}

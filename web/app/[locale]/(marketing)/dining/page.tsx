@@ -15,6 +15,7 @@ import { Glow, Weave } from '@/components/BrandEffects';
 import {
   BodyText,
   Photo,
+  PhotoGallery,
   QuoteBand,
   Reveal,
   Section,
@@ -25,7 +26,27 @@ import {
 import { Link } from '@/i18n/navigation';
 import { isLocale } from '@/i18n/routing';
 import { propertyPhoto } from '@/lib/media';
+import type { Photograph, PropertyPhotoName } from '@/lib/media';
 import styles from './page.module.css';
+
+/**
+ * The restaurant and the lobby lounge, as a guest would walk through them.
+ * Each entry names a photograph and the `photos.*` key of its alt text.
+ */
+const GALLERY = [
+  ['restaurant', 'loom'],
+  ['restaurantLong', 'restaurantLong'],
+  ['restaurantColumns', 'restaurantColumns'],
+  ['restaurantMarble', 'restaurantMarble'],
+  ['restaurantHost', 'restaurantHost'],
+  ['restaurantCorner', 'restaurantCorner'],
+  ['restaurantLength', 'restaurantLength'],
+  ['restaurantTables', 'atelier'],
+  ['lobby', 'lobby'],
+  ['loungeCafe', 'loungeCafe'],
+  ['loungeArmchairs', 'loungeArmchairs'],
+  ['loungeSofas', 'loungeSofas'],
+] as const satisfies ReadonlyArray<readonly [PropertyPhotoName, string]>;
 
 export async function generateMetadata({
   params,
@@ -52,6 +73,10 @@ export default async function DiningPage({
 
   const t = await getTranslations('dining');
   const tPhoto = await getTranslations('photos');
+
+  const gallery = GALLERY.map(([name, alt]) =>
+    propertyPhoto(name, tPhoto(alt)),
+  ).filter((photo): photo is Photograph => photo !== null);
 
   return (
     <>
@@ -167,6 +192,16 @@ export default async function DiningPage({
           </Link>
         </Reveal>
       </Section>
+
+      {/* --- Gallery --- */}
+      {gallery.length > 0 ? (
+        <Section tone="light">
+          <Reveal>
+            <h2 className={styles.galleryTitle}>{t('gallery')}</h2>
+            <PhotoGallery photos={gallery} label={t('label')} />
+          </Reveal>
+        </Section>
+      ) : null}
     </>
   );
 }

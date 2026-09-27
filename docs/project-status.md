@@ -1107,3 +1107,19 @@ the pool changed — the September renders show a redesigned pool deck. `pool` /
 
 Deployed web instances cache the room list for an hour (`revalidate: 3600`), so the new rooms appear on staging
 within the hour or on redeploy.
+
+## Facility photography: Dining gallery, a Wellness page, linked home tiles (27 Sep 2026)
+
+13 more renders from `images/Cove` are in the bucket under `images/` (`restaurant-3…8`, `lounge-1…3`, `gym-4…6`,
+`pool-5`) and named in `PROPERTY_PHOTOS`. Seven renders in that folder repeat shots already on the site at 2821px
+(pages 07, 08, 09, 14, 20, 24, 25), so the galleries use the sharper existing files rather than a second copy.
+
+- **Dining** ends with a 12-photograph gallery — restaurant and lobby lounge — using `PhotoGallery`, the same
+  click-to-enlarge viewer as the room pages (renamed from `RoomGallery`; its labels moved to `common.gallery`).
+- **`/wellness` is a real page** (pool deck, fitness floor, 8-photograph gallery), replacing the coming-soon stub
+  in the nav, footer and sitemap.
+- **The home page facility tiles link through**: pool and gym to Wellness, arrival and lift lobby to About.
+
+> ⚠️ **Wellness copy is a PLACEHOLDER** that describes only what the renders show — no hours, no claims. The
+> footer link still reads "Wellness & spa", and there is no spa in the renders; both are for the client to word.
+> Alt text for the new photographs is English in both locales, as elsewhere.

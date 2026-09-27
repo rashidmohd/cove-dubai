@@ -24,7 +24,7 @@ const NAV_ITEMS = [
   // one an offer is for, and it is the standard position on hotel sites.
   { key: 'offers', href: '/offers' },
   { key: 'dining', href: '/dining' },
-  { key: 'wellness', href: '/coming-soon' },
+  { key: 'wellness', href: '/wellness' },
   { key: 'experiences', href: '/coming-soon' },
   { key: 'members', href: '/coming-soon' },
 ] as const;

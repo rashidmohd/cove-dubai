@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * A room's gallery, and a full-screen viewer to look through it.
+ * A grid of photographs, and a full-screen viewer to look through them.
  *
- * The grid is the same one the page always had; each tile is now a button that
- * opens the viewer on that photograph. The viewer walks the **whole** gallery,
- * hero included, so a guest can start anywhere and still see every picture.
+ * Each tile is a button that opens the viewer on that photograph. The viewer
+ * walks the **whole** set — including any photographs the grid skips via
+ * `gridFrom`, such as a room's hero shown directly above — so a guest can
+ * start anywhere and still see every picture.
  *
  * A native `<dialog>` with `showModal()`, as `RoomDetailDialog` and the admin
  * panel use: the focus trap, Escape and top-layer stacking come with it.
@@ -20,18 +21,21 @@ import { useTranslations } from 'next-intl';
 import type { Photograph } from '@/lib/media';
 
 import { Photo } from './Photo';
-import styles from './RoomGallery.module.css';
+import styles from './PhotoGallery.module.css';
 
-export function RoomGallery({
+export function PhotoGallery({
   photos,
   label,
+  gridFrom = 0,
 }: {
-  /** Every photograph of the room, hero first. The grid shows the rest. */
+  /** Every photograph the viewer can show, in order. */
   photos: Photograph[];
-  /** The room's name, for the viewer's accessible name. */
+  /** What is being shown — a room's or a venue's name — for the viewer. */
   label: string;
+  /** Leave the first photographs out of the grid, e.g. a hero shown above. */
+  gridFrom?: number;
 }) {
-  const t = useTranslations('rooms');
+  const t = useTranslations('common.gallery');
   const tCommon = useTranslations('common');
 
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -42,7 +46,7 @@ export function RoomGallery({
   const total = photos.length;
 
   const slideLabel = (i: number) =>
-    t('carousel.slide', { index: i + 1, total });
+    t('slide', { index: i + 1, total });
 
   // Open and close follow state, so Escape and the close button take the same
   // path and React never disagrees with the element about whether it is open.
@@ -103,13 +107,13 @@ export function RoomGallery({
   return (
     <>
       <ul className={styles.grid}>
-        {photos.slice(1).map((photo, i) => (
+        {photos.slice(gridFrom).map((photo, i) => (
           <li key={photo.url} className={styles.tile}>
             <button
               type="button"
               className={styles.tileButton}
-              onClick={() => setOpenAt(i + 1)}
-              aria-label={t('detail.enlarge', { index: i + 2, total })}
+              onClick={() => setOpenAt(gridFrom + i)}
+              aria-label={t('enlarge', { index: gridFrom + i + 1, total })}
               aria-haspopup="dialog"
             >
               <Photo photo={photo} sizes="(max-width: 900px) 100vw, 33vw" />
@@ -189,7 +193,7 @@ export function RoomGallery({
               className={`${styles.arrow} ${styles.previous}`}
               onClick={() => go(-1)}
               disabled={index === 0}
-              aria-label={t('carousel.previous')}
+              aria-label={t('previous')}
               data-testid="gallery-previous"
             >
               <Chevron />
@@ -199,7 +203,7 @@ export function RoomGallery({
               className={`${styles.arrow} ${styles.next}`}
               onClick={() => go(1)}
               disabled={index >= total - 1}
-              aria-label={t('carousel.next')}
+              aria-label={t('next')}
               data-testid="gallery-next"
             >
               <Chevron />

@@ -1,0 +1,91 @@
+/**
+ * Wellness — the same venue layout as Dining, so the two pages read as one
+ * site. Kept as its own module rather than importing Dining's, because a page
+ * reaching into another route's styles couples two pages that change apart.
+ */
+
+.intro {
+  margin-top: var(--space-8);
+  max-width: 56ch;
+}
+
+.spaced {
+  margin-top: var(--space-6);
+}
+
+.venue {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+/* The grid's children are the Reveal wrappers, so the order is set on the
+   first child. `order` is flow-relative and mirrors under RTL. */
+.venueReversed > *:first-child {
+  order: 2;
+}
+
+.venueVisual {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+
+.venueVisual[data-venue='gym'] {
+  background: linear-gradient(150deg, #c4b8a4, #6a5a46);
+}
+
+.venueKind {
+  font-size: 0.6875rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+
+.venueName {
+  font-family: var(--s);
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: var(--fog);
+  margin: 0.5rem 0 var(--space-6);
+}
+
+.galleryTitle {
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  text-indent: var(--tracking-label);
+  color: var(--fog);
+  margin-bottom: var(--space-6);
+}
+
+/* --- Arabic -------------------------------------------------------------- */
+
+:global([lang='ar']) .venueKind,
+:global([lang='ar']) .venueName,
+:global([lang='ar']) .galleryTitle {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .venueKind {
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 900px) {
+  .venue {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  .venueReversed > *:first-child {
+    order: 0;
+  }
+}

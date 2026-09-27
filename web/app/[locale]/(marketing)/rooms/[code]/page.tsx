@@ -25,7 +25,7 @@ import { notFound } from 'next/navigation';
 import {
   Photo,
   Reveal,
-  RoomGallery,
+  PhotoGallery,
   Section,
 } from '@/components/marketing';
 import { RoomDetailBody } from '@/components/RoomDetail';
@@ -192,7 +192,11 @@ export default async function RoomDetailPage({
         <Section tone="linen">
           <Reveal>
             <h2 className={styles.galleryTitle}>{t('detail.gallery')}</h2>
-            <RoomGallery photos={gallery} label={room.name[locale]} />
+            <PhotoGallery
+              photos={gallery}
+              label={room.name[locale]}
+              gridFrom={1}
+            />
           </Reveal>
         </Section>
       ) : null}

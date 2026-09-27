@@ -76,6 +76,22 @@ export const PROPERTY_PHOTOS = {
   // than the rest of the set.
   pool: { key: 'images/pool-3.jpg', width: 1755, height: 1170 },
   poolTerrace: { key: 'images/pool-4.jpg', width: 1755, height: 1170 },
+  poolDusk: { key: 'images/pool-5.jpg', width: 1755, height: 1169 },
+  // The rest of the September 2026 facility renders, for the Dining and
+  // Wellness galleries. Where the set repeats a shot already above at 2821px,
+  // the gallery uses that sharper file instead of adding a copy here.
+  restaurantLong: { key: 'images/restaurant-3.jpg', width: 1755, height: 981 },
+  restaurantColumns: { key: 'images/restaurant-4.jpg', width: 1755, height: 984 },
+  restaurantMarble: { key: 'images/restaurant-5.jpg', width: 1755, height: 985 },
+  restaurantHost: { key: 'images/restaurant-6.jpg', width: 1755, height: 975 },
+  restaurantCorner: { key: 'images/restaurant-7.jpg', width: 1755, height: 977 },
+  restaurantLength: { key: 'images/restaurant-8.jpg', width: 1755, height: 976 },
+  loungeCafe: { key: 'images/lounge-1.jpg', width: 1752, height: 975 },
+  loungeArmchairs: { key: 'images/lounge-2.jpg', width: 1755, height: 986 },
+  loungeSofas: { key: 'images/lounge-3.jpg', width: 1750, height: 979 },
+  gymNight: { key: 'images/gym-4.jpg', width: 1275, height: 711 },
+  gymTreadmills: { key: 'images/gym-5.jpg', width: 1275, height: 849 },
+  gymWeights: { key: 'images/gym-6.jpg', width: 1275, height: 848 },
   gym: { key: 'images/gym.jpg', ...LANDSCAPE },
   gymStudio: { key: 'images/gym-3.jpg', ...LANDSCAPE },
   roomTwin: { key: 'images/room.jpg', ...LANDSCAPE },

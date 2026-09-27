@@ -38,7 +38,7 @@ const COLUMNS = [
     key: 'explore',
     links: [
       { key: 'dining', href: '/dining' },
-      { key: 'wellness', href: '/coming-soon' },
+      { key: 'wellness', href: '/wellness' },
       { key: 'experiences', href: '/coming-soon' },
       { key: 'events', href: '/coming-soon' },
     ],

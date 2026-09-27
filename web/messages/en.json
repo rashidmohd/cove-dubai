@@ -20,7 +20,13 @@
     "adults": "adults",
     "languageToggle": "العربية",
     "languageToggleLabel": "Switch to Arabic",
-    "backHome": "Return home"
+    "backHome": "Return home",
+    "gallery": {
+      "previous": "Previous photograph",
+      "next": "Next photograph",
+      "slide": "Photograph {index} of {total}",
+      "enlarge": "Enlarge photograph {index} of {total}"
+    }
   },
   "nav": {
     "about": "About",
@@ -304,8 +310,7 @@
       "allRooms": "All rooms",
       "reserveThisRoom": "Reserve this room",
       "forStay": "For your stay",
-      "gallery": "Gallery",
-      "enlarge": "Enlarge photograph {index} of {total}"
+      "gallery": "Gallery"
     },
     "specLabels": {
       "size": "Size",
@@ -384,7 +389,31 @@
       "name": "Chef's Table",
       "body": "Six seats. No printed menu. What arrives is what was best that morning. Selected evenings only.",
       "cta": "Enquire"
-    }
+    },
+    "gallery": "Gallery"
+  },
+  "wellness": {
+    "label": "Wellness",
+    "title": "Time kept",
+    "titleAccent": "for yourself.",
+    "intro": "A pool deck in the open air and a fitness floor behind full-height glass, both for every guest.",
+    "pool": {
+      "kind": "Pool deck",
+      "name": "The Pool",
+      "title": "Shade, water,",
+      "titleAccent": "and nowhere to be.",
+      "body1": "Loungers under scalloped parasols, a main pool with a plunge pool beside it, and a bar within reach.",
+      "body2": "Come for a swim. Stay for the afternoon."
+    },
+    "gym": {
+      "kind": "Fitness",
+      "name": "The Fitness Floor",
+      "title": "Room to",
+      "titleAccent": "train properly.",
+      "body1": "Cardio machines facing the glass, free weights, and a studio corner with space to stretch.",
+      "body2": "Early or late, it is there when you are."
+    },
+    "gallery": "Gallery"
   },
   "about": {
     "label": "About Cove",
@@ -724,6 +753,21 @@
     "roomInterior": "A king room, the bed set against a panelled wall",
     "loom": "The Loom, laid for dinner beneath its sculpted ceiling",
     "atelier": "The Atelier, tables set along the window wall",
-    "room": "Inside {name} at Cove Dubai"
+    "room": "Inside {name} at Cove Dubai",
+    "restaurantLong": "The Loom, long tables beneath its sculpted ceiling",
+    "restaurantColumns": "Tables set among the columns, daylight beyond the glass",
+    "restaurantMarble": "Tables laid for dinner before a marble feature wall",
+    "restaurantHost": "The marble host stand, with tables laid on either side",
+    "restaurantCorner": "Tables along the corner windows, trees outside",
+    "restaurantLength": "The length of The Loom beneath its ceiling of light",
+    "loungeCafe": "Café tables beneath the coral chandelier",
+    "loungeArmchairs": "Armchairs and café tables in the lounge",
+    "loungeSofas": "The lobby lounge, sofas grouped around low tables",
+    "poolTerrace": "Loungers and the pool bar beneath scalloped parasols",
+    "poolDusk": "The pool at dusk, a parasol beside the steps",
+    "gymNight": "The fitness floor at night, a cable machine by the glass",
+    "gymTreadmills": "Treadmills and bikes facing full-height windows",
+    "gymWeights": "Free weights and cardio machines on the fitness floor",
+    "gymEquipment": "Medicine balls and weights on lit shelving"
   }
 }
