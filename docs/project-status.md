@@ -1123,3 +1123,25 @@ within the hour or on redeploy.
 > ⚠️ **Wellness copy is a PLACEHOLDER** that describes only what the renders show — no hours, no claims. The
 > footer link still reads "Wellness & spa", and there is no spa in the renders; both are for the client to word.
 > Alt text for the new photographs is English in both locales, as elsewhere.
+
+## Arabic translation — complete draft (27 Sep 2026)
+
+The client asked to see the Arabic site, so every surface now has Arabic — as a **draft** for the client's Arabic
+copywriter, not final copy. `arabic-rtl` says the client supplies Arabic and luxury copy is never machine-translated;
+this does not replace that review, it gives the reviewer a complete starting point instead of 609 English lines.
+
+- **`messages/ar.json`** — all 609 keys (marketing, booking flow, cancellation, admin). Placeholders are intact
+  and every message was run through the ICU formatter. Counts use Arabic's six plural forms (`roomsLeft`,
+  `sleeps`, `nights`, `minNights`). Left in Latin on purpose: the `COVE` wordmark, publication names, two guest
+  names, email/phone, and numbers.
+- **Database** — room type names, categories and descriptions, all 19 amenities, rate-plan names and the 20
+  room-photo alt texts, on staging. Only fields still mirroring English were written, so nothing edited in the
+  admin panel was touched. `seed.ts` carries the same Arabic for a fresh database.
+- **Emails** — the Arabic confirmation/cancellation copy in `server/src/emails/templates.ts`.
+- **Digits and currency** — Western digits throughout (the formatters already pin `latn`). `formatMoney` now
+  writes `AED` as **درهم** in Arabic, so booking prices (which carry the API's ISO code) match the marketing pages.
+
+> ⚠️ **For the copywriter's review first:** the brand lines (hero, dining and about headlines, the chef's quote,
+> press quotes), the venue names (ذا لوم / ذا أتيليه / جناح كوف — transliterated, not translated), and the
+> person names (أمارا سليمان). Gendered forms follow the English: the chef is written masculine, the head of
+> design feminine.

@@ -91,39 +91,38 @@ const COPY: Record<Locale, Copy> = {
     hotelName: 'Cove Dubai',
     address: 'Al Rigga, Deira, Dubai',
   },
-  // Placeholder copy, in English, exactly as `messages/ar.json` holds English
-  // for its untranslated keys. The client supplies the Arabic; the layout and
-  // direction below are already correct for it (`arabic-rtl`).
+  // Draft Arabic (27 Sep 2026), matching `messages/ar.json`, for the client's
+  // Arabic copywriter to review before launch. Layout and direction below are
+  // already correct for it (`arabic-rtl`).
   ar: {
-    subjectConfirmed: (reference) => `Your reservation is confirmed — ${reference}`,
-    subjectCancelled: (reference) => `Your reservation has been cancelled — ${reference}`,
-    subjectHotel: (reference) => `New booking — ${reference}`,
-    greeting: (name) => `Dear ${name},`,
+    subjectConfirmed: (reference) => `تم تأكيد حجزك — ${reference}`,
+    subjectCancelled: (reference) => `تم إلغاء حجزك — ${reference}`,
+    subjectHotel: (reference) => `حجز جديد — ${reference}`,
+    greeting: (name) => `عزيزنا ${name}،`,
     confirmedIntro:
-      'Thank you for choosing Cove Dubai. Your reservation is confirmed and we look forward to welcoming you.',
+      'شكراً لاختيارك كوف دبي. تم تأكيد حجزك، ونتطلع إلى استقبالك.',
     cancelledIntro:
-      'Your reservation has been cancelled. No payment was taken, and nothing further is required from you.',
-    reference: 'Booking reference',
-    roomType: 'Room',
-    checkIn: 'Check-in',
-    checkOut: 'Check-out',
-    nights: 'Nights',
-    guests: 'Guests',
-    rooms: 'Rooms',
-    roomTotal: 'Accommodation',
-    tourismDirham: 'Tourism Dirham',
-    vat: 'VAT',
-    total: 'Total',
-    payAtCheckIn:
-      'No payment has been taken. Settlement is on arrival, at the hotel.',
-    cancelHeading: 'Need to cancel?',
+      'تم إلغاء حجزك. لم يُحصَّل أي مبلغ، ولا يلزمك القيام بأي إجراء آخر.',
+    reference: 'رقم الحجز',
+    roomType: 'الغرفة',
+    checkIn: 'الوصول',
+    checkOut: 'المغادرة',
+    nights: 'الليالي',
+    guests: 'الضيوف',
+    rooms: 'الغرف',
+    roomTotal: 'الإقامة',
+    tourismDirham: 'رسوم درهم السياحة',
+    vat: 'ضريبة القيمة المضافة',
+    total: 'الإجمالي',
+    payAtCheckIn: 'لم يُحصَّل أي مبلغ. يتم الدفع عند الوصول، في الفندق.',
+    cancelHeading: 'هل تحتاج إلى الإلغاء؟',
     cancelBody:
-      'Use the secure link below. It works once, and only for this booking.',
-    cancelLink: 'Cancel this reservation',
-    questions: 'Any questions, simply reply to this email.',
-    signOff: 'With warm regards,',
-    hotelName: 'Cove Dubai',
-    address: 'Al Rigga, Deira, Dubai',
+      'استخدم الرابط الآمن أدناه. يعمل مرة واحدة فقط، ولهذا الحجز وحده.',
+    cancelLink: 'إلغاء هذا الحجز',
+    questions: 'لأي استفسار، يكفي الرد على هذه الرسالة.',
+    signOff: 'مع أطيب التحيات،',
+    hotelName: 'كوف دبي',
+    address: 'الرقة، ديرة، دبي',
   },
 };
 

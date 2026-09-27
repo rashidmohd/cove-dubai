@@ -64,6 +64,9 @@ dir="ltr"` for English.
   keep the message keys clean and complete so translators have an obvious checklist.
 - Ship with English copy in place and Arabic keys present (even if temporarily mirroring English) so missing
   translations are visible and trackable, never silently blank.
+- **Current state (27 Sep 2026):** at the client's request a complete *draft* Arabic translation is in place
+  (messages, database copy, emails). Treat it as a starting point for the client's copywriter — new keys still
+  need Arabic in `ar.json`, and brand copy still goes to the client for sign-off. See `docs/project-status.md`.
 
 ## Definition of done for any UI change
 

@@ -79,7 +79,23 @@ export function formatMoney(
     numberingSystem: NUMBERING_SYSTEM,
   }).format(amount);
 
-  return `${currency} ${formatted}`;
+  return `${currencyLabel(currency, locale)} ${formatted}`;
+}
+
+/**
+ * How a currency is written in each language.
+ *
+ * Callers pass either the ISO code the API returns (`AED`, on every booking
+ * price) or the already-translated `common.currency` label (the marketing
+ * pages). Mapping the code here means the Arabic site reads درهم everywhere,
+ * rather than on some pages and `AED` on the booking summary.
+ */
+const CURRENCY_LABELS: Partial<Record<Locale, Record<string, string>>> = {
+  ar: { AED: 'درهم' },
+};
+
+function currencyLabel(currency: string, locale: Locale): string {
+  return CURRENCY_LABELS[locale]?.[currency] ?? currency;
 }
 
 export function formatNumber(value: number, locale: Locale): string {

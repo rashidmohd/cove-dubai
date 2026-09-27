@@ -6,10 +6,10 @@
  * never duplicates a room type or resets a booking count.
  *
  * English copy is taken verbatim from the approved mockups in design/mockups/.
- * Arabic fields are seeded with the English text as a visible placeholder — the
- * client supplies the real translations, and the `arabic-rtl` skill is explicit
- * that we never machine-translate luxury brand copy. Seeding them non-empty
- * keeps untranslated content obvious rather than silently blank.
+ * Arabic fields carry a DRAFT translation (27 Sep 2026), written so the client
+ * could see the Arabic site; their Arabic copywriter reviews it before launch
+ * (docs/project-status.md). As with English, an existing row keeps whatever the
+ * hotel has since written in the admin panel.
  */
 import { PrismaClient, Prisma } from '@prisma/client';
 
@@ -34,9 +34,13 @@ const ROOM_TYPES = [
   {
     code: 'deluxe-king-room',
     nameEn: 'Deluxe King Room',
+    nameAr: 'غرفة ديلوكس بسرير كينغ',
     categoryEn: 'Deluxe',
+    categoryAr: 'ديلوكس',
     descriptionEn:
       'A king bed, a lounge chair by the window and a walk-in wardrobe, in warm neutrals with a single note of colour.',
+    descriptionAr:
+      'سرير كينغ، وكرسي مريح بجانب النافذة، وغرفة ملابس، بألوان محايدة دافئة تتخللها لمسة لون واحدة.',
     baseRateAed: '1200.00',
     maxOccupancy: 2,
     totalRooms: 49,
@@ -46,9 +50,13 @@ const ROOM_TYPES = [
   {
     code: 'deluxe-twin-room',
     nameEn: 'Deluxe Twin Room',
+    nameAr: 'غرفة ديلوكس بسريرين منفصلين',
     categoryEn: 'Deluxe',
+    categoryAr: 'ديلوكس',
     descriptionEn:
       'Two beds side by side, a vanity desk and a walk-in wardrobe, in soft olive and sand.',
+    descriptionAr:
+      'سريران متجاوران، ومكتب زينة، وغرفة ملابس، بدرجات الزيتوني الهادئ والرملي.',
     baseRateAed: '1200.00',
     maxOccupancy: 2,
     totalRooms: 49,
@@ -58,9 +66,13 @@ const ROOM_TYPES = [
   {
     code: 'cove-suite',
     nameEn: 'The Cove Suite',
+    nameAr: 'جناح كوف',
     categoryEn: 'Signature',
+    categoryAr: 'سيغنتشر',
     descriptionEn:
       'The largest room in the hotel. Two aspects, one terrace, and enough space to forget you are in a city.',
+    descriptionAr:
+      'أكبر غرفة في الفندق. واجهتان، وتراس واحد، ومساحة تكفي لتنسى أنك في مدينة.',
     baseRateAed: '2400.00',
     maxOccupancy: 4,
     totalRooms: 8,
@@ -133,31 +145,31 @@ function utcDateFromToday(offsetDays: number): Date {
  */
 const AMENITIES = [
   // --- Bathroom ------------------------------------------------------------
-  { code: 'bathrobe', otaCode: 10, nameEn: 'Bathrobe', category: 'BATHROOM', sortOrder: 10 },
-  { code: 'slippers', otaCode: 228, nameEn: 'Slippers', category: 'BATHROOM', sortOrder: 20 },
-  { code: 'hairdryer', otaCode: 50, nameEn: 'Hairdryer', category: 'BATHROOM', sortOrder: 30 },
-  { code: 'rain-shower', otaCode: null, nameEn: 'Rain shower', category: 'BATHROOM', sortOrder: 40 },
-  { code: 'soaking-tub', otaCode: null, nameEn: 'Soaking tub', category: 'BATHROOM', sortOrder: 50 },
+  { code: 'bathrobe', otaCode: 10, nameEn: 'Bathrobe', nameAr: 'روب استحمام', category: 'BATHROOM', sortOrder: 10 },
+  { code: 'slippers', otaCode: 228, nameEn: 'Slippers', nameAr: 'خُفّان', category: 'BATHROOM', sortOrder: 20 },
+  { code: 'hairdryer', otaCode: 50, nameEn: 'Hairdryer', nameAr: 'مجفف شعر', category: 'BATHROOM', sortOrder: 30 },
+  { code: 'rain-shower', otaCode: null, nameEn: 'Rain shower', nameAr: 'دش مطري', category: 'BATHROOM', sortOrder: 40 },
+  { code: 'soaking-tub', otaCode: null, nameEn: 'Soaking tub', nameAr: 'حوض استحمام عميق', category: 'BATHROOM', sortOrder: 50 },
 
   // --- Comfort -------------------------------------------------------------
-  { code: 'air-conditioning', otaCode: 2, nameEn: 'Air conditioning', category: 'COMFORT', sortOrder: 10 },
-  { code: 'minibar', otaCode: 69, nameEn: 'Minibar', category: 'COMFORT', sortOrder: 20 },
-  { code: 'coffee-tea-maker', otaCode: 19, nameEn: 'Coffee & tea maker', category: 'COMFORT', sortOrder: 30 },
-  { code: 'safe', otaCode: 92, nameEn: 'In-room safe', category: 'COMFORT', sortOrder: 40 },
-  { code: 'desk', otaCode: 28, nameEn: 'Writing desk', category: 'COMFORT', sortOrder: 50 },
-  { code: 'balcony', otaCode: 5017, nameEn: 'Private balcony', category: 'COMFORT', sortOrder: 60 },
-  { code: 'soundproofed', otaCode: 144, nameEn: 'Soundproofed', category: 'COMFORT', sortOrder: 70 },
-  { code: 'blackout-curtains', otaCode: null, nameEn: 'Blackout curtains', category: 'COMFORT', sortOrder: 80 },
+  { code: 'air-conditioning', otaCode: 2, nameEn: 'Air conditioning', nameAr: 'تكييف هواء', category: 'COMFORT', sortOrder: 10 },
+  { code: 'minibar', otaCode: 69, nameEn: 'Minibar', nameAr: 'ميني بار', category: 'COMFORT', sortOrder: 20 },
+  { code: 'coffee-tea-maker', otaCode: 19, nameEn: 'Coffee & tea maker', nameAr: 'آلة قهوة وشاي', category: 'COMFORT', sortOrder: 30 },
+  { code: 'safe', otaCode: 92, nameEn: 'In-room safe', nameAr: 'خزنة داخل الغرفة', category: 'COMFORT', sortOrder: 40 },
+  { code: 'desk', otaCode: 28, nameEn: 'Writing desk', nameAr: 'مكتب للكتابة', category: 'COMFORT', sortOrder: 50 },
+  { code: 'balcony', otaCode: 5017, nameEn: 'Private balcony', nameAr: 'شرفة خاصة', category: 'COMFORT', sortOrder: 60 },
+  { code: 'soundproofed', otaCode: 144, nameEn: 'Soundproofed', nameAr: 'عازل للصوت', category: 'COMFORT', sortOrder: 70 },
+  { code: 'blackout-curtains', otaCode: null, nameEn: 'Blackout curtains', nameAr: 'ستائر معتمة', category: 'COMFORT', sortOrder: 80 },
 
   // --- Technology ----------------------------------------------------------
-  { code: 'television', otaCode: 251, nameEn: 'Television', category: 'TECHNOLOGY', sortOrder: 10 },
-  { code: 'wifi', otaCode: null, nameEn: 'High-speed Wi-Fi', category: 'TECHNOLOGY', sortOrder: 20 },
-  { code: 'telephone', otaCode: 107, nameEn: 'Telephone', category: 'TECHNOLOGY', sortOrder: 30 },
+  { code: 'television', otaCode: 251, nameEn: 'Television', nameAr: 'تلفزيون', category: 'TECHNOLOGY', sortOrder: 10 },
+  { code: 'wifi', otaCode: null, nameEn: 'High-speed Wi-Fi', nameAr: 'واي فاي عالي السرعة', category: 'TECHNOLOGY', sortOrder: 20 },
+  { code: 'telephone', otaCode: 107, nameEn: 'Telephone', nameAr: 'هاتف', category: 'TECHNOLOGY', sortOrder: 30 },
 
   // --- Services ------------------------------------------------------------
-  { code: 'iron', otaCode: 55, nameEn: 'Iron & board', category: 'SERVICES', sortOrder: 10 },
-  { code: 'housekeeping-daily', otaCode: null, nameEn: 'Daily housekeeping', category: 'SERVICES', sortOrder: 20 },
-  { code: 'room-service', otaCode: null, nameEn: 'Room service', category: 'SERVICES', sortOrder: 30 },
+  { code: 'iron', otaCode: 55, nameEn: 'Iron & board', nameAr: 'مكواة وطاولة كيّ', category: 'SERVICES', sortOrder: 10 },
+  { code: 'housekeeping-daily', otaCode: null, nameEn: 'Daily housekeeping', nameAr: 'تنظيف يومي للغرفة', category: 'SERVICES', sortOrder: 20 },
+  { code: 'room-service', otaCode: null, nameEn: 'Room service', nameAr: 'خدمة الغرف', category: 'SERVICES', sortOrder: 30 },
 ] as const;
 
 /**
@@ -198,8 +210,8 @@ async function seedAmenities() {
         code: amenity.code,
         otaCode: amenity.otaCode,
         nameEn: amenity.nameEn,
-        // Placeholder, visibly untranslated — the client supplies the Arabic.
-        nameAr: amenity.nameEn,
+        // Draft Arabic (27 Sep 2026) for the client's translator to review.
+        nameAr: amenity.nameAr,
         category: amenity.category,
         sortOrder: amenity.sortOrder,
       },
@@ -250,11 +262,11 @@ async function seedRoomTypesAndRates() {
       create: {
         code: room.code,
         nameEn: room.nameEn,
-        nameAr: room.nameEn,
+        nameAr: room.nameAr,
         categoryEn: room.categoryEn,
-        categoryAr: room.categoryEn,
+        categoryAr: room.categoryAr,
         descriptionEn: room.descriptionEn,
-        descriptionAr: room.descriptionEn,
+        descriptionAr: room.descriptionAr,
         baseRateAed: new Prisma.Decimal(room.baseRateAed),
         maxOccupancy: room.maxOccupancy,
         totalRooms: room.totalRooms,
@@ -274,7 +286,7 @@ async function seedRoomTypesAndRates() {
         data: {
           roomTypeId: roomType.id,
           nameEn: 'Standard Rate',
-          nameAr: 'Standard Rate',
+          nameAr: 'السعر القياسي',
           nightlyRateAed: new Prisma.Decimal(room.baseRateAed),
           minimumStayNights: 1,
           priority: 0,
