@@ -304,7 +304,8 @@
       "allRooms": "All rooms",
       "reserveThisRoom": "Reserve this room",
       "forStay": "For your stay",
-      "gallery": "Gallery"
+      "gallery": "Gallery",
+      "enlarge": "Enlarge photograph {index} of {total}"
     },
     "specLabels": {
       "size": "Size",

@@ -25,6 +25,7 @@ import { notFound } from 'next/navigation';
 import {
   Photo,
   Reveal,
+  RoomGallery,
   Section,
 } from '@/components/marketing';
 import { RoomDetailBody } from '@/components/RoomDetail';
@@ -32,7 +33,7 @@ import { Link } from '@/i18n/navigation';
 import { isLocale, locales } from '@/i18n/routing';
 import { bookingApi } from '@/lib/api/client';
 import { formatMoney } from '@/lib/format';
-import { resolveRoomPhoto } from '@/lib/media';
+import { resolveRoomPhoto, resolveRoomPhotos } from '@/lib/media';
 import type { RoomType } from '@/lib/api/types';
 import styles from './page.module.css';
 
@@ -113,10 +114,16 @@ export default async function RoomDetailPage({
     tPhoto('room', { name: room.name[locale] }),
   );
 
-  // Primary first, and it is already the hero above — so the gallery is the
-  // rest. A room with one photograph has no gallery rather than an empty
-  // heading over a repeat of the picture directly above it.
-  const gallery = (room.images ?? []).slice(1);
+  // Every photograph, hero first. The grid shows the rest — the hero is
+  // directly above it — but the viewer walks all of them. A room with one
+  // photograph has no gallery rather than an empty heading over a repeat of
+  // the picture above.
+  const gallery = resolveRoomPhotos(
+    room,
+    locale,
+    tPhoto('room', { name: room.name[locale] }),
+    Infinity,
+  );
 
   return (
     <>
@@ -181,25 +188,11 @@ export default async function RoomDetailPage({
         </Reveal>
       </Section>
 
-      {gallery.length > 0 ? (
+      {gallery.length > 1 ? (
         <Section tone="linen">
           <Reveal>
             <h2 className={styles.galleryTitle}>{t('detail.gallery')}</h2>
-            <ul className={styles.gallery}>
-              {gallery.map((image) => (
-                <li key={image.storageKey} className={styles.galleryItem}>
-                  <Photo
-                    photo={{
-                      url: image.url,
-                      alt: image.alt[locale],
-                      width: image.width,
-                      height: image.height,
-                    }}
-                    sizes="(max-width: 900px) 100vw, 33vw"
-                  />
-                </li>
-              ))}
-            </ul>
+            <RoomGallery photos={gallery} label={room.name[locale]} />
           </Reveal>
         </Section>
       ) : null}

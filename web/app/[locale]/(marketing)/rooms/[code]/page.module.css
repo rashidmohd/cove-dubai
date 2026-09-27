@@ -279,21 +279,7 @@ section.body {
   margin-bottom: var(--space-6);
 }
 
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-4);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.galleryItem {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  background: linear-gradient(150deg, #c4b8a4, #9a9080);
-}
+/* The grid itself lives with the viewer, in RoomGallery.module.css. */
 
 /* --- Arabic -------------------------------------------------------------- */
 

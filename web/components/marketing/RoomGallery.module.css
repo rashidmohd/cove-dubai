@@ -1,0 +1,215 @@
+/* --- Grid ------------------------------------------------------------------ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tile {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+/* The whole tile is the control, so the hit area is the photograph. */
+.tileButton {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.tileButton img {
+  transition: transform var(--transition);
+}
+
+.tileButton:hover img,
+.tileButton:focus-visible img {
+  transform: scale(1.03);
+}
+
+.tileButton:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: -2px;
+}
+
+/* --- Viewer ---------------------------------------------------------------- */
+
+.viewer {
+  /* The native dialog is centred and content-sized; the viewer is the whole
+     screen. */
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  /* Solid: at any transparency the page text behind reads through the
+     margins as ghosting. */
+  background: var(--dark);
+  color: var(--w);
+}
+
+.viewer::backdrop {
+  background: rgba(24, 14, 6, 0.6);
+}
+
+.frame {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+}
+
+.bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+}
+
+.counter {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.14em;
+  color: rgba(254, 249, 242, 0.75);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  background: none;
+  color: var(--w);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.close:hover,
+.close:focus-visible {
+  color: var(--gold-lt);
+}
+
+.track {
+  display: flex;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  flex: 0 0 100%;
+  display: grid;
+  place-items: center;
+  padding: 0 5.5rem;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* The photograph is shown whole — `contain`, where every other slot crops —
+   because enlarging is the point of opening it. */
+.image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image img {
+  object-fit: contain;
+}
+
+.caption {
+  margin: 0;
+  min-height: 3.5rem;
+  padding: var(--space-4) var(--space-6);
+  text-align: center;
+  font-size: 0.875rem;
+  color: rgba(254, 249, 242, 0.8);
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border: 0.5px solid rgba(254, 249, 242, 0.35);
+  border-radius: 50%;
+  background: rgba(24, 14, 6, 0.4);
+  color: var(--w);
+  cursor: pointer;
+  transition:
+    opacity var(--transition),
+    background var(--transition);
+}
+
+.arrow:hover,
+.arrow:focus-visible {
+  background: rgba(254, 249, 242, 0.15);
+}
+
+.arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.previous {
+  inset-inline-start: var(--space-6);
+}
+
+.next {
+  inset-inline-end: var(--space-6);
+}
+
+.previous svg {
+  transform: scaleX(-1);
+}
+
+:global([dir='rtl']) .previous svg {
+  transform: none;
+}
+
+:global([dir='rtl']) .next svg {
+  transform: scaleX(-1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .track {
+    scroll-behavior: smooth;
+  }
+}
+
+/* On a phone the photograph takes the full width and swiping moves it, so the
+   arrows would only sit on top of the picture. */
+@media (max-width: 700px), (hover: none) {
+  .slide {
+    padding: 0;
+  }
+
+  .arrow {
+    display: none;
+  }
+}
