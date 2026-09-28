@@ -1145,3 +1145,13 @@ this does not replace that review, it gives the reviewer a complete starting poi
 > press quotes), the venue names (ذا لوم / ذا أتيليه / جناح كوف — transliterated, not translated), and the
 > person names (أمارا سليمان). Gendered forms follow the English: the chef is written masculine, the head of
 > design feminine.
+
+## Home hero: a slow crossfade of five photographs (28 Sep 2026)
+
+The "Still" hero now cycles five photographs — lobby, The Loom, the pool deck, the Cove Suite living room, the
+Deluxe King bedroom — in `HeroSlideshow` (`components/marketing`). Seven seconds each, a 1.8s crossfade, a 6%
+drift; no arrows or dots, one pause/play button in the corner (WCAG 2.2.2). With `prefers-reduced-motion` the
+lobby stays still and the button is not rendered. Only the lobby loads with `priority` (it stays the LCP image);
+each later photograph mounts one slide ahead. The headline and stay search are untouched, and the eyebrow gained a
+soft text-shadow because it faded over the rooms' sheer curtains. **The client chose a single still photograph on
+15 Sep** — this is a change to show them, not a settled decision.

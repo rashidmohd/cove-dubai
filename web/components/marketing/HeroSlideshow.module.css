@@ -1,0 +1,102 @@
+/*
+ * Fills the hero's photo layer. Slides are stacked; only the active one is
+ * opaque, and the one it replaced stays on top of the others while it fades
+ * so the crossfade never passes through the dark ground beneath.
+ */
+.slideshow {
+  position: absolute;
+  inset: 0;
+  /* The slides' z-indexes order them against each other only — without this
+     they would rise above the headline and search in the hero. */
+  isolation: isolate;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.8s ease-in-out;
+}
+
+.active {
+  opacity: 1;
+  z-index: 2;
+}
+
+.leaving {
+  z-index: 1;
+}
+
+/* The drift. The slide being faded out keeps the same animation, so it goes on
+   drifting rather than snapping back to full size as it leaves. */
+.active img,
+.leaving img {
+  animation: drift 9s ease-out forwards;
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+
+/* Paused means nothing moves — the drift too, not only the change of slide. */
+.slideshow[data-paused] img {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide {
+    transition: none;
+  }
+
+  .active img,
+  .leaving img {
+    animation: none;
+  }
+}
+
+/* --- Pause / play ----------------------------------------------------------
+ * Sits in the hero's bottom padding, beneath the search, at the content's end
+ * edge — findable, but not something the eye lands on first.
+ */
+.toggle {
+  position: absolute;
+  z-index: 3;
+  inset-block-end: var(--space-4);
+  inset-inline-end: 5rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0.5px solid rgba(254, 249, 242, 0.35);
+  border-radius: 50%;
+  background: rgba(24, 14, 6, 0.35);
+  color: rgba(254, 249, 242, 0.85);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+.toggle:hover,
+.toggle:focus-visible {
+  background: rgba(24, 14, 6, 0.6);
+  color: var(--w);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .toggle {
+    inset-inline-end: 1.5rem;
+    inset-block-end: var(--space-3);
+  }
+}

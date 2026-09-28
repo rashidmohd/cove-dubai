@@ -183,6 +183,8 @@
     "heroBody": "A hotel in Dubai where the design is quiet, the service has no script, and the only thing competing for your attention is the view.",
     "heroCta": "Discover Cove",
     "heroCtaSecondary": "Our rooms",
+    "heroPause": "Pause the slideshow",
+    "heroPlay": "Play the slideshow",
     "stats": {
       "roomsValue": "106",
       "roomsLabel": "Rooms & suites",
@@ -768,6 +770,7 @@
     "gymNight": "The fitness floor at night, a cable machine by the glass",
     "gymTreadmills": "Treadmills and bikes facing full-height windows",
     "gymWeights": "Free weights and cardio machines on the fitness floor",
-    "gymEquipment": "Medicine balls and weights on lit shelving"
+    "gymEquipment": "Medicine balls and weights on lit shelving",
+    "suiteLounge": "The Cove Suite's living room, two sofas facing the window"
   }
 }

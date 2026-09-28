@@ -65,6 +65,10 @@
   text-transform: uppercase;
   color: var(--gold);
   margin-bottom: var(--space-6);
+  /* The hero now cycles photographs, and this line sits where the scrim is
+     still light — over the rooms' sheer curtains it faded. A soft shadow gives
+     it its own ground without darkening every photograph to suit the brightest. */
+  text-shadow: 0 1px 14px rgba(24, 14, 6, 0.75);
 }
 
 .title {

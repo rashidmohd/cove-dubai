@@ -10,6 +10,7 @@ import type { ReactNode } from 'react';
 import styles from './Marketing.module.css';
 
 export { Reveal } from './Reveal';
+export { HeroSlideshow } from './HeroSlideshow';
 export { Photo } from './Photo';
 export { RoomCarousel } from './RoomCarousel';
 export { PhotoGallery } from './PhotoGallery';

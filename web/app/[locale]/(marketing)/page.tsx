@@ -24,14 +24,28 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { StaySearch } from '@/components/booking/StaySearch';
 import { Weave } from '@/components/BrandEffects';
-import { Photo } from '@/components/marketing';
+import { HeroSlideshow } from '@/components/marketing';
 import { HomeSections } from '@/components/marketing/HomeSections';
 import { bookingApi } from '@/lib/api/client';
 import { isLocale } from '@/i18n/routing';
 import { propertyPhoto } from '@/lib/media';
+import type { Photograph, PropertyPhotoName } from '@/lib/media';
 import type { RoomType } from '@/lib/api/types';
 
 import styles from './page.module.css';
+
+/**
+ * The hero's photographs, in order: arrival, dining, the pool, then the two
+ * rooms. The lobby leads because it is the LCP image and the one the scrim was
+ * tuned against. Each names a photograph and the `photos.*` key of its alt.
+ */
+const HERO_PHOTOS = [
+  ['lobby', 'lobby'],
+  ['restaurant', 'loom'],
+  ['pool', 'pool'],
+  ['suiteLounge', 'suiteLounge'],
+  ['roomPendant', 'roomInterior'],
+] as const satisfies ReadonlyArray<readonly [PropertyPhotoName, string]>;
 
 export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   const { locale } = await params;
@@ -54,10 +68,11 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
     <>
       <section className={styles.hero}>
         <div className={styles.photo}>
-          <Photo
-            photo={propertyPhoto('lobby', tPhoto('lobby'))}
-            sizes="100vw"
-            priority
+          <HeroSlideshow
+            photos={HERO_PHOTOS.map(([name, alt]) =>
+              propertyPhoto(name, tPhoto(alt)),
+            ).filter((photo): photo is Photograph => photo !== null)}
+            labels={{ pause: t('heroPause'), play: t('heroPlay') }}
           />
         </div>
 
