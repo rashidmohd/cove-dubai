@@ -291,6 +291,10 @@
       "gallery": {
         "name": "معرض",
         "note": "أربع صور معاً، ويعبر البحث الخط الفاصل أسفلها."
+      },
+      "below": {
+        "name": "Below",
+        "note": "The home page as it is, with the search moved off the photograph into a band beneath it."
       }
     }
   },

@@ -35,6 +35,12 @@ const VARIANTS = [
     photo: 'restaurant',
     alt: 'loom',
   },
+  {
+    key: 'below',
+    href: '/preview/below',
+    photo: 'lobby',
+    alt: 'lobby',
+  },
 ] as const satisfies ReadonlyArray<{
   key: string;
   href: string;

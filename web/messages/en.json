@@ -291,6 +291,10 @@
       "gallery": {
         "name": "Gallery",
         "note": "Four photographs at once, the search crossing the seam below them."
+      },
+      "below": {
+        "name": "Below",
+        "note": "The home page as it is, with the search moved off the photograph into a band beneath it."
       }
     }
   },

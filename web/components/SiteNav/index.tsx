@@ -41,10 +41,11 @@ export function SiteNav() {
   // hero, and a fixed bar there overlaps their content, so they get the sticky
   // variant the interior mockups use.
   //
-  // The two remaining home page drafts under `/preview` both open on a pale
-  // panel, where the transparent nav's light text would be unreadable. They
-  // keep the solid bar.
-  const overlay = pathname === '/';
+  // Two of the home page drafts under `/preview` open on a pale panel, where
+  // the transparent nav's light text would be unreadable, so they keep the
+  // solid bar. "Below" opens on the same photograph as the home page and gets
+  // the same treatment.
+  const overlay = pathname === '/' || pathname === '/preview/below';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
