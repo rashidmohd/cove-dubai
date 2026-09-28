@@ -99,7 +99,9 @@ export default async function BelowPreviewPage({
         </div>
       </section>
 
-      <HomeSections locale={locale} roomTypes={roomTypes} />
+      {/* The about photographs are the lobby again, which the hero has just
+          shown; this draft lets the copy stand on its own. */}
+      <HomeSections locale={locale} roomTypes={roomTypes} aboutPhotos={false} />
     </>
   );
 }

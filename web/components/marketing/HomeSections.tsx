@@ -54,9 +54,13 @@ const FACILITIES = [
 export async function HomeSections({
   locale,
   roomTypes,
+  aboutPhotos = true,
 }: {
   locale: Locale;
   roomTypes: RoomType[];
+  /** The pair of photographs beside the about copy. The "Below" draft drops
+   *  them, since its hero already opens on the lobby. */
+  aboutPhotos?: boolean;
 }) {
   const t = await getTranslations('home');
   const tCommon = await getTranslations('common');
@@ -66,7 +70,13 @@ export async function HomeSections({
     <>
       {/* --- About --- */}
       <Section tone="light">
-        <div className={styles.aboutGrid}>
+        <div
+          className={
+            aboutPhotos
+              ? styles.aboutGrid
+              : `${styles.aboutGrid} ${styles.aboutSolo}`
+          }
+        >
           <Reveal>
             <SectionLabel>{t('about.label')}</SectionLabel>
             <SectionHeading accent={t('about.titleAccent')}>
@@ -96,25 +106,27 @@ export async function HomeSections({
             />
           </Reveal>
 
-          <Reveal delay={120}>
-            {/* Two photographs offset against each other, the composition the
+          {aboutPhotos ? (
+            <Reveal delay={120}>
+              {/* Two photographs offset against each other, the composition the
                 mockups drew as gradients. Both slots keep their gradient
                 underneath as the loading and no-photography state. */}
-            <div className={styles.aboutVisual}>
-              <div className={styles.aboutVisualMain}>
-                <Photo
-                  photo={propertyPhoto('lobby', tPhoto('lobby'))}
-                  sizes="(max-width: 900px) 100vw, 40vw"
-                />
+              <div className={styles.aboutVisual}>
+                <div className={styles.aboutVisualMain}>
+                  <Photo
+                    photo={propertyPhoto('lobby', tPhoto('lobby'))}
+                    sizes="(max-width: 900px) 100vw, 40vw"
+                  />
+                </div>
+                <div className={styles.aboutVisualSmall}>
+                  <Photo
+                    photo={propertyPhoto('reception', tPhoto('reception'))}
+                    sizes="(max-width: 900px) 45vw, 18vw"
+                  />
+                </div>
               </div>
-              <div className={styles.aboutVisualSmall}>
-                <Photo
-                  photo={propertyPhoto('reception', tPhoto('reception'))}
-                  sizes="(max-width: 900px) 45vw, 18vw"
-                />
-              </div>
-            </div>
-          </Reveal>
+            </Reveal>
+          ) : null}
         </div>
       </Section>
 
@@ -138,7 +150,7 @@ export async function HomeSections({
           {roomTypes.map((room, index) => (
             <li key={room.code}>
               <Reveal delay={index * 120}>
-                <Link href="/rooms" className={styles.roomCard}>
+                <Link href={`/rooms/${room.code}`} className={styles.roomCard}>
                   <span className={styles.roomFill} data-swatch={room.imageKey}>
                     <Photo
                       photo={resolveRoomPhoto(

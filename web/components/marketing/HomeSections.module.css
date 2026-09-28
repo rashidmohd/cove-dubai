@@ -20,6 +20,11 @@
   align-items: center;
 }
 
+/* The about copy on its own, when the page leaves out the photographs. */
+.aboutSolo {
+  grid-template-columns: 1fr;
+}
+
 .spaced {
   margin-top: 1.8rem;
 }
