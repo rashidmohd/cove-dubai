@@ -20,9 +20,27 @@
   align-items: center;
 }
 
-/* The about copy on its own, when the page leaves out the photographs. */
+/* The about copy on its own, when the page leaves out the photographs: the
+   headline in one column and the paragraphs in the other, top-aligned, with
+   the stats as a full-width row beneath. */
 .aboutSolo {
-  grid-template-columns: 1fr;
+  display: grid;
+  grid-template-columns: 5fr 6fr;
+  gap: var(--space-8) 9rem;
+  align-items: start;
+}
+
+/* The paragraphs start level with the headline, not a paragraph's margin
+   below it. */
+.aboutSoloCopy > :first-child {
+  margin-top: 0;
+}
+
+/* Three equal columns across the width, so the numbers answer the two
+   columns above rather than bunching at the start of the row. */
+.aboutSoloStats > ul {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .spaced {
@@ -324,6 +342,21 @@
   .aboutGrid {
     grid-template-columns: 1fr;
     gap: var(--space-16);
+  }
+
+  .aboutSolo {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .aboutSoloCopy > :first-child {
+    margin-top: 1.8rem;
+  }
+
+  /* Three equal columns leave too little room for the labels on a phone;
+     the stats go back to the row they are everywhere else. */
+  .aboutSoloStats > ul {
+    display: flex;
   }
 
   .aboutVisualSmall {

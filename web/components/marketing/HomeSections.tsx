@@ -66,47 +66,48 @@ export async function HomeSections({
   const tCommon = await getTranslations('common');
   const tPhoto = await getTranslations('photos');
 
+  // The about section's parts. Arranged one way beside its photographs and
+  // another without them, so they are built once here.
+  const aboutHeading = (
+    <>
+      <SectionLabel>{t('about.label')}</SectionLabel>
+      <SectionHeading accent={t('about.titleAccent')}>
+        {t('about.title')}
+      </SectionHeading>
+      <Kicker>{t('about.kicker')}</Kicker>
+    </>
+  );
+  const aboutCopy = (
+    <>
+      <BodyText className={styles.spaced}>{t('about.body1')}</BodyText>
+      <BodyText className={styles.spacedTight}>{t('about.body2')}</BodyText>
+      <Link href="/about" className={m.textLink}>
+        {t('about.link')}
+      </Link>
+    </>
+  );
+  const aboutStats = (
+    <Stats
+      items={[
+        { value: t('stats.roomsValue'), label: t('stats.roomsLabel') },
+        { value: t('stats.diningValue'), label: t('stats.diningLabel') },
+        { value: t('stats.ratingValue'), label: t('stats.ratingLabel') },
+      ]}
+    />
+  );
+
   return (
     <>
       {/* --- About --- */}
       <Section tone="light">
-        <div
-          className={
-            aboutPhotos
-              ? styles.aboutGrid
-              : `${styles.aboutGrid} ${styles.aboutSolo}`
-          }
-        >
-          <Reveal>
-            <SectionLabel>{t('about.label')}</SectionLabel>
-            <SectionHeading accent={t('about.titleAccent')}>
-              {t('about.title')}
-            </SectionHeading>
-            <Kicker>{t('about.kicker')}</Kicker>
-            <BodyText className={styles.spaced}>{t('about.body1')}</BodyText>
-            <BodyText className={styles.spacedTight}>
-              {t('about.body2')}
-            </BodyText>
-            <Link href="/about" className={m.textLink}>
-              {t('about.link')}
-            </Link>
+        {aboutPhotos ? (
+          <div className={styles.aboutGrid}>
+            <Reveal>
+              {aboutHeading}
+              {aboutCopy}
+              {aboutStats}
+            </Reveal>
 
-            <Stats
-              items={[
-                { value: t('stats.roomsValue'), label: t('stats.roomsLabel') },
-                {
-                  value: t('stats.diningValue'),
-                  label: t('stats.diningLabel'),
-                },
-                {
-                  value: t('stats.ratingValue'),
-                  label: t('stats.ratingLabel'),
-                },
-              ]}
-            />
-          </Reveal>
-
-          {aboutPhotos ? (
             <Reveal delay={120}>
               {/* Two photographs offset against each other, the composition the
                 mockups drew as gradients. Both slots keep their gradient
@@ -126,8 +127,21 @@ export async function HomeSections({
                 </div>
               </div>
             </Reveal>
-          ) : null}
-        </div>
+          </div>
+        ) : (
+          // Without the photographs the copy would sit in the left half of an
+          // empty row. Instead the words take both columns — the headline on
+          // one side, the paragraphs on the other — and the numbers run the
+          // full width beneath them, so the section is set like a page of type
+          // rather than a layout with a missing picture.
+          <Reveal>
+            <div className={styles.aboutSolo}>
+              <div>{aboutHeading}</div>
+              <div className={styles.aboutSoloCopy}>{aboutCopy}</div>
+            </div>
+            <div className={styles.aboutSoloStats}>{aboutStats}</div>
+          </Reveal>
+        )}
       </Section>
 
       {/* --- Rooms --- */}
