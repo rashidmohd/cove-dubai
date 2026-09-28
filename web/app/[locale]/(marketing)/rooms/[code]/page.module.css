@@ -67,6 +67,14 @@
   min-width: 0;
 }
 
+/* The slideshow's pause/play button, moved to the top corner: the bottom one,
+   where the home page keeps it, is taken here by the price and Reserve. Scoped
+   under `.hero` so it outranks the slideshow's own placement. */
+.hero .heroToggle {
+  inset-block-start: var(--space-6);
+  inset-block-end: auto;
+}
+
 .heroCategory {
   margin: 0 0 var(--space-3);
   font-size: 0.75rem;

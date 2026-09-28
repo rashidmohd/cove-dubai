@@ -34,9 +34,12 @@ const HOLD_MS = 7000;
 export function HeroSlideshow({
   photos,
   labels,
+  toggleClassName,
 }: {
   photos: Photograph[];
   labels: { pause: string; play: string };
+  /** Moves the pause/play button where the hero's own content needs its corner. */
+  toggleClassName?: string;
 }) {
   const total = photos.length;
   const [index, setIndex] = useState(0);
@@ -96,7 +99,7 @@ export function HeroSlideshow({
       {total > 1 && !reducedMotion ? (
         <button
           type="button"
-          className={styles.toggle}
+          className={[styles.toggle, toggleClassName].filter(Boolean).join(' ')}
           onClick={() => setPaused((value) => !value)}
           aria-label={paused ? labels.play : labels.pause}
           data-testid="hero-slideshow-toggle"

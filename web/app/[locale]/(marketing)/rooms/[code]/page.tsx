@@ -23,7 +23,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import {
-  Photo,
+  HeroSlideshow,
   Reveal,
   PhotoGallery,
   Section,
@@ -33,7 +33,7 @@ import { Link } from '@/i18n/navigation';
 import { isLocale, locales } from '@/i18n/routing';
 import { bookingApi } from '@/lib/api/client';
 import { formatMoney } from '@/lib/format';
-import { resolveRoomPhoto, resolveRoomPhotos } from '@/lib/media';
+import { resolveRoomPhotos } from '@/lib/media';
 import type { RoomType } from '@/lib/api/types';
 import styles from './page.module.css';
 
@@ -106,18 +106,13 @@ export default async function RoomDetailPage({
 
   const t = await getTranslations('rooms');
   const tCommon = await getTranslations('common');
+  const tHome = await getTranslations('home');
   const tPhoto = await getTranslations('photos');
 
-  const photo = resolveRoomPhoto(
-    room,
-    locale,
-    tPhoto('room', { name: room.name[locale] }),
-  );
-
-  // Every photograph, hero first. The grid shows the rest — the hero is
-  // directly above it — but the viewer walks all of them. A room with one
-  // photograph has no gallery rather than an empty heading over a repeat of
-  // the picture above.
+  // Every photograph, hero first. The hero cycles through all of them, as the
+  // home page's does; the grid below shows the rest and the viewer walks all
+  // of them. A room with one photograph has a still hero and no gallery rather
+  // than an empty heading over a repeat of the picture above.
   const gallery = resolveRoomPhotos(
     room,
     locale,
@@ -132,7 +127,11 @@ export default async function RoomDetailPage({
           interior. The shade is a separate layer so the photograph itself is
           never dimmed above the fold line of the text. */}
       <header className={styles.hero} data-swatch={room.imageKey}>
-        <Photo photo={photo} sizes="100vw" priority />
+        <HeroSlideshow
+          photos={gallery}
+          labels={{ pause: tHome('heroPause'), play: tHome('heroPlay') }}
+          toggleClassName={styles.heroToggle}
+        />
         <div className={styles.heroShade} aria-hidden="true" />
 
         <div className={styles.heroContent}>
