@@ -83,11 +83,12 @@
    * --s is where the luxury feel lives: headings, hero lines, ledes.
    * --b carries all UI: nav, buttons, labels, fields, dense body copy.
    * --ar is the Arabic face, set on <html lang="ar"> (see arabic-rtl).
-   * The font variables are supplied by next/font in the locale layout.
+   * The font variables are supplied by next/font in the locale layout. Almarai
+ * is two of them, its Arabic and Latin files (see `app/fonts.ts`).
    */
   --s: var(--font-cormorant), 'Cormorant Garamond', serif;
   --b: var(--font-jost), 'Jost', sans-serif;
-  --ar: var(--font-almarai), 'Almarai', sans-serif;
+  --ar: var(--font-almarai), var(--font-almarai-latin), 'Almarai', sans-serif;
 
   /* Signature detail: small labels and buttons are uppercase Jost with wide
    * tracking and a matching text-indent, so the tracking reads optically
@@ -130,8 +131,8 @@
  */
 :root:lang(ar),
 [lang='ar'] {
-  --b: var(--font-almarai), 'Almarai', sans-serif;
-  --s: var(--font-almarai), 'Almarai', sans-serif;
+  --b: var(--font-almarai), var(--font-almarai-latin), 'Almarai', sans-serif;
+  --s: var(--font-almarai), var(--font-almarai-latin), 'Almarai', sans-serif;
   --line-height-base: 1.9;
 }
 

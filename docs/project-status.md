@@ -1155,3 +1155,25 @@ lobby stays still and the button is not rendered. Only the lobby loads with `pri
 each later photograph mounts one slide ahead. The headline and stay search are untouched, and the eyebrow gained a
 soft text-shadow because it faded over the rooms' sheer curtains. **The client chose a single still photograph on
 15 Sep** — this is a change to show them, not a settled decision.
+
+## Fonts are self-hosted; the Railway build no longer fetches them (30 Sep 2026)
+
+The Railway `web` build failed inside `next/font/google`: Turbopack could not resolve the Jost font URLs it was
+given on the build machine (`Can't resolve '@vercel/turbopack-next/internal/font/google/font'` … `next/font/google
+queries have exactly one entry`). The same commit built cleanly locally and from a fresh clone, so the build
+depended on what Google Fonts returned to Railway — nothing in the repo could fix that while the fonts were
+downloaded at build time.
+
+The nine files Google serves for our families (Jost and Cormorant Garamond, Latin subset, variable; Almarai
+Arabic + Latin, 300/400/700) are now committed in `web/styles/fonts/` with their SIL OFL licences, and
+`app/fonts.ts` loads them through `next/font/local`. Output is unchanged — same faces, preloading, and
+metric-matched fallbacks — with no network access at build and nothing Google-specific left for the AWS move.
+Almarai is two loaders (`--font-almarai`, `--font-almarai-latin`) because a local font cannot carry a
+`unicode-range` per file; the Arabic loader has no generated fallback so Latin text on Arabic pages still reaches
+Almarai's Latin files rather than stopping at Arial. **Not carried over:** the latin-ext and Cyrillic subsets
+Google also declared — characters outside Basic Latin (e.g. `ł`, `ő`) now use the system fallback.
+
+> ⚠️ **Local e2e data:** every full `npm run e2e` books two real Cove Suites for the dates 320 days out. After a
+> day of runs the local database sold out of suites for 14–17 Aug 2027 and the booking specs fail with "No rooms
+> are available" — test data, not code. Clear the Playwright bookings (guest emails `e2e-…@e2e-test.invalid`) or
+> reseed the local database before relying on a red run.
