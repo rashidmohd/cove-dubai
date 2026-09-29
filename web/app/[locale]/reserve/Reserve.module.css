@@ -315,6 +315,123 @@
   padding: 0;
 }
 
+/* --- Grid or list -------------------------------------------------------
+ * The rooms default to a grid of large photographs; the list is the compact
+ * view for comparing prices down one column. The grid only overrides the
+ * list's layout, so every card keeps one set of markup and one selected state.
+ */
+
+.roomsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: 1.2rem;
+}
+
+/* The label's own margin would push the toggle off its centre line. */
+.roomsHead .roomsLabel {
+  margin-bottom: 0;
+}
+
+.viewToggle {
+  display: flex;
+  border: 0.5px solid rgba(28, 20, 16, 0.14);
+}
+
+.viewOption {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fog);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+.viewOption + .viewOption {
+  border-inline-start: 0.5px solid rgba(28, 20, 16, 0.14);
+}
+
+.viewOption:hover {
+  color: var(--ink);
+}
+
+.viewOption[aria-pressed='true'] {
+  background: var(--linen);
+  color: var(--bronze);
+}
+
+.viewOption:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Two columns across the form side on a laptop, one on a phone. The minimum
+   is set so a laptop's form side fits two, not three: the point of the grid is
+   the size of the photograph, which is then more than twice the list's. */
+.roomGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.2rem;
+}
+
+/* Every card in a row the same height, whatever its name wraps to. */
+.roomGrid > li {
+  display: flex;
+}
+
+.roomGrid .roomCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-inline-start: 0;
+}
+
+.roomGrid .roomSwatch {
+  width: 100%;
+  margin-block: 0;
+}
+
+/* The name on a row of its own, then the price with the tick at the far end.
+   Beside the price the name had half the card, and the longer Arabic names
+   ran to three lines. `flex: 1` so a card with a shorter name still puts
+   "View details" on the same line as its neighbour's. */
+.roomGrid .room {
+  flex: 1;
+  grid-template-columns: 1fr 20px;
+  align-content: start;
+  align-items: end;
+  row-gap: var(--space-4);
+}
+
+.roomGrid .room > :first-child {
+  grid-column: 1 / -1;
+}
+
+/* Under the name now, so it lines up with it rather than with the card's far
+   edge. Declared after the list's rules below would win, so the grid's
+   specificity (two classes) carries it. */
+.roomGrid .roomAmount,
+.roomGrid .roomPer {
+  text-align: start;
+}
+
+/* Beneath the price rather than floated beside a thumbnail: in the grid there
+   is no empty strip beside the photograph to lift it into. */
+.roomGrid .roomDetails {
+  position: static;
+  display: block;
+  width: fit-content;
+  margin-inline: auto 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
 /* The frame around one room, holding the select button and the link to its
    page. The border and the selected state live here rather than on the button
    so that both controls sit inside one card — a link cannot be nested in a
@@ -923,6 +1040,25 @@
 
   .roomCheck {
     display: none;
+  }
+
+  /* The tick is hidden at this width, so its column goes with it. */
+  .roomGrid .room {
+    grid-template-columns: 1fr;
+  }
+
+  /* One column, whatever the minimum above would allow. */
+  .roomGrid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Full width now, so the photograph is the card's width, not a thumbnail. */
+  .roomGrid .roomCard {
+    grid-template-columns: none;
+  }
+
+  .roomGrid .roomSwatch {
+    width: 100%;
   }
 
   /* The step rail is a flex row of items that cannot shrink below their text.

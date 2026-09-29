@@ -72,6 +72,9 @@
       "selected": "Selected",
       "roomsLeft": "{count, plural, one {# room left} other {# rooms left}}",
       "viewDetails": "View details",
+      "view": "Room layout",
+      "viewGrid": "Show rooms as a grid",
+      "viewList": "Show rooms as a list",
       "noAvailability": "No rooms are available for those dates.",
       "changeDates": "Change dates"
     },

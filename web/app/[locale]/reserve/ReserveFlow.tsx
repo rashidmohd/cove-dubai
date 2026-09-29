@@ -36,6 +36,33 @@ import styles from './Reserve.module.css';
 /** A few photographs per room in the list; the details dialog has them all. */
 const ROOM_PHOTO_LIMIT = 5;
 
+/**
+ * How step 2 lays out the rooms: a grid of large photographs by default, or
+ * the compact list for a guest comparing prices down one column.
+ */
+type RoomView = 'grid' | 'list';
+
+/** Where the guest's choice of view is remembered, in this browser only. */
+const ROOM_VIEW_KEY = 'cove.reserve.roomView';
+
+/**
+ * The remembered view, or the grid. Read once, lazily: step 2 is never
+ * server-rendered (the flow starts at step 1 until the session is restored),
+ * so reading browser storage here cannot cause a hydration mismatch. Storage
+ * can be unavailable or throw — a private window, blocked site data — and the
+ * grid is then simply the answer.
+ */
+function readRoomView(): RoomView {
+  if (typeof window === 'undefined') return 'grid';
+  try {
+    return window.localStorage.getItem(ROOM_VIEW_KEY) === 'list'
+      ? 'list'
+      : 'grid';
+  } catch {
+    return 'grid';
+  }
+}
+
 export function ReserveFlow({ locale }: { locale: Locale }) {
   const t = useTranslations('reserve');
   const tErrors = useTranslations('errors');
@@ -59,6 +86,16 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
    * shows the current one.
    */
   const [detailCode, setDetailCode] = useState<string | null>(null);
+  const [roomView, setRoomView] = useState<RoomView>(readRoomView);
+
+  const chooseRoomView = (view: RoomView) => {
+    setRoomView(view);
+    try {
+      window.localStorage.setItem(ROOM_VIEW_KEY, view);
+    } catch {
+      // Not remembered; the choice still holds for this visit.
+    }
+  };
 
   /**
    * The discount the guest has applied, if any.
@@ -407,7 +444,42 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
 
         {state.step === 2 && (
           <>
-            <span className={styles.roomsLabel}>{t('step2.title')}</span>
+            <div className={styles.roomsHead}>
+              <span className={styles.roomsLabel}>{t('step2.title')}</span>
+
+              {/* Two pressed-state buttons rather than a radio group: each is
+                  a single action, and `aria-pressed` announces which is on. */}
+              {!loading && rooms.length > 0 ? (
+                <div
+                  className={styles.viewToggle}
+                  role="group"
+                  aria-label={t('step2.view')}
+                >
+                  <button
+                    type="button"
+                    className={styles.viewOption}
+                    onClick={() => chooseRoomView('grid')}
+                    aria-pressed={roomView === 'grid'}
+                    aria-label={t('step2.viewGrid')}
+                    title={t('step2.viewGrid')}
+                    data-testid="room-view-grid"
+                  >
+                    <GridIcon />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.viewOption}
+                    onClick={() => chooseRoomView('list')}
+                    aria-pressed={roomView === 'list'}
+                    aria-label={t('step2.viewList')}
+                    title={t('step2.viewList')}
+                    data-testid="room-view-list"
+                  >
+                    <ListIcon />
+                  </button>
+                </div>
+              ) : null}
+            </div>
 
             {loading ? (
               <p className={styles.loading}>{tCommon('loading')}</p>
@@ -416,7 +488,15 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                 <p>{t('step2.noAvailability')}</p>
               </div>
             ) : (
-              <ul className={styles.roomList}>
+              <ul
+                className={[
+                  styles.roomList,
+                  roomView === 'grid' ? styles.roomGrid : null,
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                data-view={roomView}
+              >
                 {rooms.map((room) => {
                   const selected = room.code === state.roomTypeCode;
                   return (
@@ -456,14 +536,18 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                               tPhoto('room', { name: room.name[locale] }),
                               ROOM_PHOTO_LIMIT,
                             )}
-                            sizes="(max-width: 1000px) 104px, 200px"
+                            sizes={
+                              roomView === 'grid'
+                                ? '(max-width: 1000px) 100vw, 460px'
+                                : '(max-width: 1000px) 104px, 200px'
+                            }
                             label={room.name[locale]}
                             labels={{
                               previous: tRooms('carousel.previous'),
                               next: tRooms('carousel.next'),
                               slide: tRooms.raw('carousel.slide') as string,
                             }}
-                            compact
+                            compact={roomView === 'list'}
                           />
                         </div>
 
@@ -650,5 +734,33 @@ function StepIndicator({ current }: { current: Step }) {
         );
       })}
     </ol>
+  );
+}
+
+/** Four squares: the grid view. */
+function GridIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <path
+        d="M2.5 2.5h4.5v4.5h-4.5zM9 2.5h4.5v4.5h-4.5zM2.5 9h4.5v4.5h-4.5zM9 9h4.5v4.5h-4.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.1"
+      />
+    </svg>
+  );
+}
+
+/** Three rows, each a thumbnail and a line: the list view. */
+function ListIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <path
+        d="M2.5 3h3v2.5h-3zM2.5 6.75h3v2.5h-3zM2.5 10.5h3v2.5h-3zM7.5 4.25h6M7.5 8h6M7.5 11.75h6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.1"
+      />
+    </svg>
   );
 }

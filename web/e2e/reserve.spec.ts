@@ -128,8 +128,9 @@ test.describe('reserve flow (English)', () => {
     // form validation and does not care which room it is. Studio Room was
     // withdrawn in the admin panel on 16 Sep 2026 and this line failed with it,
     // which told us nothing about guest details. The select controls are the
-    // ones carrying `aria-pressed`; "View details" does not.
-    await page.locator('button[aria-pressed]').first().click();
+    // ones in the room list carrying `aria-pressed`; "View details" does not,
+    // and the grid/list toggle above the list is not a room.
+    await page.locator('ul[data-view] button[aria-pressed]').first().click();
     await page.getByTestId('continue-to-details').click();
 
     await page.getByTestId('confirm-reservation').click();

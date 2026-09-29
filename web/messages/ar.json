@@ -72,6 +72,9 @@
       "selected": "تم الاختيار",
       "roomsLeft": "{count, plural, zero {لا توجد غرف متبقية} one {غرفة واحدة متبقية} two {غرفتان متبقيتان} few {# غرف متبقية} many {# غرفة متبقية} other {# غرفة متبقية}}",
       "viewDetails": "عرض التفاصيل",
+      "view": "Room layout",
+      "viewGrid": "Show rooms as a grid",
+      "viewList": "Show rooms as a list",
       "noAvailability": "لا توجد غرف متاحة في هذه التواريخ.",
       "changeDates": "تغيير التواريخ"
     },
