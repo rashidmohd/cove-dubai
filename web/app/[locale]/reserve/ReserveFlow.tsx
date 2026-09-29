@@ -27,17 +27,21 @@ import { Confirmation } from './Confirmation';
 import { DatePicker } from './DatePicker';
 import { GuestDetails } from './GuestDetails';
 import { StaySummary } from './StaySummary';
-import { Photo } from '@/components/marketing';
-import { resolveRoomPhoto } from '@/lib/media';
+import { RoomCarousel } from '@/components/marketing';
+import { resolveRoomPhotos } from '@/lib/media';
 import { RoomDetailDialog } from './RoomDetailDialog';
 import { useBookingState, type Step } from './useBookingState';
 import styles from './Reserve.module.css';
+
+/** A few photographs per room in the list; the details dialog has them all. */
+const ROOM_PHOTO_LIMIT = 5;
 
 export function ReserveFlow({ locale }: { locale: Locale }) {
   const t = useTranslations('reserve');
   const tErrors = useTranslations('errors');
   const tCommon = useTranslations('common');
   const tPhoto = useTranslations('photos');
+  const tRooms = useTranslations('rooms');
 
   const { state, update, updateGuest, clear, restored } =
     useBookingState(locale);
@@ -432,6 +436,37 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                           .filter(Boolean)
                           .join(' ')}
                       >
+                        {/* The room's photographs, a few of them, to look
+                            around without opening the details. Beside the
+                            select button rather than inside it: the carousel
+                            has its own arrows, and a button cannot hold other
+                            buttons. It is not hidden from assistive technology
+                            for the same reason — its controls are focusable.
+
+                            The gradient stays underneath as the loading and
+                            failure state. */}
+                        <div
+                          className={styles.roomSwatch}
+                          data-swatch={room.imageKey}
+                        >
+                          <RoomCarousel
+                            photos={resolveRoomPhotos(
+                              room,
+                              locale,
+                              tPhoto('room', { name: room.name[locale] }),
+                              ROOM_PHOTO_LIMIT,
+                            )}
+                            sizes="(max-width: 1000px) 104px, 200px"
+                            label={room.name[locale]}
+                            labels={{
+                              previous: tRooms('carousel.previous'),
+                              next: tRooms('carousel.next'),
+                              slide: tRooms.raw('carousel.slide') as string,
+                            }}
+                            compact
+                          />
+                        </div>
+
                         <button
                           type="button"
                           className={[
@@ -444,32 +479,6 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                           aria-pressed={selected}
                           data-testid={`room-${room.code}`}
                         >
-                          {/* The hotel's photograph of the room, as every
-                              other surface shows it. The availability response
-                              already carries `images` — this slot rendered
-                              only the mockup's gradient, so a photograph
-                              uploaded in the admin panel appeared everywhere
-                              except the one screen where a guest is choosing.
-
-                              The gradient stays underneath as the loading and
-                              failure state, and `aria-hidden` stays because
-                              the room's name is right beside it: the alt text
-                              would otherwise be read into this button's
-                              accessible name ahead of the name itself. */}
-                          <span
-                            className={styles.roomSwatch}
-                            data-swatch={room.imageKey}
-                            aria-hidden="true"
-                          >
-                            <Photo
-                              photo={resolveRoomPhoto(
-                                room,
-                                locale,
-                                tPhoto('room', { name: room.name[locale] }),
-                              )}
-                              sizes="(max-width: 1000px) 104px, 200px"
-                            />
-                          </span>
                           <span>
                             <span className={styles.roomCategory}>
                               {room.category[locale]}

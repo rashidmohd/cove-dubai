@@ -32,9 +32,12 @@ export function RoomCarousel({
   sizes,
   label,
   labels,
+  compact = false,
 }: {
   photos: Photograph[];
   sizes: string;
+  /** Smaller arrows and counter, for a thumbnail-sized slot. */
+  compact?: boolean;
   /** Names the carousel for assistive technology — the room's name. */
   label: string;
   /** Already translated on the server; `{index}` and `{total}` in `slide`. */
@@ -80,6 +83,7 @@ export function RoomCarousel({
   return (
     <div
       className={styles.carousel}
+      data-compact={compact ? 'true' : undefined}
       role="region"
       aria-roledescription="carousel"
       aria-label={label}

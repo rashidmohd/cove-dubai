@@ -22,11 +22,11 @@
 import { useEffect, useId, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 
-import { Photo } from '@/components/marketing';
+import { RoomCarousel } from '@/components/marketing';
 import { RoomDetailBody } from '@/components/RoomDetail';
 import type { AvailableRoomType, Locale } from '@/lib/api/types';
 import { formatMoney } from '@/lib/format';
-import { resolveRoomPhoto } from '@/lib/media';
+import { resolveRoomPhotos } from '@/lib/media';
 import styles from './Reserve.module.css';
 
 export function RoomDetailDialog({
@@ -99,14 +99,25 @@ export function RoomDetailDialog({
             <span aria-hidden="true">×</span>
           </button>
 
+          {/* Every photograph of the room, not only the first: this dialog is
+              where a guest comparing rooms looks around one, and sending them
+              to the room page for the rest would end the comparison. */}
           <div className={styles.detailVisual} data-swatch={room.imageKey}>
-            <Photo
-              photo={resolveRoomPhoto(
+            <RoomCarousel
+              photos={resolveRoomPhotos(
                 room,
                 locale,
                 tPhoto('room', { name: room.name[locale] }),
+                Infinity,
               )}
               sizes="(max-width: 700px) 100vw, 640px"
+              label={room.name[locale]}
+              labels={{
+                previous: tRooms('carousel.previous'),
+                next: tRooms('carousel.next'),
+                // Placeholders left for the carousel to fill.
+                slide: tRooms.raw('carousel.slide') as string,
+              }}
             />
           </div>
 

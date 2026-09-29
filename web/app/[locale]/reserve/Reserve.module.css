@@ -321,6 +321,13 @@
    button, and the mockup's single bordered row has to survive being given a
    second action. */
 .roomCard {
+  /* Two columns: the photographs, then the button that selects the room. They
+     are siblings rather than one inside the other, because the photographs
+     carry their own carousel controls. */
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  align-items: center;
+  padding-inline-start: 1.2rem;
   border: 0.5px solid rgba(28, 20, 16, 0.08);
   transition: all 0.25s;
   /* The positioning context for the details control, which is lifted out of
@@ -340,7 +347,7 @@
 
 .room {
   display: grid;
-  grid-template-columns: 200px 1fr auto 20px;
+  grid-template-columns: 1fr auto 20px;
   align-items: center;
   gap: 1.2rem;
   padding: 1.2rem;
@@ -441,6 +448,9 @@
      loads, and stays if there is none. */
   position: relative;
   overflow: hidden;
+  /* The card's own padding is only on the start edge; top and bottom match
+     the button beside it, so the card is exactly as tall as it was. */
+  margin-block: 1.2rem;
 }
 
 .roomCategory {
@@ -885,8 +895,12 @@
   /* The track and the image must be the same number, or the image decides the
      column width and the row silently widens. They had already drifted apart
      here — a 40px track holding a 56px swatch. */
+  .roomCard {
+    grid-template-columns: 104px 1fr;
+  }
+
   .room {
-    grid-template-columns: 104px 1fr auto;
+    grid-template-columns: 1fr auto;
   }
 
   .roomSwatch {
@@ -899,6 +913,8 @@
   .roomDetails {
     position: static;
     display: block;
+    /* Its own row beneath the photograph and the button, at the end edge. */
+    grid-column: 1 / -1;
     margin-inline-start: auto;
     margin-inline-end: 1.2rem;
     margin-bottom: 1.1rem;

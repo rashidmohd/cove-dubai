@@ -118,3 +118,34 @@
   background: rgba(28, 20, 16, 0.45);
   pointer-events: none;
 }
+
+/* --- Compact --------------------------------------------------------------
+ * For a thumbnail — the booking flow's room list — where full-size arrows
+ * and a counter at the usual inset would cover most of the photograph.
+ */
+
+.carousel[data-compact] .arrow {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.carousel[data-compact] .arrow svg {
+  width: 12px;
+  height: 12px;
+}
+
+.carousel[data-compact] .previous {
+  inset-inline-start: var(--space-2);
+}
+
+.carousel[data-compact] .next {
+  inset-inline-end: var(--space-2);
+}
+
+.carousel[data-compact] .counter {
+  inset-block-end: var(--space-2);
+  inset-inline-end: var(--space-2);
+  padding: 0.15rem 0.45rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+}
