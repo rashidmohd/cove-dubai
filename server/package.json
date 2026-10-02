@@ -24,7 +24,8 @@
     "seed": "tsx --env-file-if-exists=.env prisma/seed.ts",
     "admin:password": "tsx --env-file-if-exists=.env scripts/set-admin-password.ts",
     "email:preview": "tsx --env-file-if-exists=.env scripts/email-preview.ts",
-    "email:test": "tsx --env-file-if-exists=.env scripts/email-test.ts"
+    "email:test": "tsx --env-file-if-exists=.env scripts/email-test.ts",
+    "bimi:check": "tsx scripts/bimi-check.ts"
   },
   "prisma": {
     "seed": "tsx --env-file-if-exists=.env prisma/seed.ts"

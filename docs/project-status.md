@@ -1224,8 +1224,7 @@ The same check runs in availability and again inside the booking transaction.
 **Not done — follow-ups:**
 - ~~**The home page search bar still has adults only.**~~ **Done the same day** — see below.
 - **Child pricing.** Pricing ignores children until the hotel answers the question in *Open items*.
-- **Multiple rooms.** `roomsCount` exists in the API but the flow books one room, so a party larger than any room
-  is told to contact the hotel.
+- ~~**Multiple rooms.**~~ **Done the same day** — see *Parties bigger than one room* below.
 
 ### Home search: children and their ages (2 Oct 2026)
 
@@ -1291,4 +1290,25 @@ guest cancellation** — the front desk previously had to spot it in the admin p
 four with sample data, `[TEST]` subjects) in `server/`. 19 email tests. Reviewed by eye in English and Arabic at
 desktop and phone width — in a browser, **not yet in real mail clients**: that is step 6 of the setup in
 `deploying.md`, once the domain is verified.
+
+### Parties bigger than one room: offered as several rooms (2 Oct 2026)
+
+A family of four choosing a room that sleeps two used to be told the room "is not large enough". It is now
+offered **2 × Deluxe Twin Room**, the way large booking sites do it — the guest never counts rooms.
+
+- **The API decides how many** (`roomsNeeded` in `occupancy.ts`): availability without a `roomsCount` offers
+  each room type at the fewest rooms that take the whole party, priced for that many, as `roomsCount` on each
+  offer. Two rules on top of capacity: **every room needs an adult** (one adult and three children cannot be
+  split), and **at most `guests_max_rooms_per_booking` rooms** (setting, default 4; beyond that it is a group).
+  A `roomsCount` passed explicitly is still honoured as before.
+- **The flow books what was priced.** Choosing an offer stores its room count; the summary reads
+  "2 × Deluxe King Room", the room list shows "2 rooms for your party", and the guest who reserved from a room
+  page goes straight to details with "Your party needs 2 × Deluxe King Room. The price is for both rooms."
+- **How the party splits between the rooms is not captured** — capacity is checked across the rooms together,
+  and the front desk arranges who sleeps where. Per-room guest entry ("Room 1: 2 adults · Room 2: 2 children")
+  is the chain-hotel pattern and a possible later step.
+
+> ⚠️ **e2e on 2 Oct 2026:** after a day of runs, The Cove Suite is sold out for the suite's test dates (320 days
+> out), so `reserve.spec.ts` and two `room-detail.spec.ts` tests fail with "no rooms" — test data, as described
+> under *Checks*. Clear the e2e bookings with the SQL in [Cleaning up test bookings](#cleaning-up-test-bookings).
 

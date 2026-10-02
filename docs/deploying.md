@@ -169,6 +169,9 @@ What needs the hotel: access to the DNS of their domain, and the mailbox the fro
 7. **Make one real test booking** on staging and cancel it from the emailed link — that proves the token, the
    link and both hotel notices end to end.
 
+**The logo beside the sender name** (BIMI) is a separate, later setup on top of this — see
+[`email-logo-bimi.md`](email-logo-bimi.md).
+
 A failed send never fails a booking — it is logged and the reservation stands. That is deliberate, but it does
 mean a broken email configuration is quiet. Check the logs after the first test booking rather than assuming.
 
