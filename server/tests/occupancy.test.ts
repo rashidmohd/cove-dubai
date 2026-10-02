@@ -10,13 +10,19 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_GUEST_POLICY,
   classifyGuests,
+  extraGuests,
   occupancyProblem,
   parseGuestPolicy,
 } from '../src/booking/occupancy.js';
 import { availabilityQuerySchema, createReservationSchema } from '../src/routes/schemas.js';
 
-const policy = { adultFromAge: 12, infantUpToAge: 1, infantsPerRoom: 1 };
-const sleepsThreeTwoAdults = { maxOccupancy: 3, maxAdults: 2 };
+const policy = { adultFromAge: 12, infantUpToAge: 1 };
+const sleepsThreeTwoAdults = {
+  maxOccupancy: 3,
+  maxAdults: 2,
+  maxChildren: 2,
+  maxInfants: 1,
+};
 
 describe('classifyGuests', () => {
   it('sorts children by age at the policy boundaries', () => {
@@ -40,7 +46,6 @@ describe('occupancyProblem', () => {
       classifyGuests({ adults, children: childAges.length, childAges }, policy),
       sleepsThreeTwoAdults,
       roomsCount,
-      policy,
     );
 
   it('takes two adults and a child in a room that sleeps three', () => {
@@ -60,12 +65,39 @@ describe('occupancyProblem', () => {
     expect(fit(2, [0, 1])).toBe('too-many-infants');
   });
 
+  it('refuses more children than the room takes', () => {
+    expect(fit(1, [4, 6, 8])).toBe('too-many-children');
+  });
+
   it('refuses a party that outnumbers the beds', () => {
-    expect(fit(1, [4, 6, 8])).toBe('too-many-guests');
+    expect(fit(2, [4, 6])).toBe('too-many-guests');
   });
 
   it('shares capacity across the rooms booked', () => {
     expect(fit(4, [5, 7], 2)).toBeNull();
+  });
+});
+
+describe('extraGuests', () => {
+  const party = (adults: number, childAges: number[]) =>
+    classifyGuests({ adults, children: childAges.length, childAges }, policy);
+
+  it('charges nobody when the rate covers the party', () => {
+    expect(extraGuests(party(2, [0]), 2, 1)).toEqual({ adults: 0, children: 0 });
+  });
+
+  it('lets adults fill the included places, so the child is the extra guest', () => {
+    // The child fee is the lower one; charging the adult fee for the child
+    // would overcharge every family.
+    expect(extraGuests(party(2, [6]), 2, 1)).toEqual({ adults: 0, children: 1 });
+  });
+
+  it('charges a third adult as an adult, a teenager included', () => {
+    expect(extraGuests(party(2, [14]), 2, 1)).toEqual({ adults: 1, children: 0 });
+  });
+
+  it('counts the places included across every room booked', () => {
+    expect(extraGuests(party(3, [5]), 2, 2)).toEqual({ adults: 0, children: 0 });
   });
 });
 
@@ -74,12 +106,10 @@ describe('parseGuestPolicy', () => {
     const rows: Record<string, string> = {
       guests_adult_from_age: '13',
       guests_infant_up_to_age: '2',
-      guests_infants_per_room: '2',
     };
     expect(parseGuestPolicy((key) => rows[key])).toEqual({
       adultFromAge: 13,
       infantUpToAge: 2,
-      infantsPerRoom: 2,
     });
   });
 

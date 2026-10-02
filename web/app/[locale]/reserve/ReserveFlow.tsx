@@ -405,9 +405,18 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
 
   // A code is validated against a specific stay and room type. Change either
   // and the preview is no longer the truth.
+  // The party too: extra-guest fees are discounted, so a preview for a
+  // different party quotes a different total.
   useEffect(() => {
     setVoucher(null);
-  }, [state.checkIn, state.checkOut, state.roomTypeCode, state.roomsCount]);
+  }, [
+    state.checkIn,
+    state.checkOut,
+    state.roomTypeCode,
+    state.roomsCount,
+    state.adults,
+    state.childAges,
+  ]);
 
   /**
    * Ask the API what a code is worth for this stay.
@@ -427,6 +436,8 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
           checkIn: state.checkIn,
           checkOut: state.checkOut,
           roomsCount: state.roomsCount,
+          adults: state.adults,
+          childAges: completeChildAges(state.childAges) ?? [],
         }),
       );
       return null;

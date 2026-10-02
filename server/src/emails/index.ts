@@ -17,6 +17,7 @@ import { config } from '../config.js';
 import {
   cancellationEmail,
   confirmationEmail,
+  hotelCancellationEmail,
   hotelNotificationEmail,
 } from './templates.js';
 import { sendEmail } from './transport.js';
@@ -31,16 +32,20 @@ export async function sendBookingConfirmation(
   reservation: Reservation,
 ): Promise<void> {
   try {
-    const token = await getBookingProvider().getCancellationToken(
-      reservation.reference,
-    );
+    const [token, cancellationHours] = await Promise.all([
+      getBookingProvider().getCancellationToken(reservation.reference),
+      readCancellationHours(),
+    ]);
 
     await Promise.all([
       // Without a token there is no safe link to include. Sending the
       // confirmation anyway is right — the guest still needs their reference —
       // but it is worth knowing about.
       token
-        ? sendGuest(reservation, confirmationEmail({ reservation, cancellationToken: token }))
+        ? sendGuest(
+            reservation,
+            confirmationEmail({ reservation, cancellationToken: token, cancellationHours }),
+          )
         : logMissingToken(reservation),
       sendEmail({
         to: config.emailHotelNotificationAddress,
@@ -59,7 +64,15 @@ export async function sendCancellationConfirmation(
   reservation: Reservation,
 ): Promise<void> {
   try {
-    await sendGuest(reservation, cancellationEmail(reservation));
+    // The hotel hears of it too: a cancelled arrival is a room the front desk
+    // should stop preparing.
+    await Promise.all([
+      sendGuest(reservation, cancellationEmail(reservation)),
+      sendEmail({
+        to: config.emailHotelNotificationAddress,
+        ...hotelCancellationEmail(reservation),
+      }),
+    ]);
   } catch (error) {
     console.error('[cove-dubai/server] cancellation email failed:', {
       reference: reservation.reference,
@@ -88,3 +101,20 @@ async function logMissingToken(reservation: Reservation): Promise<void> {
     reservation.reference,
   );
 }
+
+/**
+ * The free-cancellation window from settings, so the email states the policy
+ * the hotel has actually set. Unreadable or missing, the line is left out of
+ * the email rather than stating a number nobody chose.
+ */
+async function readCancellationHours(): Promise<number | undefined> {
+  try {
+    const settings = await getBookingProvider().listSettings();
+    const raw = settings.find((setting) => setting.key === 'cancellation_policy_hours')?.value;
+    const hours = raw === undefined ? NaN : Number(raw);
+    return Number.isInteger(hours) && hours >= 0 ? hours : undefined;
+  } catch {
+    return undefined;
+  }
+}
+

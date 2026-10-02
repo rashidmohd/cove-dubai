@@ -160,6 +160,44 @@ export function RoomTypes({ locale }: { locale: Locale }) {
                   }
                 />
                 <Figure
+                  label={t('rooms.maxChildren')}
+                  value={
+                    <Num>
+                      {formatNumber(
+                        roomType.maxChildren ?? roomType.maxOccupancy - 1,
+                        locale,
+                      )}
+                    </Num>
+                  }
+                />
+                <Figure
+                  label={t('rooms.maxInfants')}
+                  value={<Num>{formatNumber(roomType.maxInfants ?? 1, locale)}</Num>}
+                />
+                <Figure
+                  label={t('rooms.baseOccupancy')}
+                  value={
+                    <Num>
+                      {formatNumber(
+                        roomType.baseOccupancy ?? Math.min(2, roomType.maxOccupancy),
+                        locale,
+                      )}
+                    </Num>
+                  }
+                />
+                <Figure
+                  label={t('rooms.extraAdultFee')}
+                  value={
+                    <Num>{formatMoney(roomType.extraAdultFee ?? 0, 'AED', locale)}</Num>
+                  }
+                />
+                <Figure
+                  label={t('rooms.extraChildFee')}
+                  value={
+                    <Num>{formatMoney(roomType.extraChildFee ?? 0, 'AED', locale)}</Num>
+                  }
+                />
+                <Figure
                   label={t('rooms.totalRooms')}
                   value={<Num>{formatNumber(roomType.totalRooms, locale)}</Num>}
                 />
@@ -411,6 +449,19 @@ function RoomTypeForm({
   const [maxAdults, setMaxAdults] = useState(
     String(roomType.maxAdults ?? roomType.maxOccupancy),
   );
+  const [maxChildren, setMaxChildren] = useState(
+    String(roomType.maxChildren ?? roomType.maxOccupancy - 1),
+  );
+  const [maxInfants, setMaxInfants] = useState(String(roomType.maxInfants ?? 1));
+  const [baseOccupancy, setBaseOccupancy] = useState(
+    String(roomType.baseOccupancy ?? Math.min(2, roomType.maxOccupancy)),
+  );
+  const [extraAdultFee, setExtraAdultFee] = useState(
+    String(roomType.extraAdultFee ?? 0),
+  );
+  const [extraChildFee, setExtraChildFee] = useState(
+    String(roomType.extraChildFee ?? 0),
+  );
   const [isActive, setIsActive] = useState(roomType.isActive);
   const [busy, setBusy] = useState(false);
 
@@ -428,6 +479,11 @@ function RoomTypeForm({
         baseRate: Number(baseRate),
         maxOccupancy: Number(maxOccupancy),
         maxAdults: Number(maxAdults),
+        maxChildren: Number(maxChildren),
+        maxInfants: Number(maxInfants),
+        baseOccupancy: Number(baseOccupancy),
+        extraAdultFee: Number(extraAdultFee),
+        extraChildFee: Number(extraChildFee),
         isActive,
       });
       await onSaved(nameEn.trim());
@@ -507,30 +563,6 @@ function RoomTypeForm({
                 required
               />
             </Field>
-            <Field label={t('rooms.maxOccupancy')}>
-              <Input
-                type="number"
-                min="1"
-                max="20"
-                value={maxOccupancy}
-                onChange={(event) => setMaxOccupancy(event.target.value)}
-                dir="ltr"
-                required
-              />
-            </Field>
-            {/* The browser caps it at "Sleeps" as typed; the API refuses
-                anything above it regardless. */}
-            <Field label={t('rooms.maxAdults')} hint={t('rooms.maxAdultsHint')}>
-              <Input
-                type="number"
-                min="1"
-                max={maxOccupancy || '20'}
-                value={maxAdults}
-                onChange={(event) => setMaxAdults(event.target.value)}
-                dir="ltr"
-                required
-              />
-            </Field>
             <Field label={t('rooms.onSale')}>
               <Select
                 value={isActive ? 'yes' : 'no'}
@@ -541,6 +573,81 @@ function RoomTypeForm({
               </Select>
             </Field>
           </div>
+
+          {/* Who the room takes. The browser caps each limit at "Sleeps" as
+              typed; the API refuses anything above it regardless, and lowering
+              "Sleeps" carries the others down with it. */}
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>{t('rooms.occupancy')}</legend>
+            <div className={styles.formGrid}>
+              <NumberField
+                label={t('rooms.maxOccupancy')}
+                hint={t('rooms.maxOccupancyHint')}
+                value={maxOccupancy}
+                onChange={setMaxOccupancy}
+                min={1}
+                max={20}
+              />
+              <NumberField
+                label={t('rooms.maxAdults')}
+                hint={t('rooms.maxAdultsHint')}
+                value={maxAdults}
+                onChange={setMaxAdults}
+                min={1}
+                max={Number(maxOccupancy) || 20}
+              />
+              <NumberField
+                label={t('rooms.maxChildren')}
+                hint={t('rooms.maxChildrenHint')}
+                value={maxChildren}
+                onChange={setMaxChildren}
+                min={0}
+                max={Math.max(0, (Number(maxOccupancy) || 20) - 1)}
+              />
+              <NumberField
+                label={t('rooms.maxInfants')}
+                hint={t('rooms.maxInfantsHint')}
+                value={maxInfants}
+                onChange={setMaxInfants}
+                min={0}
+                max={4}
+              />
+            </div>
+          </fieldset>
+
+          {/* What a bigger party pays. Fees of 0 mean extra guests stay free —
+              the setting every room starts on, so nothing changes until the
+              hotel decides it should. */}
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>{t('rooms.extraGuests')}</legend>
+            <div className={styles.formGrid}>
+              <NumberField
+                label={t('rooms.baseOccupancy')}
+                hint={t('rooms.baseOccupancyHint')}
+                value={baseOccupancy}
+                onChange={setBaseOccupancy}
+                min={1}
+                max={Number(maxOccupancy) || 20}
+              />
+              <NumberField
+                label={t('rooms.extraAdultFee')}
+                hint={t('rooms.extraFeeHint')}
+                value={extraAdultFee}
+                onChange={setExtraAdultFee}
+                min={0}
+                step="any"
+              />
+              <NumberField
+                label={t('rooms.extraChildFee')}
+                hint={t('rooms.extraFeeHint')}
+                value={extraChildFee}
+                onChange={setExtraChildFee}
+                min={0}
+                step="any"
+              />
+            </div>
+            <p className={styles.hint}>{t('rooms.extraGuestsNote')}</p>
+          </fieldset>
 
           <div className={styles.formActions}>
             <Button variant="primary" type="submit" disabled={busy}>
@@ -553,5 +660,39 @@ function RoomTypeForm({
         </CardBody>
       </form>
     </Card>
+  );
+}
+
+/** A whole-number or money field. Left-to-right in both languages: it is a number. */
+function NumberField({
+  label,
+  hint,
+  value,
+  onChange,
+  min,
+  max,
+  step = '1',
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (value: string) => void;
+  min: number;
+  max?: number;
+  step?: string;
+}) {
+  return (
+    <Field label={label} hint={hint}>
+      <Input
+        type="number"
+        min={String(min)}
+        {...(max !== undefined ? { max: String(max) } : {})}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        dir="ltr"
+        required
+      />
+    </Field>
   );
 }

@@ -89,6 +89,16 @@ export interface RoomType {
   maxOccupancy: number;
   /** How many of those guests may be adults. Never above `maxOccupancy`. */
   maxAdults: number;
+  /** How many may be children who take a bed. Below `maxOccupancy`. */
+  maxChildren: number;
+  /** Cots: the most infants one room takes. */
+  maxInfants: number;
+  /** Guests the nightly rate includes. */
+  baseOccupancy: number;
+  /** Per night, per adult beyond `baseOccupancy`. 0 = free. */
+  extraAdultFee: number;
+  /** Per night, per bed-taking child beyond `baseOccupancy`. 0 = free. */
+  extraChildFee: number;
   /** Lowest nightly rate currently published, for "from AED x" displays. */
   baseRate: number;
   /**
@@ -230,9 +240,21 @@ export interface PriceBreakdown {
   /** Nightly rates summed across every night and room, before any discount. */
   roomTotal: number;
   /**
+   * Guests beyond what the rate includes, present only when one is charged.
+   * Part of the accommodation charge with `roomTotal`: discounted with it and
+   * taxed with it, and never part of the Tourism Dirham.
+   */
+  extraGuests?: {
+    adults: number;
+    children: number;
+    perNight: number;
+    total: number;
+  };
+  /**
    * Present only when a voucher was applied.
    *
-   * `amount` comes off `roomTotal`, and VAT below is charged on what remains.
+   * `amount` comes off the accommodation charge (`roomTotal` plus any
+   * `extraGuests`), and VAT below is charged on what remains.
    * The Tourism Dirham is untouched by it — see `pricing.ts` for why.
    */
   discount?: {
@@ -467,6 +489,11 @@ export interface RoomTypeChanges {
   description?: LocalizedText | undefined;
   maxOccupancy?: number | undefined;
   maxAdults?: number | undefined;
+  maxChildren?: number | undefined;
+  maxInfants?: number | undefined;
+  baseOccupancy?: number | undefined;
+  extraAdultFee?: number | undefined;
+  extraChildFee?: number | undefined;
   baseRate?: number | undefined;
   imageKey?: string | undefined;
   isActive?: boolean | undefined;

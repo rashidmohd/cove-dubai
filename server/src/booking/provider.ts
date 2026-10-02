@@ -313,6 +313,10 @@ export interface BookingProvider {
     checkIn: IsoDate;
     checkOut: IsoDate;
     roomsCount?: number;
+    /** The party, so extra-guest fees are priced as the booking will price them. */
+    adults?: number | undefined;
+    children?: number | undefined;
+    childAges?: number[] | undefined;
   }): Promise<VoucherPreview>;
 
   // --- Operational settings ------------------------------------------------

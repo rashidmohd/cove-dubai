@@ -11,14 +11,16 @@
  * Pure, with no database access, so the rules are tested directly.
  */
 
-/** The hotel's child policy, read from the `guests_*` settings. */
+/**
+ * The hotel's age rules, read from the `guests_*` settings. Hotel-wide: an
+ * infant is an infant in every room. What a *room* takes — beds, cots — is the
+ * room type's own, edited per room in the admin.
+ */
 export interface GuestPolicy {
   /** A child this age or older counts as an adult. */
   adultFromAge: number;
   /** A child this age or younger is an infant: a cot, not a bed. */
   infantUpToAge: number;
-  /** Cots per room — the most infants one room can take. */
-  infantsPerRoom: number;
 }
 
 /**
@@ -29,7 +31,6 @@ export interface GuestPolicy {
 export const DEFAULT_GUEST_POLICY: GuestPolicy = {
   adultFromAge: 12,
   infantUpToAge: 1,
-  infantsPerRoom: 1,
 };
 
 /** The party, sorted into the categories capacity is measured in. */
@@ -65,8 +66,22 @@ export function classifyGuests(
   return occupants;
 }
 
+/** What a room type takes, as the admin set it. */
+export interface RoomCapacity {
+  /** Beds: adults and children together. */
+  maxOccupancy: number;
+  maxAdults: number;
+  maxChildren: number;
+  /** Cots. */
+  maxInfants: number;
+}
+
 /** Why a party does not fit a room type, or null when it does. */
-export type OccupancyProblem = 'too-many-adults' | 'too-many-guests' | 'too-many-infants';
+export type OccupancyProblem =
+  | 'too-many-adults'
+  | 'too-many-children'
+  | 'too-many-guests'
+  | 'too-many-infants';
 
 /**
  * Whether a party fits `roomsCount` rooms of a type.
@@ -77,18 +92,44 @@ export type OccupancyProblem = 'too-many-adults' | 'too-many-guests' | 'too-many
  */
 export function occupancyProblem(
   occupants: Occupants,
-  room: { maxAdults: number; maxOccupancy: number },
+  room: RoomCapacity,
   roomsCount: number,
-  policy: GuestPolicy,
 ): OccupancyProblem | null {
   if (occupants.adults > room.maxAdults * roomsCount) return 'too-many-adults';
+  if (occupants.children > room.maxChildren * roomsCount) return 'too-many-children';
   if (occupants.adults + occupants.children > room.maxOccupancy * roomsCount) {
     return 'too-many-guests';
   }
-  if (occupants.infants > policy.infantsPerRoom * roomsCount) {
+  if (occupants.infants > room.maxInfants * roomsCount) {
     return 'too-many-infants';
   }
   return null;
+}
+
+/** Guests beyond what the rate includes, by who pays which fee. */
+export interface ExtraGuests {
+  adults: number;
+  children: number;
+}
+
+/**
+ * Who in the party is charged as an extra guest.
+ *
+ * The rate includes `baseOccupancy` guests per room. **Adults fill those places
+ * first**, so when a party exceeds them it is the children who are extra —
+ * charged the child fee, which is the lower one at every hotel that has both.
+ * The other order would quietly charge a family the adult fee for their child.
+ * Infants take no bed and are never charged.
+ */
+export function extraGuests(
+  occupants: Occupants,
+  baseOccupancy: number,
+  roomsCount: number,
+): ExtraGuests {
+  const included = baseOccupancy * roomsCount;
+  const adults = Math.max(0, occupants.adults - included);
+  const placesLeft = Math.max(0, included - occupants.adults);
+  return { adults, children: Math.max(0, occupants.children - placesLeft) };
 }
 
 /**
@@ -113,12 +154,10 @@ export function parseGuestPolicy(
   return {
     adultFromAge: read('guests_adult_from_age', DEFAULT_GUEST_POLICY.adultFromAge, 1, 18),
     infantUpToAge: read('guests_infant_up_to_age', DEFAULT_GUEST_POLICY.infantUpToAge, 0, 5),
-    infantsPerRoom: read('guests_infants_per_room', DEFAULT_GUEST_POLICY.infantsPerRoom, 0, 4),
   };
 }
 
 export const GUEST_POLICY_KEYS = [
   'guests_adult_from_age',
   'guests_infant_up_to_age',
-  'guests_infants_per_room',
 ] as const;

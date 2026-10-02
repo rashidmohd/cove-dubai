@@ -37,6 +37,51 @@ describe('calculatePrice', () => {
     expect(price.grandTotal).toBe(5080);
   });
 
+  it('adds extra guests to the accommodation, taxed and discounted with it', () => {
+    const price = calculatePrice({
+      nightlyRates: nightly(['2026-09-01', '2026-09-02'], 1000),
+      roomsCount: 1,
+      settings,
+      extraGuests: {
+        adults: 1,
+        children: 1,
+        adultFeePerNight: new Prisma.Decimal(200),
+        childFeePerNight: new Prisma.Decimal(100),
+      },
+      discount: {
+        code: 'TEN',
+        name: { en: 'Ten', ar: 'Ten' },
+        type: 'percentage',
+        value: new Prisma.Decimal(10),
+      },
+    });
+
+    expect(price.roomTotal).toBe(2000);
+    expect(price.extraGuests).toEqual({ adults: 1, children: 1, perNight: 300, total: 600 });
+    // 10% of the whole accommodation: 2000 + 600.
+    expect(price.discount?.amount).toBe(260);
+    expect(price.vat.total).toBe(117); // 5% of 2340
+    // Per room per night, never per guest.
+    expect(price.tourismDirham.total).toBe(40);
+    expect(price.grandTotal).toBe(2497); // 2340 + 117 + 40
+  });
+
+  it('leaves no extra-guest line when nobody is charged', () => {
+    const price = calculatePrice({
+      nightlyRates: nightly(['2026-09-01'], 1000),
+      roomsCount: 1,
+      settings,
+      extraGuests: {
+        adults: 1,
+        children: 0,
+        adultFeePerNight: new Prisma.Decimal(0),
+        childFeePerNight: new Prisma.Decimal(0),
+      },
+    });
+    expect(price.extraGuests).toBeUndefined();
+    expect(price.grandTotal).toBe(1070);
+  });
+
   it('scales the fee and the room total by room count', () => {
     const price = calculatePrice({
       nightlyRates: nightly(['2026-09-01', '2026-09-02'], 1000),

@@ -213,6 +213,9 @@ export const bookingApi = {
     checkIn: IsoDate;
     checkOut: IsoDate;
     roomsCount?: number;
+    /** The party, so extra-guest fees are discounted as the booking will. */
+    adults?: number;
+    childAges?: number[];
   }): Promise<VoucherPreview> {
     const data = await request<{ preview: VoucherPreview }>(
       '/api/vouchers/preview',

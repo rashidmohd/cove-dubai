@@ -50,6 +50,19 @@ export interface DiscountInput {
 }
 
 /**
+ * Guests beyond what the rate includes, and what each costs a night.
+ *
+ * Counts are for the whole booking, already worked out by `extraGuests` in
+ * `occupancy.ts` — this file only does the money.
+ */
+export interface ExtraGuestCharge {
+  adults: number;
+  children: number;
+  adultFeePerNight: Prisma.Decimal;
+  childFeePerNight: Prisma.Decimal;
+}
+
+/**
  * Build the full breakdown for a stay.
  *
  * The order of operations here is the whole point, and getting it wrong
@@ -72,8 +85,9 @@ export function calculatePrice(args: {
   roomsCount: number;
   settings: PricingSettings;
   discount?: DiscountInput | undefined;
+  extraGuests?: ExtraGuestCharge | undefined;
 }): PriceBreakdown {
-  const { nightlyRates, roomsCount, settings, discount } = args;
+  const { nightlyRates, roomsCount, settings, discount, extraGuests } = args;
 
   const rooms = new Prisma.Decimal(roomsCount);
   const nights = nightlyRates.length;
@@ -82,8 +96,19 @@ export function calculatePrice(args: {
     .reduce((sum, night) => sum.plus(night.rate), new Prisma.Decimal(0))
     .times(rooms);
 
-  const discountAmount = resolveDiscountAmount(roomTotal, discount);
-  const discountedRoomTotal = roomTotal.minus(discountAmount);
+  // Extra-guest fees are part of the accommodation charge: a discount comes
+  // off them as it does the room, and VAT is charged on them. The Tourism
+  // Dirham is per room, not per guest, so they never touch it.
+  const extraPerNight = extraGuests
+    ? extraGuests.adultFeePerNight
+        .times(extraGuests.adults)
+        .plus(extraGuests.childFeePerNight.times(extraGuests.children))
+    : new Prisma.Decimal(0);
+  const extraTotal = extraPerNight.times(nights);
+  const accommodation = roomTotal.plus(extraTotal);
+
+  const discountAmount = resolveDiscountAmount(accommodation, discount);
+  const discountedRoomTotal = accommodation.minus(discountAmount);
 
   const tourismDirhamTotal = settings.tourismDirhamPerRoomPerNight
     .times(nights)
@@ -107,6 +132,18 @@ export function calculatePrice(args: {
       rate: toMoney(night.rate),
     })),
     roomTotal: toMoney(roomTotal),
+    // Only when someone is actually charged, so a breakdown for a party the
+    // rate already covers looks exactly as it always has.
+    ...(extraGuests && extraTotal.greaterThan(0)
+      ? {
+          extraGuests: {
+            adults: extraGuests.adults,
+            children: extraGuests.children,
+            perNight: toMoney(extraPerNight),
+            total: toMoney(extraTotal),
+          },
+        }
+      : {}),
     ...(discount
       ? {
           discount: {
@@ -128,7 +165,7 @@ export function calculatePrice(args: {
   };
 }
 
-/** The AED a discount takes off, never more than the room total itself. */
+/** The AED a discount takes off, never more than the accommodation itself. */
 function resolveDiscountAmount(
   roomTotal: Prisma.Decimal,
   discount: DiscountInput | undefined,

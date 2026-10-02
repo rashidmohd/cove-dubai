@@ -128,7 +128,8 @@
       "vat": "VAT ({rate}%)",
       "total": "Total",
       "payAtCheckIn": "No payment is taken now. You pay at check-in.",
-      "guestsValue": "{adults, plural, one {# adult} other {# adults}}{children, plural, =0 {} one {, # child} other {, # children}}"
+      "guestsValue": "{adults, plural, one {# adult} other {# adults}}{children, plural, =0 {} one {, # child} other {, # children}}",
+      "extraGuests": "Extra guests ({adults, plural, =0 {} one {# adult} other {# adults}}{adults, plural, =0 {} other {{children, plural, =0 {} other {, }}}}{children, plural, =0 {} one {# child} other {# children}})"
     },
     "success": {
       "title": "Your reservation is confirmed",
@@ -642,7 +643,20 @@
       "rateNote": "Changing the base rate affects new quotes only. Bookings already taken keep the price they were quoted.",
       "amenitiesSaved": "Amenities updated.",
       "maxAdults": "Max adults",
-      "maxAdultsHint": "Of the guests it sleeps, how many may be adults. Older children count as adults, from the age set in Settings."
+      "maxAdultsHint": "Of the guests it sleeps, how many may be adults. Older children count as adults, from the age set in Settings.",
+      "occupancy": "Occupancy",
+      "maxOccupancyHint": "Beds: adults and children together. Babies in a cot are not counted.",
+      "maxChildren": "Max children",
+      "maxChildrenHint": "Children who take a bed. At most one fewer than it sleeps — every booking has an adult.",
+      "maxInfants": "Cots",
+      "maxInfantsHint": "The most babies the room takes. 0 if it cannot take a cot.",
+      "extraGuests": "Extra-guest charges",
+      "baseOccupancy": "Guests included in the rate",
+      "baseOccupancyHint": "The nightly rate covers this many guests per room.",
+      "extraAdultFee": "Extra adult, per night",
+      "extraChildFee": "Extra child, per night",
+      "extraFeeHint": "AED, for each guest beyond those included. 0 = free.",
+      "extraGuestsNote": "Adults fill the included places first, so in a family it is the children who are charged as extra. Babies are never charged. The charge is shown to the guest as its own line, is taxed with the room, and is discounted by vouchers. Bookings already taken keep the price they were quoted."
     },
     "images": {
       "title": "Photographs",

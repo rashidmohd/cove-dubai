@@ -79,6 +79,19 @@ export interface RoomType {
    * field existed is normal. Absent means "as many as it sleeps".
    */
   maxAdults?: number;
+  /**
+   * The rest of the room's occupancy terms, as the admin set them. Optional
+   * for the same cached-response reason as `maxAdults`.
+   */
+  maxChildren?: number;
+  /** Cots. */
+  maxInfants?: number;
+  /** Guests the nightly rate includes. */
+  baseOccupancy?: number;
+  /** Per night, per extra adult beyond `baseOccupancy`. */
+  extraAdultFee?: number;
+  /** Per night, per extra bed-taking child beyond `baseOccupancy`. */
+  extraChildFee?: number;
   baseRate: number;
   imageKey: string;
   /**
@@ -127,6 +140,16 @@ export interface PriceBreakdown {
   nightlyRates: Array<{ date: IsoDate; rate: number }>;
   /** Before any discount. */
   roomTotal: number;
+  /**
+   * Guests beyond what the rate includes, present only when charged. Part of
+   * the accommodation charge: discounted and taxed with `roomTotal`.
+   */
+  extraGuests?: {
+    adults: number;
+    children: number;
+    perNight: number;
+    total: number;
+  };
   /**
    * Present only when a voucher was applied.
    *

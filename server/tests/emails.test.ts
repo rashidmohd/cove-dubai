@@ -15,6 +15,7 @@ import {
   cancellationEmail,
   cancellationUrl,
   confirmationEmail,
+  hotelCancellationEmail,
   hotelNotificationEmail,
 } from '../src/emails/templates.js';
 import { config } from '../src/config.js';
@@ -33,6 +34,11 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
       description: { en: 'A room.', ar: 'غرفة.' },
       maxOccupancy: 2,
       maxAdults: 2,
+      maxChildren: 1,
+      maxInfants: 1,
+      baseOccupancy: 2,
+      extraAdultFee: 0,
+      extraChildFee: 0,
       baseRate: 980,
       imageKey: 'img-studio',
       amenities: [],
@@ -235,3 +241,92 @@ describe('the hotel’s copy', () => {
     expect(without.text).not.toContain('Special requests');
   });
 });
+
+describe('a stay with children, extra guests and a voucher', () => {
+  // 2 nights at 2,400: 4,800 room + 300 extra child = 5,100; 10% off = 4,590;
+  // VAT 5% = 229.5; Dirham 40; total 4,859.5.
+  const booking = reservation({
+    stay: {
+      checkIn: '2027-03-10',
+      checkOut: '2027-03-12',
+      adults: 2,
+      children: 2,
+      childAges: [6, 0],
+      roomsCount: 1,
+    },
+    price: {
+      currency: 'AED',
+      nights: 2,
+      roomsCount: 1,
+      nightlyRates: [
+        { date: '2027-03-10', rate: 2400 },
+        { date: '2027-03-11', rate: 2400 },
+      ],
+      roomTotal: 4800,
+      extraGuests: { adults: 0, children: 1, perNight: 150, total: 300 },
+      discount: { code: 'SPRING10', name: { en: 'Spring', ar: 'الربيع' }, amount: 510 },
+      tourismDirham: { perRoomPerNight: 20, total: 40 },
+      vat: { ratePercent: 5, total: 229.5 },
+      grandTotal: 4859.5,
+    },
+  });
+
+  it('lists every line, so the email adds up to the total', () => {
+    const { text } = confirmationEmail({ reservation: booking, cancellationToken: TOKEN });
+    // Previously the discount was missing, and a discounted booking's lines
+    // added up to more than its total.
+    expect(text).toContain('Accommodation: AED 4,800');
+    expect(text).toContain('Extra guests: AED 300');
+    expect(text).toContain('Discount — Spring (SPRING10): − AED 510');
+    expect(text).toContain('VAT (5%): AED 229.50');
+    expect(text).toContain('Total: AED 4,859.50');
+    const { roomTotal, extraGuests, discount, tourismDirham, vat, grandTotal } = booking.price;
+    expect(roomTotal + extraGuests!.total - discount!.amount + tourismDirham.total + vat.total).toBe(grandTotal);
+  });
+
+  it('describes the party with the children’s ages', () => {
+    const { text } = confirmationEmail({ reservation: booking, cancellationToken: TOKEN });
+    expect(text).toContain('Guests: 2 adults, 2 children (ages 6, under 1)');
+  });
+
+  it('tells the front desk the ages too', () => {
+    expect(hotelNotificationEmail(booking).text).toContain('2 children (ages 6, under 1)');
+  });
+});
+
+describe('the cancellation policy line', () => {
+  it('states the hours the hotel set', () => {
+    const { text } = confirmationEmail({
+      reservation: reservation(),
+      cancellationToken: TOKEN,
+      cancellationHours: 48,
+    });
+    expect(text).toContain('free of charge up to 48 hours before check-in');
+  });
+
+  it('is left out rather than invented when no hours are known', () => {
+    const { text } = confirmationEmail({ reservation: reservation(), cancellationToken: TOKEN });
+    expect(text).not.toContain('free of charge');
+  });
+});
+
+describe('the hotel’s cancellation notice', () => {
+  it('names the guest and arrival in the subject, in English', () => {
+    const email = hotelCancellationEmail(
+      reservation({
+        status: 'cancelled',
+        guest: {
+          firstName: 'Amira',
+          lastName: 'Hassan',
+          email: 'guest@example.com',
+          phone: '+971500000000',
+          locale: 'ar',
+        },
+      }),
+    );
+    expect(email.subject).toBe('Cancelled — CV-2026-482137 · Amira Hassan · was arriving 10 Mar 2027');
+    expect(email.html).toContain('lang="en"');
+    expect(email.text).toContain('back on sale');
+  });
+});
+

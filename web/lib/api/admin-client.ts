@@ -309,6 +309,11 @@ export const adminApi = {
       description?: LocalizedText;
       maxOccupancy?: number;
       maxAdults?: number;
+      maxChildren?: number;
+      maxInfants?: number;
+      baseOccupancy?: number;
+      extraAdultFee?: number;
+      extraChildFee?: number;
       baseRate?: number;
       isActive?: boolean;
     },

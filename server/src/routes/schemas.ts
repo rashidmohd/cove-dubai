@@ -113,13 +113,21 @@ export const createReservationSchema = z.object({
  * copied from emails and printed cards — and normalised to the stored form
  * here so no comparison downstream has to think about it.
  */
-export const voucherPreviewSchema = z.object({
-  code: voucherCodeSchema,
-  roomTypeCode: text(60),
-  checkIn: isoDate,
-  checkOut: isoDate,
-  roomsCount: z.coerce.number().int().min(1).max(10).default(1),
-});
+export const voucherPreviewSchema = z
+  .object({
+    code: voucherCodeSchema,
+    roomTypeCode: text(60),
+    checkIn: isoDate,
+    checkOut: isoDate,
+    roomsCount: z.coerce.number().int().min(1).max(10).default(1),
+    // The party, so the preview prices extra guests exactly as the booking
+    // will. Optional for a caller that predates them: it is then quoted for
+    // the guests the rate includes.
+    adults: z.number().int().min(1).max(20).optional(),
+    children: z.number().int().min(0).max(20).optional(),
+    childAges: z.array(childAge).max(20).optional(),
+  })
+  .transform(withChildAges);
 
 export const bookingReferenceSchema = z
   .string()

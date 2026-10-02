@@ -134,11 +134,40 @@ every time.
 ## Email
 
 Nothing sends until `EMAIL_API_KEY` is set; without it both services log emails to the console instead, which is
-the local and CI default. Before the client sees staging:
+the local and CI default.
 
-1. Verify the sending domain in Resend (DNS records on the hotel's domain).
-2. Set `EMAIL_FROM` to an address at that domain. An unverified domain fails at send time, not at boot.
-3. Set `EMAIL_HOTEL_NOTIFICATION_ADDRESS` to a real inbox the front desk reads.
+**Four emails go out:** the guest's confirmation and cancellation (in their language), and the hotel's notice of
+each (in English). See them without sending anything: `cd server && npm run email:preview`, then open
+`server/email-previews/index.html`.
+
+### Setting up sending (once per domain)
+
+What needs the hotel: access to the DNS of their domain, and the mailbox the front desk reads.
+
+1. **Create a Resend account** for the hotel (resend.com) — in the hotel's name, not ours, so they own the
+   sending reputation and the bill.
+2. **Add the domain.** Use a subdomain such as `mail.covedubai.com` rather than the bare domain, so transactional
+   mail cannot disturb the hotel's own office email. Resend shows the DNS records to add:
+   - **SPF** — a `TXT` record (and an `MX` for bounces) on the sending subdomain;
+   - **DKIM** — a `TXT` record at `resend._domainkey…`;
+   - **DMARC** — a `TXT` at `_dmarc.covedubai.com`, starting with `v=DMARC1; p=none; rua=mailto:…` and tightened
+     to `p=quarantine` once reports show everything passes. Gmail and Yahoo reject bulk senders without DMARC, and
+     a confirmation in the spam folder is a guest who thinks they have no room.
+3. **Wait for Resend to show the domain as Verified** (minutes to a few hours, depending on the DNS host).
+4. **Create an API key** with *sending access* only, for that domain.
+5. **Set the variables on the `server` service** (Railway now, AWS later):
+   - `EMAIL_API_KEY` — the key from step 4;
+   - `EMAIL_FROM` — `Cove Dubai <reservations@mail.covedubai.com>`. An unverified domain fails at send time,
+     not at boot;
+   - `EMAIL_HOTEL_NOTIFICATION_ADDRESS` — the reservations inbox. Guest replies go here too (it is the
+     reply-to), so it must be one a person reads;
+   - `WEB_BASE_URL` — the public site URL. Every cancellation link is built from it.
+6. **Test-send** from a machine with those variables set: `cd server && npm run email:test -- you@example.com`.
+   It sends all four emails with sample data, subjects prefixed `[TEST]`. Open them in **Gmail, Outlook and
+   Apple Mail** — on a phone too — and check: not in spam; the Arabic one is right-to-left; the cancel button
+   opens the site.
+7. **Make one real test booking** on staging and cancel it from the emailed link — that proves the token, the
+   link and both hotel notices end to end.
 
 A failed send never fails a booking — it is logged and the reservation stands. That is deliberate, but it does
 mean a broken email configuration is quiet. Check the logs after the first test booking rather than assuming.

@@ -99,6 +99,22 @@ export function StaySummary({
                 label={t('roomTotal')}
                 value={formatMoney(price.roomTotal, price.currency, locale)}
               />
+              {/* Guests beyond what the rate includes, priced by the API from
+                  the room's own fees. Shown only when charged, and named so
+                  the guest can see who it is for. */}
+              {price.extraGuests ? (
+                <Row
+                  label={t('extraGuests', {
+                    adults: price.extraGuests.adults,
+                    children: price.extraGuests.children,
+                  })}
+                  value={formatMoney(
+                    price.extraGuests.total,
+                    price.currency,
+                    locale,
+                  )}
+                />
+              ) : null}
               {/* Between the room total and the fees, because that is the
                   order the money moves in: the discount comes off the
                   accommodation charge, and the VAT line below is already

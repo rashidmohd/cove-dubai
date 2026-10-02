@@ -24,7 +24,7 @@ at startup and exit with a readable message if anything required is missing. `se
 ### Checks
 
 ```bash
-cd server && npm run typecheck && npm test     # 121 tests — hits the real database
+cd server && npm run typecheck && npm test     # 128 tests — hits the real database
 cd web    && npm run typecheck && npm test     # 57 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
 cd web    && npx playwright test               # 46 e2e — needs the API running
@@ -717,8 +717,9 @@ with this script today.
 | Orchestration | `server/src/emails/index.ts`, called **from the routes**, not from the provider |
 | Cancellation page | `web/app/[locale]/cancel/` — where the emailed link lands |
 
-Three messages go out: the guest's **confirmation** (with their single-use cancellation link), the guest's
-**cancellation confirmation**, and the hotel's **copy of a new booking** with the guest's contact details.
+Four messages go out: the guest's **confirmation** (with their single-use cancellation link), the guest's
+**cancellation confirmation**, and the hotel's **notice of a new booking** and **of a guest cancellation** (added
+2 Oct 2026). Setup steps for the sending domain are in [`deploying.md`](deploying.md#email).
 
 **Sending is deliberately outside the seam.** Emails are sent from the route after the provider returns, never
 from inside `CustomDbProvider`. Sending confirmations is not part of running a reservation engine, and a PMS that
@@ -736,9 +737,8 @@ holding a booking reference cancel a stranger's stay.
 
 ### Still to do here
 
-- **The Arabic email copy is English.** The template carries a full `ar` block with correct `dir="rtl"` layout;
-  the strings themselves are placeholders, like `ar.json`. This is the one place Arabic copy is **not** in the
-  message files, so it is easy to miss — it lives in `server/src/emails/templates.ts`.
+- **The Arabic email copy is a draft** for the client's copywriter, like `ar.json`. This is the one place Arabic
+  copy is **not** in the message files, so it is easy to miss — it lives in `server/src/emails/templates.ts`.
 - **No email is sent on an admin *modification*** — only on cancellation. A guest whose dates are changed by the
   front desk is not told.
 - **No retry.** A send that fails is logged and dropped. There is no queue.
@@ -1025,8 +1025,8 @@ None of these block development.
 | **Arabic numerals** | Western (1234) applied consistently. Switch the single constant in `web/lib/format.ts` if the client wants Arabic-Indic. |
 | **Arabic font** | Almarai, pending confirmation (skill lists Almarai or Cairo). |
 | **Photography** | All imagery is CSS gradients, as in the mockups. `imageKey` on `RoomType` is the hook for real images. |
-| **Child policy** | Three **placeholder** settings in **Admin → Settings**, read on every search: `guests_adult_from_age` **12** (a child this age or older counts as an adult), `guests_infant_up_to_age` **1** (this age or younger sleeps in a cot and takes no bed), `guests_infants_per_room` **1** (cots per room). Needs the hotel's answers, plus: **do children cost anything** (free, a child rate, an extra-bed charge)? Today children are free — pricing ignores them. |
-| **Max adults per room type** | Seeded equal to "Sleeps" (King 2, Twin 2, Suite 4), which admits exactly the parties it did before. The hotel should set the real figure per room in **Admin → Rooms** — e.g. a Suite that sleeps 4 but takes only 2 adults. |
+| **Age rules** | Two **placeholder** settings in **Admin → Settings**: `guests_adult_from_age` **12** and `guests_infant_up_to_age` **1**. The hotel sets them. |
+| **Occupancy and extra-guest charges per room** | All in **Admin → Rooms → Edit**, set by the hotel: sleeps, max adults, max children, cots, guests included in the rate, extra adult and extra child fee per night. Seeded to admit exactly the parties and charge exactly the prices as before (max children = sleeps − 1, 1 cot, 2 guests included, **fees 0**). The hotel should fill in its real terms before launch. |
 | **Resend domain** | **Not verified — this now blocks real email.** The templates and sending are built and tested, but nothing leaves the building until the hotel's domain is verified in Resend and `EMAIL_FROM` points at an address on it. Until then the console transport logs messages instead. |
 
 ---
@@ -1247,4 +1247,48 @@ asks, on the calendar's light surface.
   popovers use. The e2e placement checks now open the guests panel at its tallest on every hero, at 1440×900 and
   390×844, and check it stays on screen sideways too.
 - Fixed in passing: the field's chevron pointed sideways in Arabic (logical borders on a rotated box).
+
+### Occupancy rules and extra-guest charges, edited in the admin (2 Oct 2026)
+
+Every occupancy term is now the hotel's to set, per room type, in **Admin → Rooms → Edit**, in two groups:
+
+- **Occupancy** — *Sleeps* (beds), *Max adults*, *Max children* (bed-taking), *Cots*. Availability and booking
+  refuse a party that breaks any of them (`occupancy.ts`). Lowering *Sleeps* carries the others down; a limit typed
+  above it is refused (`INVALID_ROOM_CAPACITY`). The hotel-wide cot setting is gone — cots are per room.
+- **Extra-guest charges** — *Guests included in the rate*, *Extra adult* and *Extra child* fee per night. Adults
+  fill the included places first, so a family is charged the child fee, not the adult fee; infants are never
+  charged.
+
+**How the charge is priced** (`pricing.ts`): its own **Extra guests** line in the summary and the confirmation
+email, part of the accommodation charge — so a voucher discounts it and VAT is charged on it — and never part of
+the Tourism Dirham, which stays per room per night. The voucher preview now sends the party, so it quotes the same
+total the booking will. Snapshotted with the rest of the price, so changing a fee never rewrites a booking.
+
+Migration `20261002120000_room_occupancy_rules`, applied to the dev database; seeded values change no price and no
+availability answer. Verified live: Suite, 2 nights, AED 150 child fee, 2 adults + child of 6 → +AED 300 extra,
+VAT 255 (on 5,100), total 5,395; adding a baby changed nothing. The fee was put back to 0 afterwards.
+
+**Not checked by eye:** the admin form itself — the admin e2e tests and screenshots need `E2E_ADMIN_PASSWORD`.
+**Found in passing, not fixed:** the confirmation email lists no voucher discount line, so a discounted booking's
+email rows do not add up to its total.
+
+### Email templates redesigned (2 Oct 2026)
+
+`server/src/emails/templates.ts` rewritten. Every guest email now has: an inbox **preview line** (the grey text
+after the subject), a headline, the **booking reference** set apart, **check-in / check-out blocks** with the
+weekday, the room and nights, the **party with children's ages**, the guest's **special requests** echoed back,
+the **full price breakdown** — now including the **voucher discount** and **extra guests**, so the lines add up
+to the total, which a discounted booking's email previously did not — the pay-at-check-in notice, the
+**cancellation policy** read from the `cancellation_policy_hours` setting (left out if unset), and the cancel
+button with a copy-paste fallback link. Brand type in Georgia (Cormorant does not load in mail), no images
+(blocked by default in many clients), Arabic right-to-left without tracked capitals.
+
+The hotel's emails are rebuilt for the front desk: subject `New booking — CV-… · Name · arrives 10 Mar 2027`,
+special requests highlighted, email and phone as tap-to-contact links, the quoted price. A **new hotel notice on
+guest cancellation** — the front desk previously had to spot it in the admin panel.
+
+**Tools:** `npm run email:preview` (HTML files, sends nothing) and `npm run email:test -- you@x.com` (sends all
+four with sample data, `[TEST]` subjects) in `server/`. 19 email tests. Reviewed by eye in English and Arabic at
+desktop and phone width — in a browser, **not yet in real mail clients**: that is step 6 of the setup in
+`deploying.md`, once the domain is verified.
 

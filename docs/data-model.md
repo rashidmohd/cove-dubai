@@ -40,6 +40,10 @@ individual room, so this — not a physical room — is what a guest reserves.
 | `baseRateAed` | Fallback nightly rate when no RatePlan covers a date. |
 | `maxOccupancy` | Guests one room sleeps — adults and children together. Infants in a cot do not count. |
 | `maxAdults` | How many of those may be adults. Never above `maxOccupancy`. |
+| `maxChildren` | How many may be children who take a bed. Below `maxOccupancy` (every booking has an adult). |
+| `maxInfants` | Cots — the most infants the room takes. |
+| `baseOccupancy` | Guests the nightly rate includes, per room. |
+| `extraAdultFeeAed`, `extraChildFeeAed` | Per night, per guest beyond `baseOccupancy`. 0 = free. Adults fill the included places first. |
 | `totalRooms` | Rooms of this type the hotel owns. Seeds the per-date ledger; the ledger is authoritative thereafter. |
 | `imageKey` | Style key for the CSS treatment in the mockups. Becomes an asset path when the client supplies photography. |
 | `sortOrder`, `isActive` | Display order; soft removal without deleting history. |
@@ -152,6 +156,7 @@ cannot express them.
 | `room_types_max_adults_within_occupancy` | A room taking more adults than it has beds, or none. *(Oct 2026)* |
 | `reservations_child_ages_in_range` | A child aged 18 or over — that guest is an adult. *(Oct 2026)* |
 | `reservations_child_ages_match_count` | Ages and the child count disagreeing about who is staying. *(Oct 2026)* |
+| `room_types_max_children_within_occupancy`, `room_types_max_infants_range`, `room_types_base_occupancy_within_occupancy`, `room_types_extra_guest_fees_non_negative` | Capacity and extra-guest terms that contradict the room. *(Oct 2026)* |
 
 Application-level availability checks exist for user experience only. These
 constraints are the guarantee — two guests racing for the last room are

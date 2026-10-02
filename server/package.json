@@ -22,7 +22,9 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "seed": "tsx --env-file-if-exists=.env prisma/seed.ts",
-    "admin:password": "tsx --env-file-if-exists=.env scripts/set-admin-password.ts"
+    "admin:password": "tsx --env-file-if-exists=.env scripts/set-admin-password.ts",
+    "email:preview": "tsx --env-file-if-exists=.env scripts/email-preview.ts",
+    "email:test": "tsx --env-file-if-exists=.env scripts/email-test.ts"
   },
   "prisma": {
     "seed": "tsx --env-file-if-exists=.env prisma/seed.ts"

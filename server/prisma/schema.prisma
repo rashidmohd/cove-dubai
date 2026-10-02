@@ -60,6 +60,21 @@ model RoomType {
   /// still take only two adults, the third bed being a child's. Never more
   /// than `maxOccupancy` (a CHECK constraint holds that).
   maxAdults    Int
+  /// How many of those guests may be children who take a bed. Below
+  /// `maxOccupancy`, because every booking has at least one adult.
+  maxChildren  Int
+  /// Cots this room can take — the most infants it sleeps. Infants take no
+  /// bed, so they are counted here rather than against `maxOccupancy`.
+  maxInfants   Int @default(1)
+
+  /// Guests the nightly rate includes. Each guest beyond this, per room, is
+  /// charged the extra-guest fee below. Infants are never charged.
+  baseOccupancy      Int
+  /// Per night, per extra adult. 0 means extra adults stay free.
+  extraAdultFeeAed   Decimal @default(0) @db.Decimal(10, 2)
+  /// Per night, per extra child who takes a bed.
+  extraChildFeeAed   Decimal @default(0) @db.Decimal(10, 2)
+
   /// Rooms of this type the hotel owns. Seeds RoomTypeInventory.totalRooms; the
   /// per-date rows are authoritative once created, so a closure or maintenance
   /// block on one date does not require changing this.
