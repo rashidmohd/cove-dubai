@@ -260,6 +260,16 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     [update],
   );
 
+  /**
+   * Select a room offer: its type, and the number of rooms it is offered at.
+   * Kept together so the booking always takes as many rooms as were priced.
+   */
+  const chooseRoom = useCallback(
+    (room: AvailableRoomType) =>
+      update({ roomTypeCode: room.code, roomsCount: offeredRooms(room) }),
+    [update],
+  );
+
   async function searchAvailability() {
     if (!state.checkIn || !state.checkOut) {
       setError(tErrors('selectDates'));
@@ -284,27 +294,41 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
           checkOut: state.checkOut,
           adults: state.adults,
           childAges: ages,
-          roomsCount: state.roomsCount,
+          // No room count: the API offers each room at the number the party
+          // needs, and choosing it books that many (`chooseRoom`).
         });
       setRooms(available);
       setPartyTooLarge(onlyOccupancy(available, unavailable));
 
-      const chosen = state.roomTypeCode;
-      if (chosen && available.some((room) => room.code === chosen)) {
+      const chosen = available.find((room) => room.code === state.roomTypeCode);
+      if (chosen) {
         // The guest chose this room before they had dates — from its page or
         // the rooms list — and it suits the stay. Asking them to pick it again
         // from a list of every room is the step this skips. The list is still
         // loaded, so "Back" from their details shows it with this room ticked.
+        chooseRoom(chosen);
         goToStep(3);
+        // A party too big for one of these rooms gets more than one, the way
+        // any booking site would offer it — said plainly, so two rooms on the
+        // bill is never a surprise.
+        if (offeredRooms(chosen) > 1) {
+          setNotice(
+            t('step2.multiRoom', {
+              room: chosen.name[locale],
+              count: offeredRooms(chosen),
+            }),
+          );
+        }
         return;
       }
 
       goToStep(2);
-      if (chosen) {
+      const wanted = state.roomTypeCode;
+      if (wanted) {
         // It does not suit the stay. Say why, above the rooms that do, so the
         // guest knows whether it is the dates, the party or the room to change.
         update({ roomTypeCode: null });
-        setNotice(describeUnavailable(chosen, unavailable));
+        setNotice(describeUnavailable(wanted, unavailable));
       }
     } catch (caught) {
       setError(describeError(caught));
@@ -343,7 +367,6 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
       state.checkOut,
       state.adults,
       ages.join(','),
-      state.roomsCount,
     ].join('|');
     if (inFlightSearchRef.current === search) return;
     inFlightSearchRef.current = search;
@@ -356,7 +379,6 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         checkOut: state.checkOut,
         adults: state.adults,
         childAges: ages,
-        roomsCount: state.roomsCount,
       })
       .then(({ roomTypes: available, unavailable }) => {
         if (cancelled) return;
@@ -370,11 +392,12 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         // does not contain it, and "Continue" carries a phantom room into the
         // guest's details, where the booking fails at the last step instead of
         // the guest simply picking again here.
-        if (
-          state.roomTypeCode &&
-          !available.some((room) => room.code === state.roomTypeCode)
-        ) {
+        const kept = available.find((room) => room.code === state.roomTypeCode);
+        if (state.roomTypeCode && !kept) {
           update({ roomTypeCode: null });
+        } else if (kept) {
+          // Re-synced: the party may now need a different number of rooms.
+          chooseRoom(kept);
         }
       })
       .catch((caught: unknown) => {
@@ -396,10 +419,10 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     state.checkOut,
     state.adults,
     state.childAges,
-    state.roomsCount,
     state.roomTypeCode,
     rooms.length,
     update,
+    chooseRoom,
     describeError,
   ]);
 
@@ -751,7 +774,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                           ]
                             .filter(Boolean)
                             .join(' ')}
-                          onClick={() => update({ roomTypeCode: room.code })}
+                          onClick={() => chooseRoom(room)}
                           aria-pressed={selected}
                           data-testid={`room-${room.code}`}
                         >
@@ -760,9 +783,19 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                               {room.category[locale]}
                             </span>
                             <span className={styles.roomName}>
+                              {offeredRooms(room) > 1 ? (
+                                <span className={styles.roomTimes}>
+                                  {offeredRooms(room)} ×{' '}
+                                </span>
+                              ) : null}
                               {room.name[locale]}
                             </span>
                             <span className={styles.roomMeta}>
+                              {offeredRooms(room) > 1
+                                ? `${t('step2.roomsForParty', {
+                                    count: offeredRooms(room),
+                                  })} · `
+                                : null}
                               {t('step2.roomsLeft', {
                                 count: room.roomsAvailable,
                               })}
@@ -845,7 +878,8 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
               nights={nights}
               selected={detailCode === state.roomTypeCode}
               onSelect={() => {
-                update({ roomTypeCode: detailCode });
+                const room = rooms.find((entry) => entry.code === detailCode);
+                if (room) chooseRoom(room);
                 setDetailCode(null);
               }}
               onDismiss={() => setDetailCode(null)}
@@ -927,6 +961,14 @@ function StepIndicator({ current }: { current: Step }) {
       })}
     </ol>
   );
+}
+
+/**
+ * How many rooms an offer is for. An API from before multi-room offers sent
+ * none, and offered one.
+ */
+function offeredRooms(room: AvailableRoomType): number {
+  return room.roomsCount ?? 1;
 }
 
 /** Nothing on offer, and every room left out was left out for the party. */

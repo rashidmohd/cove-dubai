@@ -137,6 +137,12 @@ const SETTINGS = [
       'Age from which a child is counted as an adult for room capacity. PLACEHOLDER, confirm with the client.',
   },
   {
+    key: 'guests_max_rooms_per_booking',
+    value: '4',
+    description:
+      'Most rooms one online booking may take. A party needing more is a group, handled by the hotel directly.',
+  },
+  {
     key: 'guests_infant_up_to_age',
     value: '1',
     description:

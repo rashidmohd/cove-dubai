@@ -1589,3 +1589,9 @@
     justify-self: start;
   }
 }
+
+/* "2 ×" before a room's name when the party takes more than one: the accent,
+   so the count reads as part of the offer rather than part of the name. */
+.roomTimes {
+  color: var(--bronze);
+}

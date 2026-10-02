@@ -66,7 +66,9 @@ export const availabilityQuerySchema = z
       .transform((value) => (value === '' ? [] : value.split(',')))
       .pipe(z.array(childAge).max(20))
       .optional(),
-    roomsCount: z.coerce.number().int().min(1).max(10).default(1),
+    // Optional: left out, the API offers each room type at the number of
+    // rooms the party needs.
+    roomsCount: z.coerce.number().int().min(1).max(10).optional(),
   })
   .transform(withChildAges);
 

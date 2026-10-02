@@ -21,6 +21,8 @@ export interface GuestPolicy {
   adultFromAge: number;
   /** A child this age or younger is an infant: a cot, not a bed. */
   infantUpToAge: number;
+  /** The most rooms one booking may take — the ceiling for `roomsNeeded`. */
+  maxRoomsPerBooking: number;
 }
 
 /**
@@ -31,6 +33,7 @@ export interface GuestPolicy {
 export const DEFAULT_GUEST_POLICY: GuestPolicy = {
   adultFromAge: 12,
   infantUpToAge: 1,
+  maxRoomsPerBooking: 4,
 };
 
 /** The party, sorted into the categories capacity is measured in. */
@@ -106,6 +109,35 @@ export function occupancyProblem(
   return null;
 }
 
+/**
+ * The fewest rooms of a type that take the whole party, or null if none do.
+ *
+ * This is what lets a family of four book two Deluxe Twin Rooms instead of
+ * being told the room "is not large enough" — the way every large booking
+ * site answers a party bigger than one room. The guest never counts rooms:
+ * the API offers each room type at the number it takes.
+ *
+ * Two rules on top of capacity:
+ *   - **Every room needs an adult.** One adult and three children cannot be
+ *     split across two rooms, so the count never exceeds the adults.
+ *   - **A booking takes at most `maxRoomsPerBooking`.** Beyond that it is a
+ *     group, which the hotel handles directly.
+ *
+ * Capacity is shared across the rooms, as `occupancyProblem` measures it; how
+ * the party splits between them is arranged at check-in.
+ */
+export function roomsNeeded(
+  occupants: Occupants,
+  room: RoomCapacity,
+  policy: GuestPolicy,
+): number | null {
+  const ceiling = Math.min(policy.maxRoomsPerBooking, occupants.adults);
+  for (let rooms = 1; rooms <= ceiling; rooms += 1) {
+    if (!occupancyProblem(occupants, room, rooms)) return rooms;
+  }
+  return null;
+}
+
 /** Guests beyond what the rate includes, by who pays which fee. */
 export interface ExtraGuests {
   adults: number;
@@ -154,10 +186,17 @@ export function parseGuestPolicy(
   return {
     adultFromAge: read('guests_adult_from_age', DEFAULT_GUEST_POLICY.adultFromAge, 1, 18),
     infantUpToAge: read('guests_infant_up_to_age', DEFAULT_GUEST_POLICY.infantUpToAge, 0, 5),
+    maxRoomsPerBooking: read(
+      'guests_max_rooms_per_booking',
+      DEFAULT_GUEST_POLICY.maxRoomsPerBooking,
+      1,
+      10,
+    ),
   };
 }
 
 export const GUEST_POLICY_KEYS = [
   'guests_adult_from_age',
   'guests_infant_up_to_age',
+  'guests_max_rooms_per_booking',
 ] as const;

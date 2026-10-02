@@ -147,6 +147,9 @@ export function RoomDetailDialog({
                   )}
                 </span>
                 <span className={styles.detailPer}>
+                  {(room.roomsCount ?? 1) > 1
+                    ? `${t('step2.roomsForParty', { count: room.roomsCount ?? 1 })} · `
+                    : null}
                   {nights} {nights === 1 ? tCommon('night') : tCommon('nights')}
                 </span>
               </p>

@@ -72,7 +72,16 @@ export function StaySummary({
         ) : (
           <>
             <dl className={styles.sideRows}>
-              <Row label={t('room')} value={room.name[locale]} />
+              <Row
+                label={t('room')}
+                // "2 × Deluxe Twin Room" when the party takes more than one, so
+                // the guest sees what the total is for.
+                value={
+                  price.roomsCount > 1
+                    ? `${price.roomsCount} × ${room.name[locale]}`
+                    : room.name[locale]
+                }
+              />
               <Row
                 label={t('checkIn')}
                 value={checkIn ? formatStayDate(checkIn, locale) : '—'}

@@ -169,7 +169,9 @@ export const bookingApi = {
         checkOut: args.checkOut,
         adults: args.adults,
         ...(childAges.length > 0 ? { childAges: childAges.join(',') } : {}),
-        roomsCount: args.roomsCount ?? 1,
+        // Left out unless asked for: the API then offers each room type at
+        // the number of rooms the party needs.
+        roomsCount: args.roomsCount,
       })}`,
       { cache: 'no-store', ...(args.signal ? { signal: args.signal } : {}) },
     );

@@ -45,6 +45,7 @@ import {
   GUEST_POLICY_KEYS,
   occupancyProblem,
   parseGuestPolicy,
+  roomsNeeded,
   type GuestPolicy,
   type Occupants,
 } from './occupancy.js';
@@ -171,8 +172,10 @@ export class CustomDbProvider implements BookingProvider {
   async checkAvailability(
     query: AvailabilityQuery,
   ): Promise<AvailabilityResult> {
-    const roomsCount = query.roomsCount ?? 1;
-    this.assertValidStay({ ...query, roomsCount });
+    // A count given is honoured as is. Without one, each room type is offered
+    // at the fewest rooms that take the party — see `roomsNeeded`.
+    const fixedRooms = query.roomsCount;
+    this.assertValidStay({ ...query, roomsCount: fixedRooms ?? 1 });
 
     const nights = nightsBetween(query.checkIn, query.checkOut);
 
@@ -199,7 +202,13 @@ export class CustomDbProvider implements BookingProvider {
     for (const roomType of roomTypes) {
       // Checked first: a party that does not fit should hear that, not "sold
       // out", because changing dates would never help them.
-      if (occupancyProblem(occupants, roomType, roomsCount)) {
+      const roomsCount =
+        fixedRooms === undefined
+          ? roomsNeeded(occupants, roomType, policy)
+          : occupancyProblem(occupants, roomType, fixedRooms)
+            ? null
+            : fixedRooms;
+      if (roomsCount === null) {
         unavailable.push({ code: roomType.code, reason: 'occupancy' });
         continue;
       }
@@ -242,6 +251,7 @@ export class CustomDbProvider implements BookingProvider {
       available.push({
         ...toDomainRoomType(roomType),
         roomsAvailable,
+        roomsCount,
         price: this.priceStay(
           roomType,
           query.checkIn,

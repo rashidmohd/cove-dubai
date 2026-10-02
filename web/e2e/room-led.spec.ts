@@ -107,6 +107,34 @@ test.describe('reserving a chosen room', () => {
     await expect(page.getByTestId('guest-firstName')).toBeHidden();
   });
 
+  test('books two rooms when the family needs two', async ({ page }) => {
+    // A room that sleeps two, so a family of four needs a pair of them. Named
+    // here because the test is about exactly that capacity; it skips rather
+    // than fails if the hotel has taken the room off sale.
+    await page.goto('/en/rooms');
+    const king = page.getByTestId('view-room-deluxe-king-room');
+    test.skip((await king.count()) === 0, 'Deluxe King Room is not on sale');
+    await king.click();
+    await page.getByTestId('reserve-this-room').click();
+    await pickDates(page);
+
+    for (const [child, age] of [[0, '6'], [1, '9']] as const) {
+      await page.getByTestId('children-increase').click();
+      await page.getByTestId(`child-age-${child}`).selectOption(age);
+    }
+    await page.getByTestId('check-availability').click();
+
+    // Straight to details — the room fits, as two rooms — and told so.
+    await expect(page.getByTestId('guest-firstName')).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.getByTestId('room-notice')).toContainText('2 ×');
+    // And the summary prices both rooms, not one.
+    await expect(
+      page.getByText('2 × Deluxe King Room', { exact: true }),
+    ).toBeVisible();
+  });
+
   test('mirrors in Arabic', async ({ page }) => {
     await reserveFromRoomPage(page, 'ar');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');

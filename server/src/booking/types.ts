@@ -183,6 +183,12 @@ export interface Offer {
 export interface AvailableRoomType extends RoomType {
   /** Rooms of this type still sellable for every night of the stay. */
   roomsAvailable: number;
+  /**
+   * How many of these rooms the offer is for — the party's own count when the
+   * query gave one, otherwise the fewest that take the whole party. `price` is
+   * for this many, and booking this room type means booking this many.
+   */
+  roomsCount: number;
   /** What this stay costs in this room type. */
   price: PriceBreakdown;
 }
@@ -300,7 +306,8 @@ export interface Stay {
 
 export interface AvailabilityQuery
   extends Omit<Stay, 'roomsCount' | 'childAges'> {
-  roomsCount?: number;
+  /** Omitted, each room type is offered at the rooms the party needs. */
+  roomsCount?: number | undefined;
   /** One per child when given; `children` must then equal its length. */
   childAges?: number[] | undefined;
 }

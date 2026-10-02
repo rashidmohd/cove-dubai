@@ -169,6 +169,11 @@ export interface PriceBreakdown {
 
 export interface AvailableRoomType extends RoomType {
   roomsAvailable: number;
+  /**
+   * How many of these rooms the offer — and its `price` — is for: the fewest
+   * that take the party. Optional for an API from before multi-room offers.
+   */
+  roomsCount?: number;
   price: PriceBreakdown;
 }
 

@@ -97,12 +97,14 @@
       "changeDates": "Change dates",
       "yourRoom": "The room you chose",
       "unavailable": {
-        "occupancy": "{room} is not large enough for your party. These rooms are:",
+        "occupancy": "{room} cannot take your party, even across several rooms. These rooms can:",
         "soldOut": "{room} is fully booked for these dates. These rooms are available:",
         "minimumStay": "{room} needs a stay of at least {nights} nights on these dates. These rooms are available:",
         "other": "{room} is not available for this stay. These rooms are:"
       },
-      "partyTooLarge": "None of our rooms can take a party this size in one booking. For larger groups, please contact the hotel and we will arrange it."
+      "partyTooLarge": "None of our rooms can take a party this size in one booking. For larger groups, please contact the hotel and we will arrange it.",
+      "roomsForParty": "{count, plural, one {# room} other {# rooms for your party}}",
+      "multiRoom": "Your party needs {count} × {room}. The price is for {count, plural, =2 {both rooms} other {all # rooms}}."
     },
     "step3": {
       "title": "Your details",

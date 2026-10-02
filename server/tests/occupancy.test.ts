@@ -13,10 +13,11 @@ import {
   extraGuests,
   occupancyProblem,
   parseGuestPolicy,
+  roomsNeeded,
 } from '../src/booking/occupancy.js';
 import { availabilityQuerySchema, createReservationSchema } from '../src/routes/schemas.js';
 
-const policy = { adultFromAge: 12, infantUpToAge: 1 };
+const policy = { adultFromAge: 12, infantUpToAge: 1, maxRoomsPerBooking: 4 };
 const sleepsThreeTwoAdults = {
   maxOccupancy: 3,
   maxAdults: 2,
@@ -78,6 +79,34 @@ describe('occupancyProblem', () => {
   });
 });
 
+describe('roomsNeeded', () => {
+  const twin = { maxOccupancy: 2, maxAdults: 2, maxChildren: 1, maxInfants: 1 };
+  const need = (adults: number, childAges: number[], max = 4) =>
+    roomsNeeded(
+      classifyGuests({ adults, children: childAges.length, childAges }, policy),
+      twin,
+      { ...policy, maxRoomsPerBooking: max },
+    );
+
+  it('offers one room when the party fits one', () => {
+    expect(need(2, [])).toBe(1);
+  });
+
+  it('offers two twins to a family of four', () => {
+    expect(need(2, [6, 9])).toBe(2);
+  });
+
+  it('never splits a party into more rooms than it has adults', () => {
+    // One adult cannot leave children alone in a second room.
+    expect(need(1, [6, 9])).toBeNull();
+  });
+
+  it('stops at the most rooms one booking may take', () => {
+    expect(need(6, [], 2)).toBeNull();
+    expect(need(6, [], 3)).toBe(3);
+  });
+});
+
 describe('extraGuests', () => {
   const party = (adults: number, childAges: number[]) =>
     classifyGuests({ adults, children: childAges.length, childAges }, policy);
@@ -110,6 +139,7 @@ describe('parseGuestPolicy', () => {
     expect(parseGuestPolicy((key) => rows[key])).toEqual({
       adultFromAge: 13,
       infantUpToAge: 2,
+      maxRoomsPerBooking: 4,
     });
   });
 
