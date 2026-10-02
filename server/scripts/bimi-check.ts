@@ -3,7 +3,9 @@
  * inboxes (BIMI). Run after each step of `docs/email-logo-bimi.md`:
  *
  *   npm run bimi:check -- mail.covedubai.com
+ *   npm run bimi:check -- --svg https://dev.covehotels.ae/bimi/cove-logo.svg
  *
+ * The second form checks only the logo file, before any DNS exists.
  * Pass the domain the emails are sent **from** — the part after the @ in
  * EMAIL_FROM. Reads public DNS and fetches the logo; changes nothing.
  *
@@ -104,7 +106,26 @@ async function checkSvg(url: string) {
   check(kb <= 32, 'SVG is 32 KB or smaller', `${kb.toFixed(1)} KB`);
 }
 
+function report(): never {
+  for (const result of results) {
+    console.log(`${result.ok ? '✓' : '✗'} ${result.label}${result.detail ? `  — ${result.detail}` : ''}`);
+  }
+  const failed = results.filter((result) => !result.ok).length;
+  console.log(failed === 0 ? '\nAll checks pass.' : `\n${failed} to fix — see docs/email-logo-bimi.md.`);
+  process.exit(failed === 0 ? 0 : 1);
+}
+
 async function main(): Promise<void> {
+  if (process.argv[2] === '--svg') {
+    const url = process.argv[3];
+    if (!url) {
+      console.error('Usage: npm run bimi:check -- --svg https://…/cove-logo.svg');
+      process.exit(1);
+    }
+    await checkSvg(url);
+    report();
+  }
+
   const domain = process.argv[2]?.trim().toLowerCase();
   if (!domain || !domain.includes('.')) {
     console.error('Usage: npm run bimi:check -- mail.covedubai.com   (the domain in EMAIL_FROM)');
@@ -124,13 +145,7 @@ async function main(): Promise<void> {
 
   // Step 3 — the logo itself.
   if (logo?.startsWith('https://')) await checkSvg(logo);
-
-  for (const result of results) {
-    console.log(`${result.ok ? '✓' : '✗'} ${result.label}${result.detail ? `  — ${result.detail}` : ''}`);
-  }
-  const failed = results.filter((result) => !result.ok).length;
-  console.log(failed === 0 ? '\nAll checks pass.' : `\n${failed} to fix — see docs/email-logo-bimi.md.`);
-  process.exit(failed === 0 ? 0 : 1);
+  report();
 }
 
 void main();

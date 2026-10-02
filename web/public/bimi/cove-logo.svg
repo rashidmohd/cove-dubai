@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 1000 1000">
+<title>Cove Dubai</title>
+<desc>The Cove monogram, a gold C in Cormorant Garamond on the brand's dark ground. Brand indicator for email (BIMI).</desc>
+<defs>
+<linearGradient id="gold" gradientUnits="userSpaceOnUse" x1="49" y1="636" x2="636" y2="-12">
+<stop offset="0" stop-color="#f0d18f"/>
+<stop offset="0.5" stop-color="#e0b76a"/>
+<stop offset="1" stop-color="#cfa457"/>
+</linearGradient>
+</defs>
+<rect width="1000" height="1000" fill="#180e06"/>
+<g transform="translate(204.18 769.40) scale(0.86383 -0.86383)">
+<path fill="url(#gold)" d="M421.5 636Q455.6 636 488.1 632.7Q520.6 629.4 549.3 622.5Q578.1 615.5 601.1 604.6Q609.3 601.3 611.5 597.4Q613.7 593.4 614.7 581.9L627.4 449.8Q627.4 447 622.3 445.9Q617.2 444.8 615.4 448.8Q589.1 530.3 537.9 573.6Q486.7 616.9 409.9 616.9Q336.1 616.9 279.2 580.3Q222.2 543.7 190.1 476.4Q157.9 409.1 157.9 316.4Q157.9 247.8 177.5 190.8Q197 133.9 232.3 92.8Q267.6 51.7 314.8 29.3Q362 6.8 417.7 6.8Q492.8 6.8 540.8 46.1Q588.9 85.4 624.6 168.3Q626.3 171.3 631.1 170.3Q635.9 169.3 635.9 166.6L622.8 47.6Q621.8 35.6 619.5 32.2Q617.1 28.9 608.9 24.9Q559.6 4.8 512.6 -3.7Q465.7 -12.3 417.4 -12.3Q310.2 -12.3 227.1 28.5Q143.9 69.3 96.4 142.5Q49 215.7 49 311Q49 383 76.9 442.8Q104.9 502.7 155.6 545.7Q206.2 588.8 274.1 612.4Q342 636 421.5 636Z"/>
+</g>
+</svg>

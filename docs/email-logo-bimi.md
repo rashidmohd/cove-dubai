@@ -65,6 +65,13 @@ Check: `npm run bimi:check -- mail.covedubai.com` → the two DMARC lines show �
 
 ## Step 3 — Prepare the logo as "SVG Tiny PS"
 
+> **Done (2 Oct 2026):** `web/public/bimi/cove-logo.svg` is the site's existing monogram — the gold `C` in
+> Cormorant Garamond at weight 600, the same mark and gradient as `web/app/icon.png` — rebuilt as a vector in the
+> Tiny PS profile: the letter is its real outline from the self-hosted font file (no text, no font dependency),
+> centred at 56% height so a circular crop never clips it, 1.4 KB. Check it any time with
+> `npm run bimi:check -- --svg https://dev.covehotels.ae/bimi/cove-logo.svg`. If the client later supplies an
+> official logo, replace this file; the brief below is for that.
+
 Inboxes only accept the logo in one strict SVG format. Give the designer this brief:
 
 > Square SVG of the Cove logo for email (BIMI). SVG Tiny Portable/Secure profile: `version="1.2"`,
