@@ -227,6 +227,19 @@ export function Reservations({ locale }: { locale: Locale }) {
                         {formatStayDate(reservation.stay.checkIn, locale)} –{' '}
                         {formatStayDate(reservation.stay.checkOut, locale)}
                       </Num>
+                      {/* Who is coming, ages included: a cot or an extra bed
+                          is prepared from this line. */}
+                      <span className={styles.cellSub}>
+                        {t('reservations.guests', {
+                          adults: reservation.stay.adults,
+                          children: reservation.stay.children,
+                        })}
+                        {reservation.stay.childAges?.length
+                          ? ` ${t('reservations.childAges', {
+                              ages: reservation.stay.childAges.join(', '),
+                            })}`
+                          : null}
+                      </span>
                     </td>
                     <td className={styles.numeric}>
                       <Num>

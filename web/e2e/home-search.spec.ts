@@ -73,7 +73,9 @@ test.describe('home page stay search', () => {
       // Picking an arrival opens the departure calendar automatically.
       await page.getByTestId(`day-${CHECK_OUT}`).click();
 
-      await page.getByTestId('stay-search-guests').selectOption('3');
+      await page.getByTestId('stay-search-guests').click();
+      await page.getByTestId('stay-search-adults-increase').click();
+      await page.getByTestId('stay-search-guests-done').click();
       await page.getByTestId('stay-search-submit').click();
 
       // The stay travels in the URL, so it survives a reload and a shared link.
@@ -99,6 +101,61 @@ test.describe('home page stay search', () => {
       );
     });
   }
+
+  test('children and their ages travel with the search', async ({ page }) => {
+    await page.goto(home('en'));
+
+    await page.getByTestId('stay-search-checkin').click();
+    await navigateToMonth(page, CHECK_IN);
+    await page.getByTestId(`day-${CHECK_IN}`).click();
+    await page.getByTestId(`day-${CHECK_OUT}`).click();
+
+    await page.getByTestId('stay-search-guests').click();
+    await page.getByTestId('stay-search-children-increase').click();
+    await page.getByTestId('stay-search-guests-done').click();
+    await expect(page.getByTestId('stay-search-guests')).toHaveText(
+      '2 adults, 1 child',
+    );
+
+    // A child without an age cannot be searched for: the panel reopens with
+    // the gap marked, and the guest stays on the home page.
+    await page.getByTestId('stay-search-submit').click();
+    await expect(page.getByTestId('stay-search-child-age-0')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+    expect(page.url()).not.toContain('/reserve');
+
+    // A baby: a cot, not a bed, so every room that takes two adults still fits
+    // and the test does not depend on which rooms are left.
+    await page.getByTestId('stay-search-child-age-0').selectOption('0');
+    await page.getByTestId('stay-search-submit').click();
+
+    await page.waitForURL(/\/en\/reserve\?/);
+    expect(new URL(page.url()).searchParams.get('childAges')).toBe('0');
+    await expect(
+      page.locator('[data-testid^="room-details-"]').first(),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // The flow searched for the family, and its form shows them.
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(page.getByTestId('children-count')).toHaveText('1');
+    await expect(page.getByTestId('child-age-0')).toHaveValue('0');
+  });
+
+  test('a link with an unreadable age asks again rather than dropping the child', async ({
+    page,
+  }) => {
+    await page.goto(
+      `/en/reserve?checkIn=${CHECK_IN}&checkOut=${CHECK_OUT}&adults=2&childAges=4,99`,
+    );
+    // Step 1, dates kept, no children assumed: the guest states them again.
+    await expect(page.getByTestId('check-availability')).toBeVisible();
+    await expect(page.getByTestId('checkin-field')).not.toContainText(
+      'Select date',
+    );
+    await expect(page.getByTestId('children-count')).toHaveText('0');
+  });
 
   test('an empty search opens the calendar instead of navigating', async ({
     page,
@@ -216,6 +273,22 @@ test.describe('the calendar opens where it can be reached', () => {
         // field, and only the first one was ever looked at by hand.
         await page.getByTestId('stay-search-checkout').click();
         await expectFullyOnScreen(page, `${label} (check-out)`);
+
+        // The guests panel is a third popover on the same bar, and grows
+        // with each child — measured at its tallest the test can make it.
+        await page.getByTestId('stay-search-guests').click();
+        await page.getByTestId('stay-search-children-increase').click();
+        await page.getByTestId('stay-search-children-increase').click();
+        await page.getByTestId('stay-search-children-increase').click();
+        await expectFullyOnScreen(page, `${label} (guests)`);
+
+        // Sideways too: a 300px panel off a narrow field can overhang a phone.
+        const box = await page.getByRole('dialog').boundingBox();
+        expect(box!.x, `${label} (guests): off the start edge`).toBeGreaterThanOrEqual(0);
+        expect(
+          box!.x + box!.width,
+          `${label} (guests): off the end edge`,
+        ).toBeLessThanOrEqual(viewport.width);
       });
     }
   }

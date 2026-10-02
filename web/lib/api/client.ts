@@ -16,7 +16,7 @@
 import { getServerConfig, publicConfig } from '../config';
 import type {
   ApiErrorCode,
-  AvailableRoomType,
+  AvailabilityResult,
   CreateReservationInput,
   IsoDate,
   Offer,
@@ -157,21 +157,25 @@ export const bookingApi = {
     checkIn: IsoDate;
     checkOut: IsoDate;
     adults: number;
-    children?: number;
+    /** One per child. What each age means is the API's to decide. */
+    childAges?: number[];
     roomsCount?: number;
     signal?: AbortSignal;
-  }): Promise<AvailableRoomType[]> {
-    const data = await request<{ roomTypes: AvailableRoomType[] }>(
+  }): Promise<AvailabilityResult> {
+    const childAges = args.childAges ?? [];
+    const data = await request<Partial<AvailabilityResult>>(
       `/api/availability?${query({
         checkIn: args.checkIn,
         checkOut: args.checkOut,
         adults: args.adults,
-        children: args.children ?? 0,
+        ...(childAges.length > 0 ? { childAges: childAges.join(',') } : {}),
         roomsCount: args.roomsCount ?? 1,
       })}`,
       { cache: 'no-store', ...(args.signal ? { signal: args.signal } : {}) },
     );
-    return data.roomTypes;
+    // The two services deploy independently, so an API from before
+    // `unavailable` existed is answered with an empty explanation.
+    return { roomTypes: data.roomTypes ?? [], unavailable: data.unavailable ?? [] };
   },
 
   async getRate(args: {

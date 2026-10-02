@@ -21,14 +21,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useRouter } from '@/i18n/navigation';
-import { formatNumber, formatStayDate } from '@/lib/format';
-import { MAX_ADULTS, todayInDubai } from '@/lib/stay-dates';
+import { formatStayDate } from '@/lib/format';
+import { completeChildAges, todayInDubai } from '@/lib/stay-dates';
 import type { Locale } from '@/lib/api/types';
 
 import { CalendarPopover } from './CalendarPopover';
+import { GuestsPopover } from './GuestsPopover';
 import styles from './StaySearch.module.css';
 
-type Mode = 'in' | 'out';
+/** Which popover is open: a date, or the guests panel. */
+type Mode = 'in' | 'out' | 'guests';
 
 export interface StaySearchProps {
   locale: Locale;
@@ -49,7 +51,7 @@ export function StaySearch({
   className,
 }: StaySearchProps) {
   const t = useTranslations('reserve.step1');
-  const tCommon = useTranslations('common');
+  const tSummary = useTranslations('reserve.summary');
   const router = useRouter();
 
   const today = todayInDubai();
@@ -57,10 +59,15 @@ export function StaySearch({
   const [checkIn, setCheckIn] = useState<string | null>(null);
   const [checkOut, setCheckOut] = useState<string | null>(null);
   const [adults, setAdults] = useState(2);
+  /** One per child, `null` until its age is picked — as the reserve flow holds them. */
+  const [childAges, setChildAges] = useState<Array<number | null>>([]);
+  /** Set when a search was refused for a missing age, so the panel marks it. */
+  const [showMissing, setShowMissing] = useState(false);
   const [open, setOpen] = useState<Mode | null>(null);
 
   const containerRef = useRef<HTMLFormElement>(null);
   const checkInRef = useRef<HTMLButtonElement>(null);
+  const guestsRef = useRef<HTMLButtonElement>(null);
 
   // Close on an outside click or Escape — expected of any popover, and Escape
   // is the keyboard user's only way out.
@@ -71,7 +78,12 @@ export function StaySearch({
       if (!containerRef.current?.contains(event.target as Node)) setOpen(null);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(null);
+      if (event.key !== 'Escape') return;
+      // Back to the field that opened it, so a keyboard user is not dropped at
+      // the top of the page. The calendars have always left focus where the
+      // last day button was, which is inside the form either way.
+      if (open === 'guests') guestsRef.current?.focus();
+      setOpen(null);
     };
 
     document.addEventListener('mousedown', onPointerDown);
@@ -108,11 +120,23 @@ export function StaySearch({
       return;
     }
 
+    // A child without an age cannot be searched for: the age decides which
+    // rooms fit. Reopen the panel with the gap marked rather than guessing.
+    const ages = completeChildAges(childAges);
+    if (!ages) {
+      setShowMissing(true);
+      setOpen('guests');
+      return;
+    }
+
     const query = new URLSearchParams({
       checkIn,
       checkOut,
       adults: String(adults),
     });
+    // Ages, not a count: the flow must search for the same party the guest
+    // described here, and a count alone cannot say who needs a cot.
+    if (ages.length > 0) query.set('childAges', ages.join(','));
     router.push(`/reserve?${query.toString()}`);
   }
 
@@ -203,29 +227,45 @@ export function StaySearch({
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="stay-search-guests">
+          <span className={styles.label} id="stay-search-guests-label">
             {t('guests')}
-          </label>
-          {/* A native select rather than the reserve flow's ± counter. In a
-            single-line bar the counter costs three hit areas where one will do,
-            and on a phone the native picker is better than either. */}
-          <select
+          </span>
+          {/* A button opening a panel, not the native select it replaced: a
+              select can hold one number, and a family is two numbers and an
+              age per child. */}
+          <button
+            type="button"
+            ref={guestsRef}
+            className={[styles.value, styles.guestsValue].join(' ')}
+            onClick={() =>
+              setOpen((current) => (current === 'guests' ? null : 'guests'))
+            }
+            aria-labelledby="stay-search-guests-label stay-search-guests"
+            aria-expanded={open === 'guests'}
+            aria-haspopup="dialog"
             id="stay-search-guests"
-            className={styles.value}
-            value={adults}
-            onChange={(event) => setAdults(Number(event.target.value))}
             data-testid="stay-search-guests"
           >
-            {Array.from({ length: MAX_ADULTS }, (_, index) => {
-              const count = index + 1;
-              return (
-                <option key={count} value={count}>
-                  {formatNumber(count, locale)}{' '}
-                  {count === 1 ? tCommon('adult') : tCommon('adults')}
-                </option>
-              );
-            })}
-          </select>
+            {tSummary('guestsValue', { adults, children: childAges.length })}
+          </button>
+
+          {open === 'guests' && (
+            <GuestsPopover
+              locale={locale}
+              adults={adults}
+              childAges={childAges}
+              onChange={(party) => {
+                setAdults(party.adults);
+                setChildAges(party.childAges);
+              }}
+              showMissing={showMissing}
+              onDone={() => {
+                setOpen(null);
+                guestsRef.current?.focus();
+              }}
+              className={styles.guestsPopover}
+            />
+          )}
         </div>
 
         <button

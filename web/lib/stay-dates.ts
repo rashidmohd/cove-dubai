@@ -73,17 +73,45 @@ export function isStayDate(value: string | null): value is string {
  * outside — a search link, a bookmark — must stop at the same place. A URL that
  * could set eight adults would show a number the guest cannot then reduce past
  * six, or price a stay the form itself refuses to produce.
- *
- * Children have no counter in the flow at all: the field exists in the booking
- * state and is sent to the API, but nothing renders it, so nothing may seed it.
  */
 export const MAX_ADULTS = 6;
+
+/**
+ * The most children one booking can be made for.
+ *
+ * Each child comes with an age, which the guest states — in step 1, or in the
+ * home search, which hands them over as `?childAges=`. A link that carries a
+ * count without ages cannot say who needs a cot, so none is ever accepted.
+ */
+export const MAX_CHILDREN = 4;
+
+/** The oldest a child can be. Eighteen and over books as an adult. */
+export const MAX_CHILD_AGE = 17;
+
+/**
+ * Ages as the step-1 form holds them: one entry per child, `null` until the
+ * guest picks it. Returns the ages when every child has one, else null.
+ *
+ * Validation for the guest's benefit only — what each age *means* (a cot, a
+ * bed, an adult) is decided by the API.
+ */
+export function completeChildAges(
+  ages: ReadonlyArray<number | null>,
+): number[] | null {
+  return ages.every((age): age is number => age !== null) ? [...ages] : null;
+}
 
 /** A stay read out of a query string. Each field is null when not usable. */
 export interface StayQuery {
   checkIn: string | null;
   checkOut: string | null;
   adults: number | null;
+  /**
+   * Ages from `?childAges=4,9`. `[]` when the parameter is absent — a search
+   * with no children — and null when it is present but unusable, so the flow
+   * can tell "no children" from "children it could not read".
+   */
+  childAges: number[] | null;
 }
 
 /**
@@ -112,7 +140,30 @@ export function readStayQuery(
       ? { checkIn, checkOut }
       : { checkIn: null, checkOut: null };
 
-  return { ...stay, adults: readAdults(params.get('adults')) };
+  return {
+    ...stay,
+    adults: readAdults(params.get('adults')),
+    childAges: readChildAges(params.get('childAges')),
+  };
+}
+
+/**
+ * A comma-separated list of child ages, all or nothing.
+ *
+ * Unlike adults, nothing is clamped or dropped: a list with one bad age is
+ * refused whole. Quietly searching for two children when the guest asked for
+ * three would offer rooms that do not fit the family that arrives.
+ */
+function readChildAges(raw: string | null): number[] | null {
+  if (raw === null || raw.trim() === '') return [];
+
+  const parts = raw.split(',');
+  if (parts.length > MAX_CHILDREN) return null;
+
+  const ages = parts.map((part) => (/^\s*\d{1,2}\s*$/.test(part) ? Number(part) : NaN));
+  return ages.every((age) => Number.isInteger(age) && age <= MAX_CHILD_AGE)
+    ? ages
+    : null;
 }
 
 /** A whole number of adults within the counter's range, or null. */

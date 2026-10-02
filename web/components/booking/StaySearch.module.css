@@ -53,7 +53,7 @@
   text-transform: uppercase;
 }
 
-/* The date buttons and the guest select are the same object to the eye: one
+/* The date buttons and the guests button are the same object to the eye: one
    line of Jost, no box, no underline, the bar itself providing the structure. */
 .value {
   font-family: var(--b);
@@ -65,8 +65,8 @@
   background: none;
   padding: 0;
   cursor: pointer;
-  /* Buttons do not inherit line-height, and without this the date sits a pixel
-     off the select beside it. */
+  /* Buttons do not inherit line-height; set, so every field's value sits on
+     the same baseline. */
   line-height: 1.4;
   transition: color var(--transition);
 }
@@ -76,23 +76,29 @@
   outline-offset: 4px;
 }
 
-select.value {
-  appearance: none;
+/* The guests button: one line, cut short rather than wrapped — "2 adults,
+   3 children" is the longest it gets, and a wrapped bar is a taller bar. */
+.guestsValue {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   /* Room for the chevron, on whichever side the language ends. */
   padding-inline-end: var(--space-6);
 }
 
-/* The chevron for the guest select. Drawn here rather than shipped as an SVG
-   element because it is decoration on a native control, not content. */
-.field:has(select)::after {
+/* The chevron on the guests field. Keyed to the button, not to `select`: the
+   panel it opens holds selects of its own. */
+.field:has(.guestsValue)::after {
   content: '';
   position: absolute;
   inset-inline-end: var(--space-6);
   bottom: calc(var(--space-4) + 0.35rem);
   width: 7px;
   height: 7px;
-  border-inline-end: 1.5px solid;
-  border-block-end: 1.5px solid;
+  /* Physical sides on purpose. A downward chevron points the same way in both
+     languages, and logical sides turned it into a sideways "<" under RTL. */
+  border-right: 1.5px solid;
+  border-bottom: 1.5px solid;
   transform: rotate(45deg);
   pointer-events: none;
   opacity: 0.55;
@@ -130,8 +136,8 @@ select.value {
   background: rgba(24, 14, 6, 0.82);
   backdrop-filter: blur(14px);
   border: var(--border-hairline) solid rgba(196, 154, 82, 0.28);
-  /* Renders the native option list dark, so the open select does not flash
-     white over the hero. */
+  /* Native controls on the bar itself render dark. The guests panel sets its
+     own light scheme, being a light surface. */
   color-scheme: dark;
 }
 
@@ -155,7 +161,7 @@ select.value {
   color: var(--text-on-dark-muted);
 }
 
-.dark .field:has(select)::after {
+.dark .field:has(.guestsValue)::after {
   color: var(--bone);
 }
 
@@ -201,7 +207,7 @@ select.value {
   color: rgba(28, 20, 16, 0.62);
 }
 
-.light .field:has(select)::after {
+.light .field:has(.guestsValue)::after {
   color: var(--ink);
 }
 
@@ -300,7 +306,8 @@ select.value {
 
   /* A 272px calendar hanging from the start edge of a column narrower than it
      would run off the side of the screen. Centred on the field instead. */
-  .popover {
+  .popover,
+  .guestsPopover {
     inset-inline-start: 50%;
     /* Not a logical property, and it does not need to be: this centres the box
        on its own midpoint, which is the same move in both directions. */

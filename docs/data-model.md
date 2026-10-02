@@ -38,7 +38,8 @@ individual room, so this — not a physical room — is what a guest reserves.
 | `categoryEn` / `categoryAr` | Marketing tier shown above the name — Classic, Deluxe, Premium, Signature. |
 | `descriptionEn` / `descriptionAr` | Long description. |
 | `baseRateAed` | Fallback nightly rate when no RatePlan covers a date. |
-| `maxOccupancy` | Maximum guests. |
+| `maxOccupancy` | Guests one room sleeps — adults and children together. Infants in a cot do not count. |
+| `maxAdults` | How many of those may be adults. Never above `maxOccupancy`. |
 | `totalRooms` | Rooms of this type the hotel owns. Seeds the per-date ledger; the ledger is authoritative thereafter. |
 | `imageKey` | Style key for the CSS treatment in the mockups. Becomes an asset path when the client supplies photography. |
 | `sortOrder`, `isActive` | Display order; soft removal without deleting history. |
@@ -105,6 +106,7 @@ The profile any PMS expects.
 | `bookingReference` | The booking's public identity (`CV-2026-4821`) — human-friendly, non-sequential, unique in the database. Used in URLs, emails and the admin UI. Internal ids are never exposed. |
 | `checkIn` / `checkOut` | Check-in inclusive, check-out exclusive: 12th→14th is two nights. A constraint enforces `checkOut > checkIn`, so a zero-night booking — which would touch no ledger rows and therefore consume no inventory — cannot exist. |
 | `adults`, `children`, `roomsCount` | Occupancy. |
+| `childAges` | Age of each child at check-in, one per child. Empty for bookings made before ages were asked, or after an admin changed the count by hand. |
 | `status` | `HELD` · `CONFIRMED` · `CANCELLED` · `CHECKED_IN` · `CHECKED_OUT`. Phase 1 confirms immediately, so `HELD` is rare. |
 | `priceBreakdown` | The full breakdown as computed at booking time — room total, Tourism Dirham, VAT, grand total. **Snapshotted, never recomputed**, so a later rate or tax change cannot rewrite a total the guest was already quoted and emailed. |
 | `totalAmountAed` | Grand total from that snapshot, denormalised for reporting. |
@@ -147,6 +149,9 @@ cannot express them.
 | `room_types_base_rate_non_negative`, `rate_plans_nightly_rate_non_negative` | Negative rates. |
 | `rate_plans_date_window_complete` | One-sided or inverted seasonal windows. |
 | `rate_plans_minimum_stay_positive` | A minimum stay below one night. |
+| `room_types_max_adults_within_occupancy` | A room taking more adults than it has beds, or none. *(Oct 2026)* |
+| `reservations_child_ages_in_range` | A child aged 18 or over — that guest is an adult. *(Oct 2026)* |
+| `reservations_child_ages_match_count` | Ages and the child count disagreeing about who is staying. *(Oct 2026)* |
 
 Application-level availability checks exist for user experience only. These
 constraints are the guarantee — two guests racing for the last room are
@@ -160,5 +165,9 @@ separated by the database, not by our code.
   No schema change is needed to start recording them.
 - If the chosen PMS owns availability, `RoomTypeInventory` becomes a read-through
   cache or is retired — nothing outside the booking provider reads it directly.
+- **Child ages map onto every PMS's age categories.** We store raw ages, not
+  our classification of them; the hotel's rules (`guests_*` settings) are
+  applied in `server/src/booking/occupancy.ts`. A PMS that owns age categories
+  takes the ages and applies its own — the front-end only ever sends ages.
 - `priceBreakdown` is a snapshot and should be migrated as historical data, not
   recomputed against the PMS's current rates.

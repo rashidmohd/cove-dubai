@@ -58,7 +58,6 @@ export function StaySummary({
   const t = useTranslations('reserve.summary');
   const tCommon = useTranslations('common');
 
-  const guestCount = adults + children;
 
   return (
     <aside className={styles.side} aria-label={t('title')}>
@@ -90,9 +89,9 @@ export function StaySummary({
               />
               <Row
                 label={t('guests')}
-                value={`${guestCount} ${
-                  guestCount === 1 ? tCommon('adult') : tCommon('adults')
-                }`}
+                // Adults and children named apart: "3 adults" for a couple
+                // and their child reads as a booking for the wrong party.
+                value={t('guestsValue', { adults, children })}
               />
 
               {/* The three lines the mockup does not have. */}

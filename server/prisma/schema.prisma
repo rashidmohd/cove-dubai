@@ -53,7 +53,13 @@ model RoomType {
   /// RatePlan covers a given date.
   baseRateAed Decimal @db.Decimal(10, 2)
 
+  /// Guests one room sleeps — adults and children together. Infants in a cot
+  /// do not count (see the `guests_*` settings).
   maxOccupancy Int
+  /// How many of those guests may be adults. A room that sleeps three may
+  /// still take only two adults, the third bed being a child's. Never more
+  /// than `maxOccupancy` (a CHECK constraint holds that).
+  maxAdults    Int
   /// Rooms of this type the hotel owns. Seeds RoomTypeInventory.totalRooms; the
   /// per-date rows are authoritative once created, so a closure or maintenance
   /// block on one date does not require changing this.
@@ -319,6 +325,11 @@ model Reservation {
   adults     Int @default(1)
   children   Int @default(0)
   roomsCount Int @default(1)
+  /// Age of each child at check-in, as the guest gave it. Kept rather than
+  /// collapsed into a count because the hotel's age rules can change after
+  /// the booking, and every PMS takes child ages. Empty for bookings made
+  /// before ages were asked, or when an admin changed the count by hand.
+  childAges  Int[] @default([])
 
   status ReservationStatus @default(CONFIRMED)
 

@@ -30,6 +30,7 @@ const STATUS_BY_CODE: Record<BookingErrorCode, number> = {
   // 409: the request is well-formed, it just conflicts with rooms already sold.
   INVENTORY_BELOW_BOOKED: 409,
   SETTING_NOT_FOUND: 404,
+  INVALID_ROOM_CAPACITY: 400,
   INVALID_STATUS_TRANSITION: 409,
   AMENITY_NOT_FOUND: 404,
   AMENITY_CODE_IN_USE: 409,

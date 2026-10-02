@@ -22,7 +22,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import { readRoomCode, readStayQuery, todayInDubai } from '@/lib/stay-dates';
+import {
+  MAX_CHILDREN,
+  MAX_CHILD_AGE,
+  readRoomCode,
+  readStayQuery,
+  todayInDubai,
+} from '@/lib/stay-dates';
 import type { Locale } from '@/lib/api/types';
 
 export type Step = 1 | 2 | 3;
@@ -39,7 +45,11 @@ export interface BookingState {
   checkIn: string | null;
   checkOut: string | null;
   adults: number;
-  children: number;
+  /**
+   * One entry per child, `null` until the guest picks that child's age. The
+   * count of children is this array's length, so the two cannot disagree.
+   */
+  childAges: Array<number | null>;
   roomsCount: number;
   roomTypeCode: string | null;
   guest: GuestForm;
@@ -53,7 +63,7 @@ export const initialBookingState: BookingState = {
   checkIn: null,
   checkOut: null,
   adults: 2,
-  children: 0,
+  childAges: [],
   roomsCount: 1,
   roomTypeCode: null,
   guest: { firstName: '', lastName: '', email: '', phone: '' },
@@ -75,14 +85,18 @@ function restore(): BookingState {
     if (!raw) return initialBookingState;
 
     const saved = JSON.parse(raw) as Partial<BookingState>;
-    const state: BookingState = { ...initialBookingState, ...saved };
+    const state: BookingState = {
+      ...initialBookingState,
+      ...saved,
+      childAges: restoreChildAges(saved.childAges),
+    };
 
     const today = todayInDubai();
     if (state.checkIn && state.checkIn < today) {
       return {
         ...initialBookingState,
         adults: state.adults,
-        children: state.children,
+        childAges: state.childAges,
         guest: state.guest,
       };
     }
@@ -97,6 +111,23 @@ function restore(): BookingState {
     // Corrupt or tampered storage should never break the booking flow.
     return initialBookingState;
   }
+}
+
+/**
+ * Child ages from storage, keeping only entries that could have been entered.
+ *
+ * Progress saved before ages were asked has no `childAges` at all — those
+ * sessions never had a way to add a child, so an empty list is exactly right.
+ */
+function restoreChildAges(saved: unknown): Array<number | null> {
+  if (!Array.isArray(saved)) return [];
+  return saved
+    .slice(0, MAX_CHILDREN)
+    .map((age) =>
+      Number.isInteger(age) && age >= 0 && age <= MAX_CHILD_AGE
+        ? (age as number)
+        : null,
+    );
 }
 
 /**
@@ -130,23 +161,41 @@ function applyStayFromParams(
     next.checkIn = stay.checkIn;
     next.checkOut = stay.checkOut;
     next.roomTypeCode = null;
+    // The party comes with the stay. A search states its children — none, if
+    // it carries no ages — so a draft's children from earlier in the session
+    // must not ride along into a search the guest made without them.
+    next.childAges = stay.childAges ?? [];
     // A link carrying a stay has settled step 1 already: the guest picked
     // those dates and pressed "Check availability" to get here. Landing them on
     // the date picker with the dates filled in made them press it a second
     // time. Step 2 fetches availability for these dates as soon as it opens,
     // with no rooms loaded, so the room list simply arrives.
-    next.step = 2;
+    //
+    // Unless the children could not be read: then the guest is shown step 1
+    // to state them again, rather than a room list for a party without them.
+    next.step = stay.childAges === null ? 1 : 2;
   }
 
-  // `?room=` then pre-selects a room. With only a room — the offers page,
-  // which has no dates to give — step 1 is still where the guest starts.
+  // `?room=` then pre-selects a room — the room page, the rooms list and the
+  // offers page all link this way. A guest arriving with one has already
+  // chosen, so the flow does not ask again: step 1 shows the room, and when
+  // availability confirms it fits the party for those dates the flow goes
+  // straight to their details (`ReserveFlow`).
   //
-  // Nothing is taken on trust by doing this. Step 2 re-checks availability for
-  // the dates, and the guard there drops a room the API does not offer, so a
-  // stale or invented link lands on the room list rather than carrying a
-  // phantom room into the guest's details.
+  // Always step 1, even with dates: who is staying — and how old the
+  // children are — decides whether the room fits at all, and no link carries
+  // that. Landing past it would skip the one question the room choice still
+  // depends on.
+  //
+  // Nothing is taken on trust by doing this. Availability is re-checked for
+  // the dates, and a room the API does not offer drops the guest onto the room
+  // list with the reason, rather than carrying a phantom room into the
+  // guest's details.
   const room = readRoomCode(params.get('room'));
-  if (room) next.roomTypeCode = room;
+  if (room) {
+    next.roomTypeCode = room;
+    next.step = 1;
+  }
 
   return next;
 }

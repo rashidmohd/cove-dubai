@@ -70,9 +70,9 @@ bookingRouter.get(
   readRateLimit,
   asyncRoute(async (req, res) => {
     const query = availabilityQuerySchema.parse(req.query);
-    res.json({
-      roomTypes: await getBookingProvider().checkAvailability(query),
-    });
+    // `{ roomTypes, unavailable }` — `roomTypes` keeps the shape this endpoint
+    // has always had, so a front-end that predates `unavailable` still works.
+    res.json(await getBookingProvider().checkAvailability(query));
   }),
 );
 

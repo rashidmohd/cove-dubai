@@ -64,7 +64,25 @@
       "anyPreference": "لا تفضيل",
       "checkAvailability": "تحقق من التوفر",
       "previousMonth": "الشهر السابق",
-      "nextMonth": "الشهر التالي"
+      "nextMonth": "الشهر التالي",
+      "adults": "البالغون",
+      "adultsHint": "من 18 عاماً فأكثر",
+      "children": "الأطفال",
+      "childrenHint": "من 0 إلى {max} عاماً",
+      "childAgesLegend": "أعمار الأطفال",
+      "childAge": "الطفل {number}",
+      "ageChoose": "العمر عند الوصول",
+      "ageUnderOne": "أقل من سنة",
+      "ageYears": "{age, plural, one {سنة واحدة} two {سنتان} few {# سنوات} many {# سنة} other {# سنة}}",
+      "childAgesNote": "الأعمار عند الوصول. نسأل عنها لنقترح غرفاً بالأسرّة المناسبة. ينام الرضّع في سرير أطفال.",
+      "increase": "إضافة واحد: {label}",
+      "decrease": "إزالة واحد: {label}",
+      "yourRoom": "غرفتك",
+      "changeRoom": "تغيير الغرفة",
+      "capacity": "{sleeps, plural, one {تتسع لضيف واحد} two {تتسع لضيفين} few {تتسع لـ # ضيوف} many {تتسع لـ # ضيفاً} other {تتسع لـ # ضيف}}",
+      "capacityWithAdults": "تتسع لـ {sleeps} ضيوف، {adults, plural, one {منهم بالغ واحد كحد أقصى} two {منهم بالغان كحد أقصى} few {منهم # بالغين كحد أقصى} many {منهم # بالغاً كحد أقصى} other {منهم # بالغ كحد أقصى}}",
+      "guestsDone": "تم",
+      "ageChooseShort": "العمر"
     },
     "step2": {
       "title": "اختر غرفتك",
@@ -76,7 +94,15 @@
       "viewGrid": "Show rooms as a grid",
       "viewList": "Show rooms as a list",
       "noAvailability": "لا توجد غرف متاحة في هذه التواريخ.",
-      "changeDates": "تغيير التواريخ"
+      "changeDates": "تغيير التواريخ",
+      "yourRoom": "الغرفة التي اخترتها",
+      "unavailable": {
+        "occupancy": "{room} لا تتسع لعدد ضيوفك. هذه الغرف تتسع لهم:",
+        "soldOut": "{room} محجوزة بالكامل في هذه التواريخ. هذه الغرف متاحة:",
+        "minimumStay": "{room} تتطلب إقامة لا تقل عن {nights} ليالٍ في هذه التواريخ. هذه الغرف متاحة:",
+        "other": "{room} غير متاحة لهذه الإقامة. هذه الغرف متاحة:"
+      },
+      "partyTooLarge": "لا تتسع أي من غرفنا لهذا العدد من الضيوف في حجز واحد. للمجموعات الأكبر، يرجى التواصل مع الفندق وسنرتب لكم ذلك."
     },
     "step3": {
       "title": "بياناتك",
@@ -101,7 +127,8 @@
       "tourismDirhamNote": "لكل غرفة، لكل ليلة",
       "vat": "ضريبة القيمة المضافة ({rate}%)",
       "total": "الإجمالي",
-      "payAtCheckIn": "لا يُحصَّل أي مبلغ الآن. تدفع عند الوصول."
+      "payAtCheckIn": "لا يُحصَّل أي مبلغ الآن. تدفع عند الوصول.",
+      "guestsValue": "{adults, plural, one {بالغ واحد} two {بالغان} few {# بالغين} many {# بالغاً} other {# بالغ}}{children, plural, =0 {} one {، طفل واحد} two {، طفلان} few {، # أطفال} many {، # طفلاً} other {، # طفل}}"
     },
     "success": {
       "title": "تم تأكيد حجزك",
@@ -133,7 +160,9 @@
     "voucherNotFound": "هذا الرمز غير معروف. يُرجى التحقق منه والمحاولة مرة أخرى.",
     "voucherExpired": "انتهت صلاحية هذا الرمز.",
     "voucherExhausted": "استُخدم هذا الرمز بالكامل.",
-    "voucherNotApplicable": "هذا الرمز لا ينطبق على هذه الإقامة."
+    "voucherNotApplicable": "هذا الرمز لا ينطبق على هذه الإقامة.",
+    "childAgesRequired": "اختر عمر كل طفل.",
+    "occupancyExceeded": "هذه الغرفة لا تتسع لعدد ضيوفك. يرجى اختيار غرفة أخرى."
   },
   "cancel": {
     "title": "إلغاء حجزك",
@@ -582,7 +611,9 @@
       "cancel": "إلغاء",
       "confirmCancelTitle": "إلغاء هذا الحجز؟",
       "confirmCancelAction": "إلغاء الحجز",
-      "confirmCancel": "سيُعاد الحجز {reference} إلى البيع. لا يمكن التراجع عن ذلك من هنا."
+      "confirmCancel": "سيُعاد الحجز {reference} إلى البيع. لا يمكن التراجع عن ذلك من هنا.",
+      "guests": "{adults, plural, one {بالغ واحد} two {بالغان} few {# بالغين} many {# بالغاً} other {# بالغ}}{children, plural, =0 {} one {، طفل واحد} two {، طفلان} few {، # أطفال} many {، # طفلاً} other {، # طفل}}",
+      "childAges": "(الأعمار {ages})"
     },
     "pagination": {
       "label": "الصفحات",
@@ -609,7 +640,9 @@
       "descriptionAr": "الوصف (بالعربية)",
       "saved": "تم حفظ {name}.",
       "rateNote": "يؤثر تغيير السعر الأساسي على عروض الأسعار الجديدة فقط. تحتفظ الحجوزات القائمة بالسعر الذي عُرض عليها.",
-      "amenitiesSaved": "تم تحديث المرافق."
+      "amenitiesSaved": "تم تحديث المرافق.",
+      "maxAdults": "الحد الأقصى للبالغين",
+      "maxAdultsHint": "عدد البالغين المسموح به من بين الضيوف الذين تتسع لهم الغرفة. يُحتسب الأطفال الأكبر سناً بالغين ابتداءً من العمر المحدد في الإعدادات."
     },
     "images": {
       "title": "الصور",

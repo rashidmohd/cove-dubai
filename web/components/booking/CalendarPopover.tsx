@@ -22,20 +22,14 @@
  * only while open, so opening a field seeds the cursor from `anchor` — which is
  * what both callers previously did by hand on every open.
  */
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { formatMonthYear, formatStayDate, weekdayNames } from '@/lib/format';
 import { isoFromParts } from '@/lib/stay-dates';
 import type { Locale } from '@/lib/api/types';
 
-import { choosePlacement, type PlacementResult } from './placement';
+import { usePopoverPlacement } from './usePopoverPlacement';
 import styles from './CalendarPopover.module.css';
 
 export interface CalendarPopoverProps {
@@ -83,53 +77,8 @@ export function CalendarPopover({
     return { year, month: month - 1 };
   });
 
-  const popoverRef = useRef<HTMLDivElement>(null);
-
-  // Downwards until measurement says otherwise — the common case, and the state
-  // the markup has always rendered in.
-  const [fit, setFit] = useState<PlacementResult>({
-    placement: 'below',
-    maxHeight: null,
-  });
-
-  const measure = useCallback(() => {
-    const el = popoverRef.current;
-    // `offsetParent` is the field: both callers mark theirs `position: relative`
-    // precisely so this popover hangs off it.
-    const field = el?.offsetParent;
-    if (!el || !(field instanceof HTMLElement)) return;
-
-    const rect = field.getBoundingClientRect();
-    setFit(
-      choosePlacement({
-        anchorTop: rect.top,
-        anchorBottom: rect.bottom,
-        viewportHeight: window.innerHeight,
-        // `scrollHeight`, not `offsetHeight`: once a previous measurement has
-        // capped the height, `offsetHeight` reports the cap and the calendar
-        // could never discover it has room to grow back.
-        calendarHeight: el.scrollHeight,
-      }),
-    );
-  }, []);
-
-  // Before paint, not after. `useLayoutEffect` lets the flip happen in the same
-  // frame the popover appears in, so the guest never sees it open downwards and
-  // then jump. The component mounts only on a click, so this never runs on the
-  // server.
-  useLayoutEffect(measure, [measure]);
-
-  // A resize changes the room available; so does scrolling, and the reserve
-  // page can be scrolled with the picker open. Passive listeners, as in
-  // `SiteNav`, because neither handler calls `preventDefault`.
-  useEffect(() => {
-    window.addEventListener('resize', measure, { passive: true });
-    window.addEventListener('scroll', measure, { passive: true });
-    return () => {
-      window.removeEventListener('resize', measure);
-      window.removeEventListener('scroll', measure);
-    };
-  }, [measure]);
+  // Opens above the field when below will not fit. See `usePopoverPlacement`.
+  const { ref: popoverRef, fit } = usePopoverPlacement<HTMLDivElement>();
 
   const weekdays = weekdayNames(locale);
   const firstOfMonth = new Date(Date.UTC(cursor.year, cursor.month, 1));

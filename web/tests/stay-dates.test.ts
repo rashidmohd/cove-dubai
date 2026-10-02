@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_ADULTS,
   addDays,
+  completeChildAges,
   isStayDate,
   isoFromParts,
   readRoomCode,
@@ -193,5 +194,44 @@ describe('readRoomCode', () => {
   it('refuses a code longer than any room would have', () => {
     expect(readRoomCode('a'.repeat(64))).toBe('a'.repeat(64));
     expect(readRoomCode('a'.repeat(65))).toBeNull();
+  });
+});
+
+describe('completeChildAges', () => {
+  it('returns the ages once every child has one', () => {
+    expect(completeChildAges([4, 0, 17])).toEqual([4, 0, 17]);
+    expect(completeChildAges([])).toEqual([]);
+  });
+
+  it('refuses while any age is still unanswered — including a newborn', () => {
+    expect(completeChildAges([4, null])).toBeNull();
+    // 0 is an age ("under 1"), not a missing one.
+    expect(completeChildAges([0])).toEqual([0]);
+  });
+});
+
+describe('readStayQuery — children', () => {
+  const read = (query: string) =>
+    readStayQuery(new URLSearchParams(query), '2026-10-02').childAges;
+
+  it('reads ages from the home search', () => {
+    expect(read('childAges=4,0,17')).toEqual([4, 0, 17]);
+  });
+
+  it('reads no parameter as no children', () => {
+    expect(read('adults=2')).toEqual([]);
+  });
+
+  it('refuses the whole list when any age is unusable', () => {
+    // One bad age must not quietly become a smaller family.
+    expect(read('childAges=4,18')).toBeNull();
+    expect(read('childAges=4,abc')).toBeNull();
+    expect(read('childAges=4,,6')).toBeNull();
+    expect(read('childAges=-1')).toBeNull();
+    expect(read('childAges=2.5')).toBeNull();
+  });
+
+  it('refuses more children than the flow can hold', () => {
+    expect(read('childAges=1,2,3,4,5')).toBeNull();
   });
 });

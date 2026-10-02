@@ -30,7 +30,7 @@ import type {
   AmenityChanges,
   AmenityDraft,
   AvailabilityQuery,
-  AvailableRoomType,
+  AvailabilityResult,
   InventoryCalendar,
   InventoryChanges,
   IsoDate,
@@ -59,13 +59,15 @@ export interface BookingProvider {
   getRoomType(code: string): Promise<RoomType | null>;
 
   /**
-   * Room types with enough inventory for the whole stay, each priced for it.
+   * Room types with enough inventory for the whole stay and room for the
+   * party, each priced for it — plus, where known, why the others were left
+   * out.
    *
    * This is the guest's view of availability and is advisory only: inventory
    * can be taken between this call and `createReservation`. The authoritative
    * check happens inside that method's transaction.
    */
-  checkAvailability(query: AvailabilityQuery): Promise<AvailableRoomType[]>;
+  checkAvailability(query: AvailabilityQuery): Promise<AvailabilityResult>;
 
   /** Price a stay in a room type without touching inventory. */
   getRate(args: {

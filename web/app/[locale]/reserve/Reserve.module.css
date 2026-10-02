@@ -1433,3 +1433,159 @@
     text-align: center;
   }
 }
+
+/* --- Room chosen before dates ---------------------------------------------
+   Step 1's card for a guest who pressed "Reserve" on a room. Last in the file
+   so `chosenRoomPhoto` overrides the list's `roomSwatch` size it borrows the
+   gradients from. Logical properties throughout, so Arabic mirrors as is. */
+
+.chosenRoom {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1.2rem;
+  border: 0.5px solid var(--bronze);
+  background: var(--w);
+  padding: 1rem 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.chosenRoomPhoto {
+  width: 120px;
+  margin-block: 0;
+}
+
+.chosenRoomText {
+  min-width: 0;
+}
+
+.chosenRoomChange {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--bronze);
+  padding: 0 0 0.25rem;
+  cursor: pointer;
+  font-family: var(--b);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  white-space: nowrap;
+  transition: all var(--transition);
+}
+
+.chosenRoomChange:hover,
+.chosenRoomChange:focus-visible {
+  color: var(--bronze-dk);
+  border-bottom-color: var(--bronze-dk);
+}
+
+/* Information about a choice, not a failure: bronze, not the alert's orange. */
+.notice {
+  border: 0.5px solid var(--bronze);
+  background: rgba(125, 101, 64, 0.06);
+  color: var(--ink);
+  padding: 1rem 1.2rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Guests: adults, children and their ages ----------------------------- */
+
+.guestRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.counterHint {
+  font-size: 0.75rem;
+  color: var(--fog);
+}
+
+.childAges {
+  border: 0;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  min-width: 0;
+}
+
+.childAges > legend {
+  padding: 0;
+  margin-bottom: 0.75rem;
+}
+
+.childAgeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem 1.2rem;
+}
+
+.childAgeLabel {
+  font-size: 0.8125rem;
+  color: var(--ink);
+}
+
+.select {
+  appearance: none;
+  border: 0.5px solid rgba(28, 20, 16, 0.12);
+  border-radius: 0;
+  padding-block: 0.75rem;
+  padding-inline: 1rem 2.2rem;
+  font-family: var(--b);
+  font-size: 0.9375rem;
+  font-weight: 300;
+  color: var(--ink);
+  /* A drawn chevron, placed at the inline end so it mirrors in Arabic. */
+  background:
+    linear-gradient(45deg, transparent 50%, var(--fog) 50%) no-repeat,
+    linear-gradient(135deg, var(--fog) 50%, transparent 50%) no-repeat,
+    var(--w);
+  background-size: 5px 5px, 5px 5px, auto;
+  background-position:
+    calc(100% - 1.05rem) 55%,
+    calc(100% - 0.75rem) 55%,
+    0 0;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color 0.25s;
+}
+
+:global([dir='rtl']) .select {
+  background-position:
+    0.75rem 55%,
+    1.05rem 55%,
+    0 0;
+}
+
+.select:hover {
+  border-color: rgba(28, 20, 16, 0.28);
+}
+
+.select[aria-invalid='true'] {
+  border-color: var(--orange);
+}
+
+.childAgesNote {
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--fog);
+  margin-top: 0.9rem;
+}
+
+@media (max-width: 700px) {
+  .chosenRoom {
+    grid-template-columns: auto 1fr;
+  }
+
+  .chosenRoomPhoto {
+    width: 88px;
+  }
+
+  .chosenRoomChange {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

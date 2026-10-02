@@ -70,7 +70,15 @@ export interface RoomType {
   name: LocalizedText;
   category: LocalizedText;
   description: LocalizedText;
+  /** Guests one room sleeps, adults and children together. Infants excluded. */
   maxOccupancy: number;
+  /**
+   * How many of those may be adults.
+   *
+   * Optional for the reason `amenities` is: a cached response from before the
+   * field existed is normal. Absent means "as many as it sleeps".
+   */
+  maxAdults?: number;
   baseRate: number;
   imageKey: string;
   /**
@@ -141,6 +149,24 @@ export interface AvailableRoomType extends RoomType {
   price: PriceBreakdown;
 }
 
+/**
+ * Why a room the hotel sells was left out of an availability answer. See
+ * `UnavailableRoomType` in the server types.
+ */
+export type UnavailableReason = 'occupancy' | 'sold-out' | 'minimum-stay';
+
+export interface UnavailableRoomType {
+  code: string;
+  reason: UnavailableReason;
+  minimumStayNights?: number;
+}
+
+export interface AvailabilityResult {
+  roomTypes: AvailableRoomType[];
+  /** May be empty even when rooms were left out; never assume it explains all. */
+  unavailable: UnavailableRoomType[];
+}
+
 export interface GuestDetails {
   firstName: string;
   lastName: string;
@@ -154,6 +180,8 @@ export interface Stay {
   checkOut: IsoDate;
   adults: number;
   children: number;
+  /** One per child, or empty when the ages were not recorded. */
+  childAges?: number[];
   roomsCount: number;
 }
 
@@ -174,7 +202,8 @@ export interface CreateReservationInput {
   checkIn: IsoDate;
   checkOut: IsoDate;
   adults: number;
-  children: number;
+  /** One per child. The API derives the child count from it. */
+  childAges: number[];
   roomsCount: number;
   guest: GuestDetails;
   specialRequests?: string;

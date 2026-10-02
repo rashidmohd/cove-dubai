@@ -1,0 +1,232 @@
+/**
+ * The guests panel the home search opens.
+ *
+ * The calendar's surface, border, shadow and flip (`CalendarPopover.module.css`)
+ * so the two popovers in one bar read as one system. Logical properties
+ * throughout, so it mirrors under `dir="rtl"` with no second rule
+ * (`arabic-rtl`).
+ */
+
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  width: 300px;
+  background: var(--w);
+  color: var(--ink);
+  border: 0.5px solid rgba(28, 20, 16, 0.12);
+  z-index: 50;
+  padding: 1.2rem 1.2rem 1rem;
+  box-shadow: 0 8px 28px rgba(28, 20, 16, 0.08);
+  max-height: var(--popover-max-height, none);
+  overflow-y: auto;
+  /* The hero bar renders native controls dark; this panel is a light surface,
+     so its age selects must open light too. */
+  color-scheme: light;
+  text-align: start;
+}
+
+.above {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+/* --- Counters ------------------------------------------------------------ */
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.7rem;
+}
+
+.row + .row {
+  border-block-start: 0.5px solid rgba(28, 20, 16, 0.08);
+}
+
+.rowLabel {
+  display: block;
+  font-family: var(--b);
+  font-size: 0.9375rem;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.rowHint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--fog);
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* The reserve flow's counter buttons, enlarged to a comfortable touch target:
+   this panel is used on phones over the hero far more than the flow's is. */
+.counterBtn {
+  width: 32px;
+  height: 32px;
+  border: 0.5px solid rgba(28, 20, 16, 0.2);
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s;
+}
+
+.counterBtn:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.counterBtn:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 2px;
+}
+
+.counterBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.counterValue {
+  font-size: 0.9375rem;
+  min-width: 14px;
+  text-align: center;
+}
+
+/* --- Ages ---------------------------------------------------------------- */
+
+.ages {
+  border: 0;
+  border-block-start: 0.5px solid rgba(28, 20, 16, 0.08);
+  padding: 0.9rem 0 0;
+  margin: 0.2rem 0 0;
+  min-width: 0;
+}
+
+.legend {
+  float: inline-start;
+  width: 100%;
+  margin-bottom: 0.6rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+
+.ageGrid {
+  clear: both;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem 0.8rem;
+}
+
+.ageField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.ageLabel {
+  font-size: 0.75rem;
+  color: var(--ink);
+}
+
+.select {
+  appearance: none;
+  border: 0.5px solid rgba(28, 20, 16, 0.18);
+  border-radius: 0;
+  padding-block: 0.55rem;
+  padding-inline: 0.7rem 1.8rem;
+  font-family: var(--b);
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: var(--ink);
+  /* A drawn chevron at the inline end. */
+  background:
+    linear-gradient(45deg, transparent 50%, var(--fog) 50%) no-repeat,
+    linear-gradient(135deg, var(--fog) 50%, transparent 50%) no-repeat,
+    var(--w);
+  background-size: 5px 5px, 5px 5px, auto;
+  background-position:
+    calc(100% - 0.95rem) 55%,
+    calc(100% - 0.65rem) 55%,
+    0 0;
+  cursor: pointer;
+  width: 100%;
+}
+
+:global([dir='rtl']) .select {
+  background-position:
+    0.65rem 55%,
+    0.95rem 55%,
+    0 0;
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 1px;
+}
+
+.select[aria-invalid='true'] {
+  border-color: var(--orange);
+}
+
+.note,
+.error {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  margin-top: 0.7rem;
+}
+
+.note {
+  color: var(--fog);
+}
+
+.error {
+  color: var(--orange);
+}
+
+/* --- Done ---------------------------------------------------------------- */
+
+.done {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: var(--bronze);
+  color: #fff;
+  font-family: var(--b);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.done:hover,
+.done:focus-visible {
+  background: var(--bronze-dk);
+}
+
+:global([lang='ar']) .legend,
+:global([lang='ar']) .done {
+  text-transform: none;
+  letter-spacing: 0;
+  text-indent: 0;
+}
+
+:global([lang='ar']) .legend {
+  font-size: 0.8125rem;
+}

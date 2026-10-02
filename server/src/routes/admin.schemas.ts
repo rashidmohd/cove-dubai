@@ -56,6 +56,7 @@ export const modifyReservationSchema = z
     roomTypeCode: text(60).optional(),
     adults: z.number().int().min(1).max(20).optional(),
     children: z.number().int().min(0).max(20).optional(),
+    childAges: z.array(z.number().int().min(0).max(17)).max(20).optional(),
     roomsCount: z.number().int().min(1).max(10).optional(),
     specialRequests: z.string().trim().max(2000).optional(),
   })
@@ -70,6 +71,7 @@ export const updateRoomTypeSchema = z
     category: localizedText(120).optional(),
     description: localizedText(2000).optional(),
     maxOccupancy: z.number().int().min(1).max(20).optional(),
+    maxAdults: z.number().int().min(1).max(20).optional(),
     baseRate: z.number().min(0).max(1_000_000).optional(),
     imageKey: text(120).optional(),
     isActive: z.boolean().optional(),

@@ -149,6 +149,17 @@ export function RoomTypes({ locale }: { locale: Locale }) {
                   value={<Num>{formatNumber(roomType.maxOccupancy, locale)}</Num>}
                 />
                 <Figure
+                  label={t('rooms.maxAdults')}
+                  value={
+                    <Num>
+                      {formatNumber(
+                        roomType.maxAdults ?? roomType.maxOccupancy,
+                        locale,
+                      )}
+                    </Num>
+                  }
+                />
+                <Figure
                   label={t('rooms.totalRooms')}
                   value={<Num>{formatNumber(roomType.totalRooms, locale)}</Num>}
                 />
@@ -397,6 +408,9 @@ function RoomTypeForm({
   const [maxOccupancy, setMaxOccupancy] = useState(
     String(roomType.maxOccupancy),
   );
+  const [maxAdults, setMaxAdults] = useState(
+    String(roomType.maxAdults ?? roomType.maxOccupancy),
+  );
   const [isActive, setIsActive] = useState(roomType.isActive);
   const [busy, setBusy] = useState(false);
 
@@ -413,6 +427,7 @@ function RoomTypeForm({
         },
         baseRate: Number(baseRate),
         maxOccupancy: Number(maxOccupancy),
+        maxAdults: Number(maxAdults),
         isActive,
       });
       await onSaved(nameEn.trim());
@@ -499,6 +514,19 @@ function RoomTypeForm({
                 max="20"
                 value={maxOccupancy}
                 onChange={(event) => setMaxOccupancy(event.target.value)}
+                dir="ltr"
+                required
+              />
+            </Field>
+            {/* The browser caps it at "Sleeps" as typed; the API refuses
+                anything above it regardless. */}
+            <Field label={t('rooms.maxAdults')} hint={t('rooms.maxAdultsHint')}>
+              <Input
+                type="number"
+                min="1"
+                max={maxOccupancy || '20'}
+                value={maxAdults}
+                onChange={(event) => setMaxAdults(event.target.value)}
                 dir="ltr"
                 required
               />

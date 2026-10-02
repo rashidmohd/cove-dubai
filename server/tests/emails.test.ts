@@ -32,6 +32,7 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
       category: { en: 'Classic', ar: 'كلاسيك' },
       description: { en: 'A room.', ar: 'غرفة.' },
       maxOccupancy: 2,
+      maxAdults: 2,
       baseRate: 980,
       imageKey: 'img-studio',
       amenities: [],
@@ -42,6 +43,7 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
       checkOut: '2027-03-12',
       adults: 2,
       children: 0,
+      childAges: [],
       roomsCount: 1,
     },
     guest: {

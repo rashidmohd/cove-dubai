@@ -39,6 +39,13 @@ import {
   type DiscountInput,
   type PricingSettings,
 } from './pricing.js';
+import {
+  classifyGuests,
+  GUEST_POLICY_KEYS,
+  occupancyProblem,
+  parseGuestPolicy,
+  type GuestPolicy,
+} from './occupancy.js';
 import type { BookingProvider } from './provider.js';
 import { generateBookingReference } from './reference.js';
 import { deleteObject, publicUrlFor } from '../media/storage.js';
@@ -52,6 +59,7 @@ import {
   type AmenityChanges,
   type AmenityDraft,
   type AvailabilityQuery,
+  type AvailabilityResult,
   type AvailableRoomType,
   type InventoryCalendar,
   type InventoryChanges,
@@ -71,6 +79,7 @@ import {
   type RoomType,
   type RoomTypeChanges,
   type Stay,
+  type UnavailableRoomType,
   type VoucherChanges,
   type VoucherDraft,
   type VoucherPreview,
@@ -159,25 +168,40 @@ export class CustomDbProvider implements BookingProvider {
 
   async checkAvailability(
     query: AvailabilityQuery,
-  ): Promise<AvailableRoomType[]> {
+  ): Promise<AvailabilityResult> {
     const roomsCount = query.roomsCount ?? 1;
     this.assertValidStay({ ...query, roomsCount });
 
-    const guests = query.adults + query.children;
     const nights = nightsBetween(query.checkIn, query.checkOut);
 
-    const [roomTypes, settings] = await Promise.all([
+    // Every room type on sale is read, not just those big enough, so the ones
+    // the party does not fit can be reported as such rather than vanishing.
+    const [roomTypes, settings, policy] = await Promise.all([
       this.prisma.roomType.findMany({
-        where: { isActive: true, maxOccupancy: { gte: guests } },
+        where: { isActive: true },
         orderBy: { sortOrder: 'asc' },
         include: { ratePlans: { where: { isActive: true } }, ...WITH_AMENITIES },
       }),
       this.loadPricingSettings(),
+      this.loadGuestPolicy(),
     ]);
 
+    const occupants = classifyGuests(
+      { adults: query.adults, children: query.children, childAges: query.childAges ?? [] },
+      policy,
+    );
+
     const available: AvailableRoomType[] = [];
+    const unavailable: UnavailableRoomType[] = [];
 
     for (const roomType of roomTypes) {
+      // Checked first: a party that does not fit should hear that, not "sold
+      // out", because changing dates would never help them.
+      if (occupancyProblem(occupants, roomType, roomsCount, policy)) {
+        unavailable.push({ code: roomType.code, reason: 'occupancy' });
+        continue;
+      }
+
       const inventory = await this.prisma.roomTypeInventory.findMany({
         where: {
           roomTypeId: roomType.id,
@@ -188,21 +212,30 @@ export class CustomDbProvider implements BookingProvider {
       // Every night of the stay must have an open inventory row. A missing row
       // means the calendar is not open that far out, which is unavailable
       // rather than unlimited.
-      if (inventory.length !== nights.length) continue;
-      if (inventory.some((night) => night.isClosed)) continue;
-
-      // The binding constraint is the tightest night in the stay.
-      const roomsAvailable = Math.min(
-        ...inventory.map((night) => night.totalRooms - night.bookedRooms),
-      );
-      if (roomsAvailable < roomsCount) continue;
+      const roomsAvailable =
+        inventory.length === nights.length &&
+        !inventory.some((night) => night.isClosed)
+          ? // The binding constraint is the tightest night in the stay.
+            Math.min(...inventory.map((night) => night.totalRooms - night.bookedRooms))
+          : 0;
+      if (roomsAvailable < roomsCount) {
+        unavailable.push({ code: roomType.code, reason: 'sold-out' });
+        continue;
+      }
 
       const minimumStay = resolveMinimumStay({
         checkIn: query.checkIn,
         checkOut: query.checkOut,
         ratePlans: roomType.ratePlans,
       });
-      if (nights.length < minimumStay) continue;
+      if (nights.length < minimumStay) {
+        unavailable.push({
+          code: roomType.code,
+          reason: 'minimum-stay',
+          minimumStayNights: minimumStay,
+        });
+        continue;
+      }
 
       available.push({
         ...toDomainRoomType(roomType),
@@ -211,7 +244,7 @@ export class CustomDbProvider implements BookingProvider {
       });
     }
 
-    return available;
+    return { roomTypes: available, unavailable };
   }
 
   async getRate(args: {
@@ -381,12 +414,20 @@ export class CustomDbProvider implements BookingProvider {
       );
     }
 
-    const guests = draft.adults + draft.children;
-    if (guests > roomType.maxOccupancy * draft.roomsCount) {
+    // The same rule availability applied, re-checked here because the draft
+    // is the guest's word and availability was only advice.
+    const policy = await this.loadGuestPolicy(tx);
+    const occupants = classifyGuests(
+      { adults: draft.adults, children: draft.children, childAges: draft.childAges ?? [] },
+      policy,
+    );
+    if (occupancyProblem(occupants, roomType, draft.roomsCount, policy)) {
       throw new BookingError(
         'OCCUPANCY_EXCEEDED',
-        `This room type sleeps ${roomType.maxOccupancy}.`,
-        { maxOccupancy: roomType.maxOccupancy },
+        roomType.maxAdults < roomType.maxOccupancy
+          ? `This room type sleeps ${roomType.maxOccupancy}, of whom ${roomType.maxAdults} may be adults.`
+          : `This room type sleeps ${roomType.maxOccupancy}.`,
+        { maxOccupancy: roomType.maxOccupancy, maxAdults: roomType.maxAdults },
       );
     }
 
@@ -465,6 +506,7 @@ export class CustomDbProvider implements BookingProvider {
         checkOut: toUtcDate(draft.checkOut),
         adults: draft.adults,
         children: draft.children,
+        childAges: draft.childAges ?? [],
         roomsCount: draft.roomsCount,
         status: 'CONFIRMED',
         specialRequests: draft.specialRequests ?? null,
@@ -863,7 +905,15 @@ export class CustomDbProvider implements BookingProvider {
           const checkOut = changes.checkOut ?? toIsoDate(existing.checkOut);
           const roomsCount = changes.roomsCount ?? existing.roomsCount;
           const adults = changes.adults ?? existing.adults;
-          const children = changes.children ?? existing.children;
+          const children =
+            changes.children ?? changes.childAges?.length ?? existing.children;
+          // Ages are the guest's own account of their children. An admin who
+          // changes the count by hand has not given new ages, so the old ones
+          // no longer describe the party and are dropped rather than kept
+          // half-right; ages given with the change replace them.
+          const childAges =
+            changes.childAges ??
+            (children === existing.children ? existing.childAges : []);
 
           const roomTypeCode = changes.roomTypeCode ?? existing.roomType.code;
           const roomType = await tx.roomType.findUnique({
@@ -882,6 +932,7 @@ export class CustomDbProvider implements BookingProvider {
             checkOut,
             adults,
             children,
+            childAges,
             roomsCount,
           });
 
@@ -912,6 +963,7 @@ export class CustomDbProvider implements BookingProvider {
               checkOut: toUtcDate(checkOut),
               adults,
               children,
+              childAges,
               roomsCount,
               ...(changes.specialRequests !== undefined
                 ? { specialRequests: changes.specialRequests }
@@ -1115,8 +1167,22 @@ export class CustomDbProvider implements BookingProvider {
       data.descriptionEn = changes.description.en;
       data.descriptionAr = changes.description.ar;
     }
-    if (changes.maxOccupancy !== undefined) {
-      data.maxOccupancy = changes.maxOccupancy;
+    if (changes.maxOccupancy !== undefined || changes.maxAdults !== undefined) {
+      const current = await this.requireRoomType(code);
+      const maxOccupancy = changes.maxOccupancy ?? current.maxOccupancy;
+      // Lowering the beds carries the adult limit down with it, rather than
+      // refusing the edit: an admin who makes a room sleep two plainly does
+      // not mean it to still take three adults.
+      const maxAdults = Math.min(changes.maxAdults ?? current.maxAdults, maxOccupancy);
+      if (changes.maxAdults !== undefined && changes.maxAdults > maxOccupancy) {
+        throw new BookingError(
+          'INVALID_ROOM_CAPACITY',
+          `This room sleeps ${maxOccupancy}, so it cannot take ${changes.maxAdults} adults.`,
+          { maxOccupancy },
+        );
+      }
+      data.maxOccupancy = maxOccupancy;
+      data.maxAdults = maxAdults;
     }
     if (changes.baseRate !== undefined) {
       data.baseRateAed = new Prisma.Decimal(changes.baseRate);
@@ -2009,7 +2075,9 @@ export class CustomDbProvider implements BookingProvider {
     }
   }
 
-  private assertValidStay(stay: Stay): void {
+  private assertValidStay(
+    stay: Omit<Stay, 'childAges'> & { childAges?: number[] | undefined },
+  ): void {
     if (!isValidIsoDate(stay.checkIn) || !isValidIsoDate(stay.checkOut)) {
       throw new BookingError('INVALID_STAY', 'Dates must be valid YYYY-MM-DD.');
     }
@@ -2025,6 +2093,26 @@ export class CustomDbProvider implements BookingProvider {
     if (stay.children < 0 || stay.roomsCount < 1) {
       throw new BookingError('INVALID_STAY', 'Invalid guest or room count.');
     }
+    // Ages, when given, are one per child. A mismatch would make the count and
+    // the ages disagree about who is staying, and capacity has to pick one.
+    if (stay.childAges && stay.childAges.length > 0) {
+      if (stay.childAges.length !== stay.children) {
+        throw new BookingError('INVALID_STAY', 'Give one age per child.');
+      }
+      if (stay.childAges.some((age) => !Number.isInteger(age) || age < 0 || age > 17)) {
+        throw new BookingError('INVALID_STAY', 'Child ages must be 0 to 17.');
+      }
+    }
+  }
+
+  /** The hotel's child policy, from settings. See `occupancy.ts`. */
+  private async loadGuestPolicy(
+    client: Tx | PrismaClient = this.prisma,
+  ): Promise<GuestPolicy> {
+    const rows = await client.setting.findMany({
+      where: { key: { in: [...GUEST_POLICY_KEYS] } },
+    });
+    return parseGuestPolicy((key) => rows.find((row) => row.key === key)?.value);
   }
 
   /**
@@ -2070,6 +2158,7 @@ function toDomainRoomType(roomType: RoomTypeMaybeAmenities): RoomType {
     category: { en: roomType.categoryEn, ar: roomType.categoryAr },
     description: { en: roomType.descriptionEn, ar: roomType.descriptionAr },
     maxOccupancy: roomType.maxOccupancy,
+    maxAdults: roomType.maxAdults,
     baseRate: roomType.baseRateAed.toNumber(),
     imageKey: roomType.imageKey,
     // Empty rather than undefined when the relation was not loaded, so callers
@@ -2194,6 +2283,7 @@ function toDomainReservation(
       checkOut: toIsoDate(reservation.checkOut),
       adults: reservation.adults,
       children: reservation.children,
+      childAges: reservation.childAges,
       roomsCount: reservation.roomsCount,
     },
     guest: {

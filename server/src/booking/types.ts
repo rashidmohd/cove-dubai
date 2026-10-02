@@ -85,7 +85,10 @@ export interface RoomType {
   name: LocalizedText;
   category: LocalizedText;
   description: LocalizedText;
+  /** Guests one room sleeps, adults and children together. Infants excluded. */
   maxOccupancy: number;
+  /** How many of those guests may be adults. Never above `maxOccupancy`. */
+  maxAdults: number;
   /** Lowest nightly rate currently published, for "from AED x" displays. */
   baseRate: number;
   /**
@@ -175,6 +178,39 @@ export interface AvailableRoomType extends RoomType {
 }
 
 /**
+ * Why a room type the hotel sells was left out of an availability answer.
+ *
+ * Lets the booking flow tell a guest who arrived wanting one room *why* it is
+ * not on offer — "sleeps two" asks them to change their party, "sold out"
+ * their dates — rather than silently showing a list without it.
+ *
+ * - `occupancy` — the party does not fit, whatever the dates.
+ * - `sold-out` — no rooms left, closed, or not yet on sale for those nights.
+ * - `minimum-stay` — the stay is shorter than a rate plan requires.
+ */
+export type UnavailableReason = 'occupancy' | 'sold-out' | 'minimum-stay';
+
+export interface UnavailableRoomType {
+  code: string;
+  reason: UnavailableReason;
+  /** Present with `minimum-stay`: the nights the guest would need to book. */
+  minimumStayNights?: number;
+}
+
+/**
+ * The answer to "what can I book for this stay".
+ *
+ * `unavailable` is explanatory and may be empty even when rooms were left out —
+ * a future PMS need not say why it declined a room, and the flow then falls
+ * back to a general message. Room types the hotel does not sell at all never
+ * appear in either list.
+ */
+export interface AvailabilityResult {
+  roomTypes: AvailableRoomType[];
+  unavailable: UnavailableRoomType[];
+}
+
+/**
  * The full cost of a stay, itemised.
  *
  * `booking-engine` requires the guest sees room total, Tourism Dirham and VAT
@@ -232,15 +268,24 @@ export interface Stay {
   checkOut: IsoDate;
   adults: number;
   children: number;
+  /**
+   * Age of each child at check-in. Empty when the ages were not recorded —
+   * bookings from before they were asked, or a count an admin edited by hand.
+   */
+  childAges: number[];
   roomsCount: number;
 }
 
-export interface AvailabilityQuery extends Omit<Stay, 'roomsCount'> {
+export interface AvailabilityQuery
+  extends Omit<Stay, 'roomsCount' | 'childAges'> {
   roomsCount?: number;
+  /** One per child when given; `children` must then equal its length. */
+  childAges?: number[] | undefined;
 }
 
 /** Everything needed to create a reservation. */
-export interface ReservationDraft extends Stay {
+export interface ReservationDraft extends Omit<Stay, 'childAges'> {
+  childAges?: number[] | undefined;
   roomTypeCode: string;
   guest: GuestDetails;
   // `| undefined` is explicit because `exactOptionalPropertyTypes` is on and
@@ -288,6 +333,8 @@ export interface ReservationChanges {
   roomTypeCode?: string | undefined;
   adults?: number | undefined;
   children?: number | undefined;
+  /** One per child; replaces the recorded ages. */
+  childAges?: number[] | undefined;
   roomsCount?: number | undefined;
   specialRequests?: string | undefined;
 }
@@ -419,6 +466,7 @@ export interface RoomTypeChanges {
   category?: LocalizedText | undefined;
   description?: LocalizedText | undefined;
   maxOccupancy?: number | undefined;
+  maxAdults?: number | undefined;
   baseRate?: number | undefined;
   imageKey?: string | undefined;
   isActive?: boolean | undefined;
@@ -480,6 +528,8 @@ export type BookingErrorCode =
   /** An admin tried to cut inventory below the rooms already sold. */
   | 'INVENTORY_BELOW_BOOKED'
   | 'SETTING_NOT_FOUND'
+  /** A room type would take more adults than it has beds. */
+  | 'INVALID_ROOM_CAPACITY'
   | 'AMENITY_NOT_FOUND'
   /** An amenity code is already taken, or an OTA code is claimed twice. */
   | 'AMENITY_CODE_IN_USE'

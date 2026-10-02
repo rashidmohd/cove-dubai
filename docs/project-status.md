@@ -1,6 +1,6 @@
 # Project status
 
-**Last updated:** 16 September 2026
+**Last updated:** 2 October 2026
 **Phase 1 progress:** milestones M0–M7 complete · **not yet deployed to Railway**
 **In flight:** vouchers, offers, and guest accounts — see [`promotions-and-accounts.md`](promotions-and-accounts.md)
 
@@ -24,10 +24,10 @@ at startup and exit with a readable message if anything required is missing. `se
 ### Checks
 
 ```bash
-cd server && npm run typecheck && npm test     # 106 tests — hits the real database
-cd web    && npm run typecheck && npm test     # 51 tests — pure, no network
+cd server && npm run typecheck && npm test     # 121 tests — hits the real database
+cd web    && npm run typecheck && npm test     # 57 tests — pure, no network
 cd web    && npm run check:translations        # Arabic coverage report
-cd web    && npx playwright test               # 39 e2e — needs the API running
+cd web    && npx playwright test               # 46 e2e — needs the API running
 ```
 
 The 7 admin e2e tests skip unless `E2E_ADMIN_PASSWORD` is set to the password of `admin@covedubai.local`, so the
@@ -1025,6 +1025,8 @@ None of these block development.
 | **Arabic numerals** | Western (1234) applied consistently. Switch the single constant in `web/lib/format.ts` if the client wants Arabic-Indic. |
 | **Arabic font** | Almarai, pending confirmation (skill lists Almarai or Cairo). |
 | **Photography** | All imagery is CSS gradients, as in the mockups. `imageKey` on `RoomType` is the hook for real images. |
+| **Child policy** | Three **placeholder** settings in **Admin → Settings**, read on every search: `guests_adult_from_age` **12** (a child this age or older counts as an adult), `guests_infant_up_to_age` **1** (this age or younger sleeps in a cot and takes no bed), `guests_infants_per_room` **1** (cots per room). Needs the hotel's answers, plus: **do children cost anything** (free, a child rate, an extra-bed charge)? Today children are free — pricing ignores them. |
+| **Max adults per room type** | Seeded equal to "Sleeps" (King 2, Twin 2, Suite 4), which admits exactly the parties it did before. The hotel should set the real figure per room in **Admin → Rooms** — e.g. a Suite that sleeps 4 but takes only 2 adults. |
 | **Resend domain** | **Not verified — this now blocks real email.** The templates and sending are built and tested, but nothing leaves the building until the hotel's domain is verified in Resend and `EMAIL_FROM` points at an address on it. Until then the console transport logs messages instead. |
 
 ---
@@ -1177,3 +1179,72 @@ Google also declared — characters outside Basic Latin (e.g. `ł`, `ő`) now us
 > day of runs the local database sold out of suites for 14–17 Aug 2027 and the booking specs fail with "No rooms
 > are available" — test data, not code. Clear the Playwright bookings (guest emails `e2e-…@e2e-test.invalid`) or
 > reseed the local database before relying on a red run.
+
+---
+
+## Reserving a chosen room, and children with ages (2 Oct 2026)
+
+**The problem.** "Reserve" on a room (rooms list, room page, offers) linked to `/reserve?room=<code>`, which
+landed on step 1 with no sign the room was kept, then showed **every** room in step 2 with that one ticked — so
+the guest was asked to choose a room they had already chosen. And the flow had no children at all: a counter for
+adults only, though the API stored a child count.
+
+**The flow now, when a guest arrives with a room:**
+
+1. Step 1 shows a **"Your room" card** (photo, name, capacity, *Change room*) above the dates and guests.
+2. Guests are **adults + children**, and each child gets an **age** (Under 1 … 17). The search is refused until
+   every age is chosen. A `?room=` link always lands on step 1, even with dates, because the ages decide whether
+   the room fits and no link carries them.
+3. *Check availability* → **room fits these dates and this party: straight to step 3 (Details).** The step
+   indicator shows Room as done; *Back* reaches the full list with the room ticked.
+4. **Room does not suit:** step 2 with a notice naming why — *not large enough for your party*, *fully booked for
+   these dates*, or *needs a minimum stay of N nights* — above the rooms that do. When **no** room fits the party,
+   the empty list says so instead of blaming the dates.
+5. *Change room* drops the choice and the guest gets the ordinary three steps.
+
+A guest starting from the nav or the home search gets the same three steps as before, now with children.
+
+**Where the rules live (`pms-readiness`).** The browser sends **raw ages**; what an age *means* is decided in the
+API by `server/src/booking/occupancy.ts` from three settings (see *Open items*): adults (including children at or
+over the adult age) ≤ `maxAdults` × rooms; adults + children ≤ `maxOccupancy` × rooms; infants ≤ cots × rooms.
+The same check runs in availability and again inside the booking transaction.
+
+**API changes.**
+- `GET /api/availability` takes `childAges=4,9` (the count is derived; a disagreeing `children` is refused) and
+  returns `{ roomTypes, unavailable: [{ code, reason, minimumStayNights? }] }`. `roomTypes` is unchanged, so an
+  older front-end still works; `unavailable` may be empty for a provider that does not explain itself.
+- `POST /api/reservations` takes `childAges`; reservations return `stay.childAges`.
+- Room types carry `maxAdults`, editable in Admin → Rooms; lowering *Sleeps* carries it down, and a value above
+  *Sleeps* is refused (`INVALID_ROOM_CAPACITY`).
+- Migration `20261002090000_add_child_ages_and_max_adults` — additive, backfills `maxAdults = maxOccupancy`, so no
+  availability answer changed on applying it. Applied to the dev database; three new CHECK constraints (see
+  `data-model.md`).
+- Admin → Reservations shows each booking's party and child ages under the dates, so a cot can be prepared.
+
+**Not done — follow-ups:**
+- ~~**The home page search bar still has adults only.**~~ **Done the same day** — see below.
+- **Child pricing.** Pricing ignores children until the hotel answers the question in *Open items*.
+- **Multiple rooms.** `roomsCount` exists in the API but the flow books one room, so a party larger than any room
+  is told to contact the hotel.
+
+### Home search: children and their ages (2 Oct 2026)
+
+The hero bar's guest field was a native select of adults only, so every family reached the flow as a party of
+adults and was shown rooms that could not take their children. It is now a **Guests button** ("2 adults,
+1 child") opening a panel with adults and children counters and an **age per child** — the same questions step 1
+asks, on the calendar's light surface.
+
+- **A child without an age blocks the search**: the panel reopens with the empty age marked, and the guest stays
+  on the home page.
+- **The link carries ages**: `/reserve?checkIn=…&checkOut=…&adults=2&childAges=4,0`. The flow opens on the room
+  list already searched for that party, and step 1 shows the children with their ages.
+- **A search states its party.** A link with dates and no `childAges` means no children, replacing any children
+  in a session draft — the same "the link wins" rule the dates follow.
+- **An unreadable list is refused whole** (`childAges=4,99`): the guest lands on step 1 with the dates kept and
+  no children assumed, rather than on a room list for a smaller family. Parsing is `readStayQuery` in
+  `web/lib/stay-dates.ts`, unit-tested.
+- The flip-above-when-it-won't-fit logic moved from `CalendarPopover` into `usePopoverPlacement`, which both
+  popovers use. The e2e placement checks now open the guests panel at its tallest on every hero, at 1440×900 and
+  390×844, and check it stays on screen sideways too.
+- Fixed in passing: the field's chevron pointed sideways in Arabic (logical borders on a rotated box).
+

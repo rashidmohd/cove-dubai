@@ -19,16 +19,23 @@ import type {
   AvailableRoomType,
   Locale,
   Reservation,
+  RoomType,
+  UnavailableRoomType,
   VoucherPreview,
 } from '@/lib/api/types';
 import { formatMoney, countNights } from '@/lib/format';
-import { MAX_ADULTS } from '@/lib/stay-dates';
+import {
+  MAX_ADULTS,
+  MAX_CHILDREN,
+  MAX_CHILD_AGE,
+  completeChildAges,
+} from '@/lib/stay-dates';
 import { Confirmation } from './Confirmation';
 import { DatePicker } from './DatePicker';
 import { GuestDetails } from './GuestDetails';
 import { StaySummary } from './StaySummary';
-import { RoomCarousel } from '@/components/marketing';
-import { resolveRoomPhotos } from '@/lib/media';
+import { Photo, RoomCarousel } from '@/components/marketing';
+import { resolveRoomPhoto, resolveRoomPhotos } from '@/lib/media';
 import { RoomDetailDialog } from './RoomDetailDialog';
 import { useBookingState, type Step } from './useBookingState';
 import styles from './Reserve.module.css';
@@ -76,6 +83,29 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
   const [rooms, setRooms] = useState<AvailableRoomType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Why the room the guest arrived with is not in the list, shown above it.
+   *
+   * Separate from `error`: nothing has failed. The guest picked a room that
+   * does not suit these dates or this party, and needs to hear which, so they
+   * know whether to change the room, the dates or the guests.
+   */
+  const [notice, setNotice] = useState<string | null>(null);
+
+  /**
+   * True when no room is on offer *because of the party*, not the dates. The
+   * empty list then says so — "nothing available for those dates" would send
+   * a family of six hunting through a calendar for dates that do not exist.
+   */
+  const [partyTooLarge, setPartyTooLarge] = useState(false);
+
+  /**
+   * Every room the hotel sells, for the step-1 card naming the room a guest
+   * arrived with. Availability is not known until they pick dates, so this is
+   * the catalogue, not an offer — it carries no price for the stay.
+   */
+  const [catalogue, setCatalogue] = useState<RoomType[]>([]);
   const [reservation, setReservation] = useState<Reservation | null>(null);
 
   /**
@@ -120,6 +150,63 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     [rooms, state.roomTypeCode],
   );
 
+  /** The room chosen before dates, as the catalogue describes it. */
+  const chosenRoom = useMemo(
+    () => catalogue.find((room) => room.code === state.roomTypeCode) ?? null,
+    [catalogue, state.roomTypeCode],
+  );
+
+  const childAges = state.childAges;
+
+  // Only fetched when a room has been chosen before availability — a link from
+  // a room page — because that is the only time step 1 has a room to show.
+  useEffect(() => {
+    if (!restored || !state.roomTypeCode || catalogue.length > 0) return;
+    let cancelled = false;
+    bookingApi
+      .getRoomTypes()
+      .then((roomTypes) => {
+        if (!cancelled) setCatalogue(roomTypes);
+      })
+      .catch(() => {
+        // The card is a courtesy. Without it the flow still works: the room is
+        // still chosen, and availability still decides what happens next.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [restored, state.roomTypeCode, catalogue.length]);
+
+  /**
+   * Explain why a chosen room is not on offer.
+   *
+   * Reads the reason the API gave. With none — an API that does not explain,
+   * or a code it does not sell at all — the general sentence still tells the
+   * guest the room is unavailable rather than leaving it to vanish silently.
+   */
+  const describeUnavailable = useCallback(
+    (code: string, unavailable: UnavailableRoomType[]): string => {
+      const room =
+        catalogue.find((entry) => entry.code === code)?.name[locale] ??
+        t('step2.yourRoom');
+      const why = unavailable.find((entry) => entry.code === code);
+      switch (why?.reason) {
+        case 'occupancy':
+          return t('step2.unavailable.occupancy', { room });
+        case 'sold-out':
+          return t('step2.unavailable.soldOut', { room });
+        case 'minimum-stay':
+          return t('step2.unavailable.minimumStay', {
+            room,
+            nights: why.minimumStayNights ?? 2,
+          });
+        default:
+          return t('step2.unavailable.other', { room });
+      }
+    },
+    [catalogue, locale, t],
+  );
+
   /**
    * Turn an API failure into a message the guest can act on.
    *
@@ -139,6 +226,8 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
             return tErrors('rateLimited');
           case 'INVALID_STAY':
             return tErrors('checkOutAfterCheckIn');
+          case 'OCCUPANCY_EXCEEDED':
+            return tErrors('occupancyExceeded');
           // A mistyped code is the guest's to fix, so each reason is named.
           // Falling through to "something went wrong" would read as a fault at
           // the hotel's end and leave them with nothing to act on.
@@ -163,6 +252,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     (step: Step) => {
       update({ step });
       setError(null);
+      setNotice(null);
       // Move focus to the heading so keyboard and screen-reader users land on
       // the new step rather than being left where the old button used to be.
       requestAnimationFrame(() => headingRef.current?.focus());
@@ -179,27 +269,43 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
       setError(tErrors('checkOutAfterCheckIn'));
       return;
     }
+    const ages = completeChildAges(childAges);
+    if (!ages) {
+      setError(tErrors('childAgesRequired'));
+      return;
+    }
 
     setLoading(true);
     setError(null);
     try {
-      const available = await bookingApi.checkAvailability({
-        checkIn: state.checkIn,
-        checkOut: state.checkOut,
-        adults: state.adults,
-        children: state.children,
-        roomsCount: state.roomsCount,
-      });
+      const { roomTypes: available, unavailable } =
+        await bookingApi.checkAvailability({
+          checkIn: state.checkIn,
+          checkOut: state.checkOut,
+          adults: state.adults,
+          childAges: ages,
+          roomsCount: state.roomsCount,
+        });
       setRooms(available);
+      setPartyTooLarge(onlyOccupancy(available, unavailable));
 
-      // A room chosen earlier may not be available for newly-picked dates.
-      if (
-        state.roomTypeCode &&
-        !available.some((room) => room.code === state.roomTypeCode)
-      ) {
-        update({ roomTypeCode: null });
+      const chosen = state.roomTypeCode;
+      if (chosen && available.some((room) => room.code === chosen)) {
+        // The guest chose this room before they had dates — from its page or
+        // the rooms list — and it suits the stay. Asking them to pick it again
+        // from a list of every room is the step this skips. The list is still
+        // loaded, so "Back" from their details shows it with this room ticked.
+        goToStep(3);
+        return;
       }
+
       goToStep(2);
+      if (chosen) {
+        // It does not suit the stay. Say why, above the rooms that do, so the
+        // guest knows whether it is the dates, the party or the room to change.
+        update({ roomTypeCode: null });
+        setNotice(describeUnavailable(chosen, unavailable));
+      }
     } catch (caught) {
       setError(describeError(caught));
     } finally {
@@ -224,11 +330,19 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     if (!restored || state.step !== 2 || rooms.length > 0) return;
     if (!state.checkIn || !state.checkOut) return;
 
+    // A step-2 session with an unaged child cannot be searched; step 1 is
+    // where the age is asked, so that is where the guest goes.
+    const ages = completeChildAges(state.childAges);
+    if (!ages) {
+      update({ step: 1 });
+      return;
+    }
+
     const search = [
       state.checkIn,
       state.checkOut,
       state.adults,
-      state.children,
+      ages.join(','),
       state.roomsCount,
     ].join('|');
     if (inFlightSearchRef.current === search) return;
@@ -241,12 +355,13 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         checkIn: state.checkIn,
         checkOut: state.checkOut,
         adults: state.adults,
-        children: state.children,
+        childAges: ages,
         roomsCount: state.roomsCount,
       })
-      .then((available) => {
+      .then(({ roomTypes: available, unavailable }) => {
         if (cancelled) return;
         setRooms(available);
+        setPartyTooLarge(onlyOccupancy(available, unavailable));
 
         // The same check `searchAvailability` makes, because this path reaches
         // step 2 without going through it: a restored session, or a link that
@@ -280,7 +395,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     state.checkIn,
     state.checkOut,
     state.adults,
-    state.children,
+    state.childAges,
     state.roomsCount,
     state.roomTypeCode,
     rooms.length,
@@ -332,7 +447,8 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         checkIn: state.checkIn,
         checkOut: state.checkOut,
         adults: state.adults,
-        children: state.children,
+        // Complete by now: step 1 refuses to search without every age.
+        childAges: completeChildAges(state.childAges) ?? [],
         roomsCount: state.roomsCount,
         guest: { ...state.guest, locale },
         ...(state.specialRequests
@@ -384,8 +500,24 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
           </div>
         ) : null}
 
+        {notice ? (
+          // `status`, not `alert`: this is information about a choice, not a
+          // failure, and it should not interrupt whatever is being read.
+          <div className={styles.notice} role="status" data-testid="room-notice">
+            {notice}
+          </div>
+        ) : null}
+
         {state.step === 1 && (
           <>
+            {chosenRoom ? (
+              <ChosenRoomCard
+                room={chosenRoom}
+                locale={locale}
+                onChange={() => update({ roomTypeCode: null })}
+              />
+            ) : null}
+
             <DatePicker
               locale={locale}
               checkIn={state.checkIn}
@@ -395,38 +527,83 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
               }
             />
 
-            <div className={styles.field}>
-              <span className={styles.fieldLabel} id="guests-label">
-                {t('step1.guests')}
-              </span>
-              <div className={styles.counter} aria-labelledby="guests-label">
-                <button
-                  type="button"
-                  className={styles.counterBtn}
-                  onClick={() =>
-                    update({ adults: Math.max(1, state.adults - 1) })
-                  }
-                  disabled={state.adults <= 1}
-                  aria-label={`${t('step1.guests')} −`}
-                >
-                  −
-                </button>
-                <span className={styles.counterValue} aria-live="polite">
-                  {state.adults}
-                </span>
-                <button
-                  type="button"
-                  className={styles.counterBtn}
-                  onClick={() =>
-                    update({ adults: Math.min(MAX_ADULTS, state.adults + 1) })
-                  }
-                  disabled={state.adults >= MAX_ADULTS}
-                  aria-label={`${t('step1.guests')} +`}
-                >
-                  +
-                </button>
-              </div>
+            <div className={styles.guestRow}>
+              <Counter
+                id="adults"
+                label={t('step1.adults')}
+                hint={t('step1.adultsHint')}
+                value={state.adults}
+                min={1}
+                max={MAX_ADULTS}
+                onChange={(adults) => update({ adults })}
+              />
+              <Counter
+                id="children"
+                label={t('step1.children')}
+                hint={t('step1.childrenHint', { max: MAX_CHILD_AGE })}
+                value={childAges.length}
+                min={0}
+                max={MAX_CHILDREN}
+                testId="children"
+                onChange={(count) =>
+                  update({
+                    // Adding a child adds an unanswered age; removing one
+                    // takes the last, so ages already picked stay put.
+                    childAges:
+                      count > childAges.length
+                        ? [...childAges, null]
+                        : childAges.slice(0, count),
+                  })
+                }
+              />
             </div>
+
+            {childAges.length > 0 ? (
+              <fieldset className={styles.childAges}>
+                <legend className={styles.fieldLabel}>
+                  {t('step1.childAgesLegend')}
+                </legend>
+                <div className={styles.childAgeGrid}>
+                  {childAges.map((age, index) => {
+                    const id = `child-age-${index}`;
+                    const missing = age === null && error !== null;
+                    return (
+                      <div className={styles.field} key={index}>
+                        <label className={styles.childAgeLabel} htmlFor={id}>
+                          {t('step1.childAge', { number: index + 1 })}
+                        </label>
+                        <select
+                          id={id}
+                          className={styles.select}
+                          value={age ?? ''}
+                          aria-invalid={missing || undefined}
+                          data-testid={id}
+                          onChange={(event) => {
+                            const next = [...childAges];
+                            next[index] =
+                              event.target.value === ''
+                                ? null
+                                : Number(event.target.value);
+                            update({ childAges: next });
+                          }}
+                        >
+                          <option value="">{t('step1.ageChoose')}</option>
+                          {Array.from({ length: MAX_CHILD_AGE + 1 }, (_, value) => (
+                            <option key={value} value={value}>
+                              {value === 0
+                                ? t('step1.ageUnderOne')
+                                : t('step1.ageYears', { age: value })}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Why we ask, so the question does not read as nosiness. */}
+                <p className={styles.childAgesNote}>{t('step1.childAgesNote')}</p>
+              </fieldset>
+            ) : null}
 
             <div className={styles.actions}>
               <button
@@ -485,7 +662,11 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
               <p className={styles.loading}>{tCommon('loading')}</p>
             ) : rooms.length === 0 ? (
               <div className={styles.empty}>
-                <p>{t('step2.noAvailability')}</p>
+                <p>
+                  {partyTooLarge
+                    ? t('step2.partyTooLarge')
+                    : t('step2.noAvailability')}
+                </p>
               </div>
             ) : (
               <ul
@@ -679,7 +860,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         checkIn={state.checkIn}
         checkOut={state.checkOut}
         adults={state.adults}
-        children={state.children}
+        children={childAges.length}
         room={selectedRoom}
         // The previewed breakdown wins when a code is applied: it is the same
         // arithmetic the booking will use, done by the API.
@@ -734,6 +915,155 @@ function StepIndicator({ current }: { current: Step }) {
         );
       })}
     </ol>
+  );
+}
+
+/** Nothing on offer, and every room left out was left out for the party. */
+function onlyOccupancy(
+  available: AvailableRoomType[],
+  unavailable: UnavailableRoomType[],
+): boolean {
+  return (
+    available.length === 0 &&
+    unavailable.length > 0 &&
+    unavailable.every((room) => room.reason === 'occupancy')
+  );
+}
+
+/**
+ * A − / + counter.
+ *
+ * The label is visible and the buttons say what they change, so a screen
+ * reader hears "Children, add" rather than a bare "plus".
+ */
+function Counter({
+  id,
+  label,
+  hint,
+  value,
+  min,
+  max,
+  testId,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  value: number;
+  min: number;
+  max: number;
+  testId?: string;
+  onChange: (value: number) => void;
+}) {
+  const t = useTranslations('reserve.step1');
+  return (
+    <div className={styles.field}>
+      <span className={styles.fieldLabel} id={`${id}-label`}>
+        {label}
+      </span>
+      <div
+        className={styles.counter}
+        role="group"
+        aria-labelledby={`${id}-label`}
+        aria-describedby={`${id}-hint`}
+      >
+        <button
+          type="button"
+          className={styles.counterBtn}
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          aria-label={t('decrease', { label })}
+          data-testid={testId ? `${testId}-decrease` : undefined}
+        >
+          −
+        </button>
+        <span
+          className={styles.counterValue}
+          aria-live="polite"
+          data-testid={testId ? `${testId}-count` : undefined}
+        >
+          {value}
+        </span>
+        <button
+          type="button"
+          className={styles.counterBtn}
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={value >= max}
+          aria-label={t('increase', { label })}
+          data-testid={testId ? `${testId}-increase` : undefined}
+        >
+          +
+        </button>
+      </div>
+      <span className={styles.counterHint} id={`${id}-hint`}>
+        {hint}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The room a guest arrived with, at the top of step 1.
+ *
+ * Without it a guest who pressed "Reserve" on a room lands on a date picker
+ * with no sign their choice was kept. It states the room's capacity because
+ * that is the one thing about it the next two fields can contradict.
+ */
+function ChosenRoomCard({
+  room,
+  locale,
+  onChange,
+}: {
+  room: RoomType;
+  locale: Locale;
+  onChange: () => void;
+}) {
+  const t = useTranslations('reserve.step1');
+  const tPhoto = useTranslations('photos');
+  const maxAdults = room.maxAdults ?? room.maxOccupancy;
+
+  return (
+    <section
+      className={styles.chosenRoom}
+      aria-label={t('yourRoom')}
+      data-testid="chosen-room"
+    >
+      <div
+        // `roomSwatch` for its gradients, which stand in until a photograph
+        // loads and stay when there is none; `chosenRoomPhoto` sizes it.
+        className={`${styles.roomSwatch} ${styles.chosenRoomPhoto}`}
+        data-swatch={room.imageKey}
+      >
+        <Photo
+          photo={resolveRoomPhoto(
+            room,
+            locale,
+            tPhoto('room', { name: room.name[locale] }),
+          )}
+          sizes="120px"
+        />
+      </div>
+      <div className={styles.chosenRoomText}>
+        <span className={styles.roomCategory}>{t('yourRoom')}</span>
+        <span className={styles.roomName}>{room.name[locale]}</span>
+        <span className={styles.roomMeta}>
+          {maxAdults < room.maxOccupancy
+            ? t('capacityWithAdults', {
+                sleeps: room.maxOccupancy,
+                adults: maxAdults,
+              })
+            : t('capacity', { sleeps: room.maxOccupancy })}
+        </span>
+      </div>
+      <button
+        type="button"
+        className={styles.chosenRoomChange}
+        onClick={onChange}
+        data-testid="change-room"
+      >
+        {t('changeRoom')}
+      </button>
+    </section>
   );
 }
 

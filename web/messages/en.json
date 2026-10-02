@@ -64,7 +64,25 @@
       "anyPreference": "Any preference",
       "checkAvailability": "Check availability",
       "previousMonth": "Previous month",
-      "nextMonth": "Next month"
+      "nextMonth": "Next month",
+      "adults": "Adults",
+      "adultsHint": "Ages 18 and over",
+      "children": "Children",
+      "childrenHint": "Ages 0 to {max}",
+      "childAgesLegend": "Children's ages",
+      "childAge": "Child {number}",
+      "ageChoose": "Age at check-in",
+      "ageUnderOne": "Under 1",
+      "ageYears": "{age, plural, one {# year} other {# years}}",
+      "childAgesNote": "Ages at check-in. We ask so we can offer rooms with the right beds. Babies sleep in a cot.",
+      "increase": "Add one: {label}",
+      "decrease": "Remove one: {label}",
+      "yourRoom": "Your room",
+      "changeRoom": "Change room",
+      "capacity": "{sleeps, plural, one {Sleeps 1 guest} other {Sleeps # guests}}",
+      "capacityWithAdults": "Sleeps {sleeps} guests, up to {adults, plural, one {1 adult} other {# adults}}",
+      "guestsDone": "Done",
+      "ageChooseShort": "Age"
     },
     "step2": {
       "title": "Choose your room",
@@ -76,7 +94,15 @@
       "viewGrid": "Show rooms as a grid",
       "viewList": "Show rooms as a list",
       "noAvailability": "No rooms are available for those dates.",
-      "changeDates": "Change dates"
+      "changeDates": "Change dates",
+      "yourRoom": "The room you chose",
+      "unavailable": {
+        "occupancy": "{room} is not large enough for your party. These rooms are:",
+        "soldOut": "{room} is fully booked for these dates. These rooms are available:",
+        "minimumStay": "{room} needs a stay of at least {nights} nights on these dates. These rooms are available:",
+        "other": "{room} is not available for this stay. These rooms are:"
+      },
+      "partyTooLarge": "None of our rooms can take a party this size in one booking. For larger groups, please contact the hotel and we will arrange it."
     },
     "step3": {
       "title": "Your details",
@@ -101,7 +127,8 @@
       "tourismDirhamNote": "Per room, per night",
       "vat": "VAT ({rate}%)",
       "total": "Total",
-      "payAtCheckIn": "No payment is taken now. You pay at check-in."
+      "payAtCheckIn": "No payment is taken now. You pay at check-in.",
+      "guestsValue": "{adults, plural, one {# adult} other {# adults}}{children, plural, =0 {} one {, # child} other {, # children}}"
     },
     "success": {
       "title": "Your reservation is confirmed",
@@ -133,7 +160,9 @@
     "voucherNotFound": "That code is not recognised. Please check it and try again.",
     "voucherExpired": "That code has expired.",
     "voucherExhausted": "That code has already been fully redeemed.",
-    "voucherNotApplicable": "That code does not apply to this stay."
+    "voucherNotApplicable": "That code does not apply to this stay.",
+    "childAgesRequired": "Choose an age for each child.",
+    "occupancyExceeded": "That room cannot take your party. Please choose another room."
   },
   "cancel": {
     "title": "Cancel your reservation",
@@ -582,7 +611,9 @@
       "cancel": "Cancel",
       "confirmCancelTitle": "Cancel this booking?",
       "confirmCancelAction": "Cancel booking",
-      "confirmCancel": "Booking {reference} will be released back to sale. This cannot be undone here."
+      "confirmCancel": "Booking {reference} will be released back to sale. This cannot be undone here.",
+      "guests": "{adults, plural, one {# adult} other {# adults}}{children, plural, =0 {} one {, # child} other {, # children}}",
+      "childAges": "(ages {ages})"
     },
     "pagination": {
       "label": "Pages",
@@ -609,7 +640,9 @@
       "descriptionAr": "Description (Arabic)",
       "saved": "{name} saved.",
       "rateNote": "Changing the base rate affects new quotes only. Bookings already taken keep the price they were quoted.",
-      "amenitiesSaved": "Amenities updated."
+      "amenitiesSaved": "Amenities updated.",
+      "maxAdults": "Max adults",
+      "maxAdultsHint": "Of the guests it sleeps, how many may be adults. Older children count as adults, from the age set in Settings."
     },
     "images": {
       "title": "Photographs",

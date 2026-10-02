@@ -43,6 +43,7 @@ const ROOM_TYPES = [
       'سرير كينغ، وكرسي مريح بجانب النافذة، وغرفة ملابس، بألوان محايدة دافئة تتخللها لمسة لون واحدة.',
     baseRateAed: '1200.00',
     maxOccupancy: 2,
+    maxAdults: 2,
     totalRooms: 49,
     imageKey: 'img-king',
     sortOrder: 1,
@@ -59,6 +60,7 @@ const ROOM_TYPES = [
       'سريران متجاوران، ومكتب زينة، وغرفة ملابس، بدرجات الزيتوني الهادئ والرملي.',
     baseRateAed: '1200.00',
     maxOccupancy: 2,
+    maxAdults: 2,
     totalRooms: 49,
     imageKey: 'img-twin',
     sortOrder: 2,
@@ -75,6 +77,7 @@ const ROOM_TYPES = [
       'أكبر غرفة في الفندق. واجهتان، وتراس واحد، ومساحة تكفي لتنسى أنك في مدينة.',
     baseRateAed: '2400.00',
     maxOccupancy: 4,
+    maxAdults: 4,
     totalRooms: 8,
     imageKey: 'img-suite',
     sortOrder: 3,
@@ -117,6 +120,27 @@ const SETTINGS = [
     value: '48',
     description:
       'Hours before check-in that a guest may cancel free of charge.',
+  },
+  // The hotel's child policy. All three are PLACEHOLDERS until the client
+  // confirms them (docs/project-status.md); the API reads them on every
+  // availability check, so changing one needs no deploy.
+  {
+    key: 'guests_adult_from_age',
+    value: '12',
+    description:
+      'Age from which a child is counted as an adult for room capacity. PLACEHOLDER, confirm with the client.',
+  },
+  {
+    key: 'guests_infant_up_to_age',
+    value: '1',
+    description:
+      'Children this age or younger sleep in a cot and do not count toward room capacity. PLACEHOLDER, confirm with the client.',
+  },
+  {
+    key: 'guests_infants_per_room',
+    value: '1',
+    description:
+      'Cots available per room, so the most infants one room can take. PLACEHOLDER, confirm with the client.',
   },
 ] as const;
 
@@ -269,6 +293,7 @@ async function seedRoomTypesAndRates() {
         descriptionAr: room.descriptionAr,
         baseRateAed: new Prisma.Decimal(room.baseRateAed),
         maxOccupancy: room.maxOccupancy,
+        maxAdults: room.maxAdults,
         totalRooms: room.totalRooms,
         imageKey: room.imageKey,
         sortOrder: room.sortOrder,
