@@ -120,16 +120,21 @@ test.describe('room detail in the booking flow', () => {
     expect(cardPrice).toContain(dialogPrice?.trim());
   });
 
-  test('selects the room and returns to the list', async ({ page }) => {
+  test('selects the room and moves on to its price', async ({ page }) => {
     const [code] = await reachRoomList(page);
     await page.getByTestId(`room-details-${code}`).click();
     await page.getByTestId('room-detail-select').click();
 
+    // A guest who read the room and chose it is not left on the list.
     await expect(page.getByTestId('room-detail-dialog')).toBeHidden();
+    await expect(page.getByTestId('review-stay')).toBeVisible();
 
-    const room = page.getByTestId(`room-${code}`);
-    await expect(room).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByTestId('continue-to-details')).toBeEnabled();
+    // And "Back" returns to the list with that room ticked.
+    await page.getByRole('button', { name: /back/i }).click();
+    await expect(page.getByTestId(`room-${code}`)).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   test('closes on Escape without choosing anything', async ({ page }) => {
@@ -186,9 +191,10 @@ test.describe('room detail page', () => {
     // withdrawn in the admin panel, and an withdrawn room's page is a 404.
     await page.goto('/ar/rooms');
     const sized = page.getByTestId(`view-room-${ROOM_WITH_SIZE}`);
-    await ((await sized.count())
-      ? sized
-      : page.locator('[data-testid^="view-room-"]').first()
+    await (
+      (await sized.count())
+        ? sized
+        : page.locator('[data-testid^="view-room-"]').first()
     ).click();
 
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');

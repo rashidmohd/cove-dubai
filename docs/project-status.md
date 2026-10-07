@@ -1323,10 +1323,16 @@ the discount-code field came *after* "Confirm reservation".
   guest's details, on every screen size. The flow is now Dates → Room → Your stay → Details. The breakdown is the
   sidebar's own `StayBreakdown`, recoloured by `.reviewPanel`, so the two cannot disagree. The sidebar is not
   rendered on this step; the discount code now lives only here. A room-page link with dates lands on this step.
+  On desktop (>1000px) the room's photographs (carousel, up to 5) sit beside the price with its category and name,
+  sticky while the breakdown scrolls; no "View details" link — "Back" reaches the list. Hidden on tablet/phone so
+  the price stays above the fold.
 - **Action row pinned to the bottom on phones** (≤1000px), with the total beside Continue / Confirm. Sticky, not
   fixed, so there is still one set of buttons in the page.
 - **Room details dialog is a bottom sheet on phones** (≤700px), with price + Select pinned to its foot and the
   close button pinned to its top.
+- **Select in the room details dialog moves on to the price step** (every screen size). Before, it only closed
+  the dialog and left the guest to find "Continue". "Back" returns to the list with the room ticked. The list's
+  own select button still only selects — that is where rooms are compared.
 - **Smaller fixes:** empty "Your stay" panel hidden on phones at step 1; step labels collapse to numbers on phones
   except the current one; invalid guest details move focus to the first bad field; error alerts scroll into view;
   the "code applied" line used the English discount name in Arabic; `children` props renamed `childCount`.

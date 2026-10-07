@@ -986,6 +986,68 @@
   background: var(--dark);
 }
 
+/* The panel and, on a desktop, the room beside it. */
+.reviewLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 36rem) minmax(0, 1fr);
+  gap: var(--space-12);
+  align-items: start;
+}
+
+/* Stays beside the breakdown while the guest scrolls it, clear of the sticky
+   site header. */
+.reviewRoom {
+  position: sticky;
+  inset-block-start: 7rem;
+  margin: 0;
+  max-width: 40rem;
+}
+
+.reviewPhoto {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: linear-gradient(150deg, #c4b8a4, #9a9080);
+}
+
+.reviewPhoto[data-swatch='img-suite'] {
+  background: linear-gradient(150deg, #c8a87c, #6a3a16);
+}
+.reviewPhoto[data-swatch='img-king'] {
+  background: linear-gradient(150deg, #d0c0a4, #a49070);
+}
+.reviewPhoto[data-swatch='img-twin'] {
+  background: linear-gradient(150deg, #b8c4c0, #7a9898);
+}
+
+.reviewCaption {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: var(--space-4);
+}
+
+.reviewRoomName {
+  font-family: var(--s);
+  font-size: 1.6rem;
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+/* One column below the desktop width, and no photograph: it would push the
+   price and the discount code below the fold, which this step exists to
+   avoid. */
+@media (max-width: 1000px) {
+  .reviewLayout {
+    grid-template-columns: minmax(0, 36rem);
+  }
+
+  .reviewRoom {
+    display: none;
+  }
+}
+
 @media (max-width: 700px) {
   .reviewPanel {
     padding: var(--space-6) var(--space-4);

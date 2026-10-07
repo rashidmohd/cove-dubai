@@ -928,11 +928,13 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
               room={rooms.find((room) => room.code === detailCode) ?? null}
               locale={locale}
               nights={nights}
-              selected={detailCode === state.roomTypeCode}
               onSelect={() => {
                 const room = rooms.find((entry) => entry.code === detailCode);
-                if (room) chooseRoom(room);
                 setDetailCode(null);
+                if (!room) return;
+                // Chosen from its details: straight on to its price.
+                chooseRoom(room);
+                goToStep(3);
               }}
               onDismiss={() => setDetailCode(null)}
             />

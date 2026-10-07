@@ -33,7 +33,6 @@ export function RoomDetailDialog({
   room,
   locale,
   nights,
-  selected,
   onSelect,
   onDismiss,
 }: {
@@ -41,7 +40,6 @@ export function RoomDetailDialog({
   room: AvailableRoomType | null;
   locale: Locale;
   nights: number;
-  selected: boolean;
   onSelect: () => void;
   onDismiss: () => void;
 }) {
@@ -154,19 +152,20 @@ export function RoomDetailDialog({
                 </span>
               </p>
 
-              {/* Selecting from here closes the dialog and leaves the room
-                  chosen in the list behind it, so the guest carries on where
-                  they were rather than having to find the row again. A room
-                  that is already selected gets the plain close instead — a
-                  button that repeats what is already true reads as a failure
-                  to register the first press. */}
+              {/* Selecting from here chooses the room and moves on to its
+                  price. A guest who opened a room and read it through has
+                  decided; closing the dialog to leave them hunting for
+                  "Continue" was a step for nothing. The price step's "Back"
+                  returns to the list with this room ticked, so nothing is
+                  lost by moving on. The list's own select button still only
+                  selects — that is where rooms are compared. */}
               <button
                 type="button"
                 className={styles.detailAction}
-                onClick={selected ? onDismiss : onSelect}
+                onClick={onSelect}
                 data-testid="room-detail-select"
               >
-                {selected ? t('step2.selected') : t('step2.selectRoom')}
+                {t('step2.selectRoom')}
               </button>
             </div>
           </div>

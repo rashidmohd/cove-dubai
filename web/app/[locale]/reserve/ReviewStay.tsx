@@ -1,5 +1,8 @@
 'use client';
 
+/** As many photographs as the room list shows per room. */
+const PHOTO_LIMIT = 5;
+
 /**
  * Step 3 — the stay and its price, before the guest's details.
  *
@@ -11,10 +14,19 @@
  * Nothing is priced here. The breakdown is `StayBreakdown`, the same component
  * the sidebar uses, fed the API's figures (`pms-readiness`); applying a code
  * asks the API to reprice the stay.
+ *
+ * On a desktop the room's photographs sit beside the price, in what was empty
+ * space, so the guest sees which room they are paying for. No "View details"
+ * link: they reach this step having just chosen the room, and "Back" returns
+ * to the list where every room's details are. Narrower screens leave the
+ * photographs out — there they would push the price below the fold, which is
+ * what this step exists to avoid.
  */
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { RoomCarousel } from '@/components/marketing';
+import { resolveRoomPhotos } from '@/lib/media';
 import type {
   AvailableRoomType,
   Locale,
@@ -57,6 +69,8 @@ export function ReviewStay({
 }) {
   const t = useTranslations('reserve');
   const tCommon = useTranslations('common');
+  const tRooms = useTranslations('rooms');
+  const tPhoto = useTranslations('photos');
 
   return (
     <>
@@ -64,27 +78,60 @@ export function ReviewStay({
       {!room || !price ? (
         <p className={styles.loading}>{tCommon('loading')}</p>
       ) : (
-        <section
-          className={styles.reviewPanel}
-          aria-label={t('summary.title')}
-          data-testid="review-stay"
-        >
-          <StayBreakdown
-            locale={locale}
-            checkIn={checkIn}
-            checkOut={checkOut}
-            adults={adults}
-            childCount={childCount}
-            room={room}
-            price={price}
-          />
-          <VoucherField
-            locale={locale}
-            voucher={voucher}
-            onApply={onApplyVoucher}
-            onRemove={onRemoveVoucher}
-          />
-        </section>
+        <div className={styles.reviewLayout}>
+          <section
+            className={styles.reviewPanel}
+            aria-label={t('summary.title')}
+            data-testid="review-stay"
+          >
+            <StayBreakdown
+              locale={locale}
+              checkIn={checkIn}
+              checkOut={checkOut}
+              adults={adults}
+              childCount={childCount}
+              room={room}
+              price={price}
+            />
+            <VoucherField
+              locale={locale}
+              voucher={voucher}
+              onApply={onApplyVoucher}
+              onRemove={onRemoveVoucher}
+            />
+          </section>
+
+          {/* The gradient behind it is the loading and the no-photograph state,
+            as on the room cards. */}
+          <figure className={styles.reviewRoom} data-testid="review-room">
+            <div className={styles.reviewPhoto} data-swatch={room.imageKey}>
+              <RoomCarousel
+                photos={resolveRoomPhotos(
+                  room,
+                  locale,
+                  tPhoto('room', { name: room.name[locale] }),
+                  PHOTO_LIMIT,
+                )}
+                sizes="(max-width: 1000px) 0px, 40vw"
+                label={room.name[locale]}
+                labels={{
+                  previous: tRooms('carousel.previous'),
+                  next: tRooms('carousel.next'),
+                  // Placeholders left for the carousel to fill.
+                  slide: tRooms.raw('carousel.slide') as string,
+                }}
+              />
+            </div>
+            <figcaption className={styles.reviewCaption}>
+              <span className={styles.roomCategory}>
+                <bdi>{room.category[locale]}</bdi>
+              </span>
+              <span className={styles.reviewRoomName}>
+                <bdi>{room.name[locale]}</bdi>
+              </span>
+            </figcaption>
+          </figure>
+        </div>
       )}
 
       <div className={styles.actions}>
