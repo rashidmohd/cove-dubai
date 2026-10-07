@@ -90,6 +90,9 @@ test.describe('reserve flow (English)', () => {
     await expect(page.getByText(/pay at check-in/i).first()).toBeVisible();
 
     await page.getByTestId('continue-to-details').click();
+    // The price step: the stay and its breakdown, before any details.
+    await expect(page.getByTestId('review-stay')).toBeVisible();
+    await page.getByTestId('continue-to-guest').click();
     await fillGuestDetails(page, email);
     await page.getByTestId('confirm-reservation').click();
 
@@ -132,6 +135,7 @@ test.describe('reserve flow (English)', () => {
     // and the grid/list toggle above the list is not a room.
     await page.locator('ul[data-view] button[aria-pressed]').first().click();
     await page.getByTestId('continue-to-details').click();
+    await page.getByTestId('continue-to-guest').click();
 
     await page.getByTestId('confirm-reservation').click();
     await expect(
@@ -205,6 +209,9 @@ test.describe('reserve flow (Arabic)', () => {
     await room.click();
 
     await page.getByTestId('continue-to-details').click();
+    // The price step: the stay and its breakdown, before any details.
+    await expect(page.getByTestId('review-stay')).toBeVisible();
+    await page.getByTestId('continue-to-guest').click();
     await fillGuestDetails(page, email);
     await page.getByTestId('confirm-reservation').click();
 

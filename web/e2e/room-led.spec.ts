@@ -59,8 +59,8 @@ test.describe('reserving a chosen room', () => {
     await pickDates(page);
     await page.getByTestId('check-availability').click();
 
-    // Straight to the guest's details — the room step is not shown again.
-    await expect(page.getByTestId('guest-firstName')).toBeVisible({
+    // Straight to the room's price — the room step is not shown again.
+    await expect(page.getByTestId('review-stay')).toBeVisible({
       timeout: 20_000,
     });
     await expect(page.locator('[data-testid^="room-details-"]')).toHaveCount(0);
@@ -95,7 +95,9 @@ test.describe('reserving a chosen room', () => {
     // the hotel sells sleeps, so the reason cannot depend on which room it is.
     for (let child = 0; child < 3; child += 1) {
       await page.getByTestId('children-increase').click();
-      await page.getByTestId(`child-age-${child}`).selectOption(String(6 + child));
+      await page
+        .getByTestId(`child-age-${child}`)
+        .selectOption(String(6 + child));
     }
     await page.getByTestId('check-availability').click();
 
@@ -104,7 +106,7 @@ test.describe('reserving a chosen room', () => {
     });
     // Still on the room step, not carried past it with a room that cannot
     // take them.
-    await expect(page.getByTestId('guest-firstName')).toBeHidden();
+    await expect(page.getByTestId('review-stay')).toBeHidden();
   });
 
   test('books two rooms when the family needs two', async ({ page }) => {
@@ -118,14 +120,17 @@ test.describe('reserving a chosen room', () => {
     await page.getByTestId('reserve-this-room').click();
     await pickDates(page);
 
-    for (const [child, age] of [[0, '6'], [1, '9']] as const) {
+    for (const [child, age] of [
+      [0, '6'],
+      [1, '9'],
+    ] as const) {
       await page.getByTestId('children-increase').click();
       await page.getByTestId(`child-age-${child}`).selectOption(age);
     }
     await page.getByTestId('check-availability').click();
 
-    // Straight to details — the room fits, as two rooms — and told so.
-    await expect(page.getByTestId('guest-firstName')).toBeVisible({
+    // Straight to its price — the room fits, as two rooms — and told so.
+    await expect(page.getByTestId('review-stay')).toBeVisible({
       timeout: 20_000,
     });
     await expect(page.getByTestId('room-notice')).toContainText('2 ×');

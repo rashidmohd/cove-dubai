@@ -52,6 +52,7 @@
     "steps": {
       "dates": "Dates",
       "room": "Room",
+      "review": "Your stay",
       "details": "Details"
     },
     "step1": {
@@ -105,6 +106,9 @@
       "partyTooLarge": "None of our rooms can take a party this size in one booking. For larger groups, please contact the hotel and we will arrange it.",
       "roomsForParty": "{count, plural, one {# room} other {# rooms for your party}}",
       "multiRoom": "Your party needs {count} × {room}. The price is for {count, plural, =2 {both rooms} other {all # rooms}}."
+    },
+    "review": {
+      "title": "Review your stay"
     },
     "step3": {
       "title": "Your details",

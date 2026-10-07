@@ -52,6 +52,7 @@
     "steps": {
       "dates": "التواريخ",
       "room": "الغرفة",
+      "review": "Your stay",
       "details": "التفاصيل"
     },
     "step1": {
@@ -105,6 +106,9 @@
       "partyTooLarge": "لا تتسع أي من غرفنا لهذا العدد من الضيوف في حجز واحد. للمجموعات الأكبر، يرجى التواصل مع الفندق وسنرتب لكم ذلك.",
       "roomsForParty": "{count, plural, one {غرفة واحدة} two {غرفتان لضيوفك} few {# غرف لضيوفك} many {# غرفة لضيوفك} other {# غرفة لضيوفك}}",
       "multiRoom": "يحتاج ضيوفك إلى {count} × {room}. السعر يشمل جميع الغرف."
+    },
+    "review": {
+      "title": "Review your stay"
     },
     "step3": {
       "title": "بياناتك",

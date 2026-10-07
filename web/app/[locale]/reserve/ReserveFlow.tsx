@@ -1,9 +1,12 @@
 'use client';
 
 /**
- * The three-step reserve flow.
+ * The four-step reserve flow.
  *
- * Dates and guests → room → details → confirmation, matching the mockups.
+ * Dates and guests → room → the stay and its price → details → confirmation.
+ * The mockups have three steps; the price step was added so a guest sees every
+ * line of what they will pay, and can apply a discount code, before typing
+ * their details (`ReviewStay`).
  *
  * The mockup's script carries hardcoded rates and computes the total in the
  * browser (`selPrice * selNights`). None of that survives here: availability
@@ -37,9 +40,22 @@ import { GuestDetails } from './GuestDetails';
 import { StaySummary } from './StaySummary';
 import { Photo, RoomCarousel } from '@/components/marketing';
 import { resolveRoomPhoto, resolveRoomPhotos } from '@/lib/media';
+import { ReviewStay } from './ReviewStay';
 import { RoomDetailDialog } from './RoomDetailDialog';
 import { useBookingState, type Step } from './useBookingState';
 import styles from './Reserve.module.css';
+
+/**
+ * Each step's heading. Keyed by step rather than built from its number: the
+ * price step came after the message keys were named, so step 4 — the guest's
+ * details — keeps its `step3` copy rather than every translation moving.
+ */
+const STEP_TITLES = {
+  1: 'step1.title',
+  2: 'step2.title',
+  3: 'review.title',
+  4: 'step3.title',
+} as const;
 
 /** A few photographs per room in the list; the details dialog has them all. */
 const ROOM_PHOTO_LIMIT = 5;
@@ -150,7 +166,6 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     if (error) alertRef.current?.scrollIntoView({ block: 'nearest' });
   }, [error]);
 
-
   const nights =
     state.checkIn && state.checkOut
       ? countNights(state.checkIn, state.checkOut)
@@ -161,7 +176,10 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     [rooms, state.roomTypeCode],
   );
 
-  /** The price for the bar pinned under the guest's thumb on a phone. */
+  /**
+   * The stay's price as the booking will charge it: the discounted breakdown
+   * when a code is applied, the room's own otherwise.
+   */
   const barPrice = voucher?.price ?? selectedRoom?.price ?? null;
 
   /** The room chosen before dates, as the catalogue describes it. */
@@ -318,8 +336,9 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
       if (chosen) {
         // The guest chose this room before they had dates — from its page or
         // the rooms list — and it suits the stay. Asking them to pick it again
-        // from a list of every room is the step this skips. The list is still
-        // loaded, so "Back" from their details shows it with this room ticked.
+        // from a list of every room is the step this skips; they land on its
+        // price. The list is still loaded, so "Back" shows it with this room
+        // ticked.
         chooseRoom(chosen);
         goToStep(3);
         // A party too big for one of these rooms gets more than one, the way
@@ -365,7 +384,10 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
   const inFlightSearchRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!restored || state.step !== 2 || rooms.length > 0) return;
+    // Every step from the room list on shows a price, and neither prices nor
+    // availability are persisted — so a session restored onto any of them
+    // fetches afresh.
+    if (!restored || state.step < 2 || rooms.length > 0) return;
     if (!state.checkIn || !state.checkOut) return;
 
     // A step-2 session with an unaged child cannot be searched; step 1 is
@@ -408,7 +430,9 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         // the guest simply picking again here.
         const kept = available.find((room) => room.code === state.roomTypeCode);
         if (state.roomTypeCode && !kept) {
-          update({ roomTypeCode: null });
+          // Gone since the session was saved: back to the list to choose
+          // again, rather than a price step or a form for a room not on offer.
+          update({ roomTypeCode: null, step: 2 });
         } else if (kept) {
           // Re-synced: the party may now need a different number of rooms.
           chooseRoom(kept);
@@ -530,11 +554,11 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-step={state.step}>
       <div className={styles.formSide}>
         <p className={styles.pageLabel}>{t('title')}</p>
         <h1 className={styles.pageHeading} tabIndex={-1} ref={headingRef}>
-          {t(`step${state.step}.title` as 'step1.title')}
+          {t(STEP_TITLES[state.step])}
         </h1>
         <p className={styles.pageSub}>{t('summary.payAtCheckIn')}</p>
 
@@ -551,7 +575,11 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         {notice ? (
           // `status`, not `alert`: this is information about a choice, not a
           // failure, and it should not interrupt whatever is being read.
-          <div className={styles.notice} role="status" data-testid="room-notice">
+          <div
+            className={styles.notice}
+            role="status"
+            data-testid="room-notice"
+          >
             {notice}
           </div>
         ) : null}
@@ -636,20 +664,25 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
                           }}
                         >
                           <option value="">{t('step1.ageChoose')}</option>
-                          {Array.from({ length: MAX_CHILD_AGE + 1 }, (_, value) => (
-                            <option key={value} value={value}>
-                              {value === 0
-                                ? t('step1.ageUnderOne')
-                                : t('step1.ageYears', { age: value })}
-                            </option>
-                          ))}
+                          {Array.from(
+                            { length: MAX_CHILD_AGE + 1 },
+                            (_, value) => (
+                              <option key={value} value={value}>
+                                {value === 0
+                                  ? t('step1.ageUnderOne')
+                                  : t('step1.ageYears', { age: value })}
+                              </option>
+                            ),
+                          )}
                         </select>
                       </div>
                     );
                   })}
                 </div>
                 {/* Why we ask, so the question does not read as nosiness. */}
-                <p className={styles.childAgesNote}>{t('step1.childAgesNote')}</p>
+                <p className={styles.childAgesNote}>
+                  {t('step1.childAgesNote')}
+                </p>
               </fieldset>
             ) : null}
 
@@ -907,33 +940,52 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         )}
 
         {state.step === 3 && (
+          <ReviewStay
+            locale={locale}
+            checkIn={state.checkIn}
+            checkOut={state.checkOut}
+            adults={state.adults}
+            childCount={childAges.length}
+            room={selectedRoom}
+            // The previewed breakdown wins when a code is applied: it is the
+            // same arithmetic the booking will use, done by the API.
+            price={barPrice}
+            voucher={voucher}
+            onApplyVoucher={applyVoucher}
+            onRemoveVoucher={() => setVoucher(null)}
+            onBack={() => goToStep(2)}
+            onContinue={() => goToStep(4)}
+            barTotal={<BarTotal price={barPrice} locale={locale} />}
+          />
+        )}
+
+        {state.step === 4 && (
           <GuestDetails
             guest={state.guest}
             specialRequests={state.specialRequests}
             submitting={loading}
             onChangeGuest={updateGuest}
             onChangeRequests={(value) => update({ specialRequests: value })}
-            onBack={() => goToStep(2)}
+            onBack={() => goToStep(3)}
             onSubmit={submitBooking}
             barTotal={<BarTotal price={barPrice} locale={locale} />}
           />
         )}
       </div>
 
-      <StaySummary
-        locale={locale}
-        checkIn={state.checkIn}
-        checkOut={state.checkOut}
-        adults={state.adults}
-        children={childAges.length}
-        room={selectedRoom}
-        // The previewed breakdown wins when a code is applied: it is the same
-        // arithmetic the booking will use, done by the API.
-        price={voucher?.price ?? selectedRoom?.price ?? null}
-        voucher={voucher}
-        onApplyVoucher={applyVoucher}
-        onRemoveVoucher={() => setVoucher(null)}
-      />
+      {/* Not on the price step: the main column is this same breakdown, and
+          two copies side by side read as two different prices. */}
+      {state.step === 3 ? null : (
+        <StaySummary
+          locale={locale}
+          checkIn={state.checkIn}
+          checkOut={state.checkOut}
+          adults={state.adults}
+          childCount={childAges.length}
+          room={selectedRoom}
+          price={barPrice}
+        />
+      )}
     </div>
   );
 }
@@ -983,7 +1035,8 @@ function StepIndicator({ current }: { current: Step }) {
   const items = [
     { step: 1 as const, label: t('dates') },
     { step: 2 as const, label: t('room') },
-    { step: 3 as const, label: t('details') },
+    { step: 3 as const, label: t('review') },
+    { step: 4 as const, label: t('details') },
   ];
 
   return (
@@ -1015,7 +1068,7 @@ function StepIndicator({ current }: { current: Step }) {
                   on the room cards below. */}
               {done ? <span className={styles.stepTick} /> : item.step}
             </span>
-            {item.label}
+            <span className={styles.stepLabel}>{item.label}</span>
           </li>
         );
       })}

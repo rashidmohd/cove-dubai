@@ -31,7 +31,7 @@ import {
 } from '@/lib/stay-dates';
 import type { Locale } from '@/lib/api/types';
 
-export type Step = 1 | 2 | 3;
+export type Step = 1 | 2 | 3 | 4;
 
 export interface GuestForm {
   firstName: string;
@@ -100,6 +100,11 @@ function restore(): BookingState {
         guest: state.guest,
       };
     }
+
+    // A step this flow does not have — tampered storage — starts over. A
+    // session saved when the flow had three steps restores its step 3 onto
+    // the price step, which is harmless: the details are one press on.
+    if (![1, 2, 3, 4].includes(state.step)) state.step = 1;
 
     // Never restore straight into a later step without the data that step
     // depends on, which would render an empty room list or an unpriced summary.

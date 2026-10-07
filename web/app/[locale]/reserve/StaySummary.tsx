@@ -14,6 +14,12 @@
  * in the browser — pricing belongs to the booking layer so a future PMS can own
  * it (`pms-readiness`), and a total calculated twice is a total that can
  * disagree with itself.
+ *
+ * The breakdown itself is `StayBreakdown`, shared with the "Your stay" step
+ * (`ReviewStay`), so the sidebar and that step can never show different
+ * figures for the same booking. The discount code lives on that step only —
+ * one place to apply it, before the guest's details — and the sidebar shows
+ * the discount once applied.
  */
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -33,14 +39,9 @@ interface StaySummaryProps {
   checkIn: string | null;
   checkOut: string | null;
   adults: number;
-  children: number;
+  childCount: number;
   room: AvailableRoomType | null;
   price: PriceBreakdown | null;
-  /** The applied discount, if the guest has entered a valid code. */
-  voucher: VoucherPreview | null;
-  /** Resolves to an error message to show inline, or null on success. */
-  onApplyVoucher: (code: string) => Promise<string | null>;
-  onRemoveVoucher: () => void;
 }
 
 export function StaySummary({
@@ -48,16 +49,11 @@ export function StaySummary({
   checkIn,
   checkOut,
   adults,
-  children,
+  childCount,
   room,
   price,
-  voucher,
-  onApplyVoucher,
-  onRemoveVoucher,
 }: StaySummaryProps) {
   const t = useTranslations('reserve.summary');
-  const tCommon = useTranslations('common');
-
 
   return (
     <aside
@@ -76,109 +72,134 @@ export function StaySummary({
         {!room || !price ? (
           <p className={styles.sideEmpty}>{t('payAtCheckIn')}</p>
         ) : (
-          <>
-            <dl className={styles.sideRows}>
-              <Row
-                label={t('room')}
-                // "2 × Deluxe Twin Room" when the party takes more than one, so
-                // the guest sees what the total is for.
-                value={
-                  price.roomsCount > 1
-                    ? `${price.roomsCount} × ${room.name[locale]}`
-                    : room.name[locale]
-                }
-              />
-              <Row
-                label={t('checkIn')}
-                value={checkIn ? formatStayDate(checkIn, locale) : '—'}
-              />
-              <Row
-                label={t('checkOut')}
-                value={checkOut ? formatStayDate(checkOut, locale) : '—'}
-              />
-              <Row
-                label={t('nights')}
-                value={`${price.nights} ${
-                  price.nights === 1 ? tCommon('night') : tCommon('nights')
-                }`}
-              />
-              <Row
-                label={t('guests')}
-                // Adults and children named apart: "3 adults" for a couple
-                // and their child reads as a booking for the wrong party.
-                value={t('guestsValue', { adults, children })}
-              />
-
-              {/* The three lines the mockup does not have. */}
-              <Row
-                label={t('roomTotal')}
-                value={formatMoney(price.roomTotal, price.currency, locale)}
-              />
-              {/* Guests beyond what the rate includes, priced by the API from
-                  the room's own fees. Shown only when charged, and named so
-                  the guest can see who it is for. */}
-              {price.extraGuests ? (
-                <Row
-                  label={t('extraGuests', {
-                    adults: price.extraGuests.adults,
-                    children: price.extraGuests.children,
-                  })}
-                  value={formatMoney(
-                    price.extraGuests.total,
-                    price.currency,
-                    locale,
-                  )}
-                />
-              ) : null}
-              {/* Between the room total and the fees, because that is the
-                  order the money moves in: the discount comes off the
-                  accommodation charge, and the VAT line below is already
-                  calculated on what remains. */}
-              {price.discount ? (
-                <Row
-                  label={price.discount.name[locale]}
-                  value={`−${formatMoney(
-                    price.discount.amount,
-                    price.currency,
-                    locale,
-                  )}`}
-                />
-              ) : null}
-
-              <Row
-                label={t('tourismDirham')}
-                note={t('tourismDirhamNote')}
-                value={formatMoney(
-                  price.tourismDirham.total,
-                  price.currency,
-                  locale,
-                )}
-              />
-              <Row
-                label={t('vat', { rate: price.vat.ratePercent })}
-                value={formatMoney(price.vat.total, price.currency, locale)}
-              />
-            </dl>
-
-            <div className={styles.sideTotal}>
-              <span className={styles.sideTotalLabel}>{t('total')}</span>
-              <span className={styles.sideTotalAmount}>
-                {formatMoney(price.grandTotal, price.currency, locale)}
-              </span>
-              {/* The pay-at-check-in model must be explicit before the guest
-                  commits — they are confirming a booking that takes no money. */}
-              <p className={styles.sideTotalNote}>{t('payAtCheckIn')}</p>
-            </div>
-
-            <VoucherField
-              voucher={voucher}
-              onApply={onApplyVoucher}
-              onRemove={onRemoveVoucher}
-            />
-          </>
+          <StayBreakdown
+            locale={locale}
+            checkIn={checkIn}
+            checkOut={checkOut}
+            adults={adults}
+            childCount={childCount}
+            room={room}
+            price={price}
+          />
         )}
       </div>
     </aside>
+  );
+}
+
+/**
+ * The stay and every line of its price, down to the total.
+ *
+ * Styled by its surroundings: the dark sidebar, or the light "Your stay" step,
+ * which wraps it in `reviewPanel` to recolour the same classes.
+ */
+export function StayBreakdown({
+  locale,
+  checkIn,
+  checkOut,
+  adults,
+  childCount,
+  room,
+  price,
+}: {
+  locale: Locale;
+  checkIn: string | null;
+  checkOut: string | null;
+  adults: number;
+  childCount: number;
+  room: AvailableRoomType;
+  price: PriceBreakdown;
+}) {
+  const t = useTranslations('reserve.summary');
+  const tCommon = useTranslations('common');
+
+  return (
+    <>
+      <dl className={styles.sideRows}>
+        <Row
+          label={t('room')}
+          // "2 × Deluxe Twin Room" when the party takes more than one, so
+          // the guest sees what the total is for.
+          value={
+            price.roomsCount > 1
+              ? `${price.roomsCount} × ${room.name[locale]}`
+              : room.name[locale]
+          }
+        />
+        <Row
+          label={t('checkIn')}
+          value={checkIn ? formatStayDate(checkIn, locale) : '—'}
+        />
+        <Row
+          label={t('checkOut')}
+          value={checkOut ? formatStayDate(checkOut, locale) : '—'}
+        />
+        <Row
+          label={t('nights')}
+          value={`${price.nights} ${
+            price.nights === 1 ? tCommon('night') : tCommon('nights')
+          }`}
+        />
+        <Row
+          label={t('guests')}
+          // Adults and children named apart: "3 adults" for a couple
+          // and their child reads as a booking for the wrong party.
+          value={t('guestsValue', { adults, children: childCount })}
+        />
+
+        {/* The three lines the mockup does not have. */}
+        <Row
+          label={t('roomTotal')}
+          value={formatMoney(price.roomTotal, price.currency, locale)}
+        />
+        {/* Guests beyond what the rate includes, priced by the API from
+            the room's own fees. Shown only when charged, and named so
+            the guest can see who it is for. */}
+        {price.extraGuests ? (
+          <Row
+            label={t('extraGuests', {
+              adults: price.extraGuests.adults,
+              children: price.extraGuests.children,
+            })}
+            value={formatMoney(price.extraGuests.total, price.currency, locale)}
+          />
+        ) : null}
+        {/* Between the room total and the fees, because that is the
+            order the money moves in: the discount comes off the
+            accommodation charge, and the VAT line below is already
+            calculated on what remains. */}
+        {price.discount ? (
+          <Row
+            label={price.discount.name[locale]}
+            value={`−${formatMoney(
+              price.discount.amount,
+              price.currency,
+              locale,
+            )}`}
+          />
+        ) : null}
+
+        <Row
+          label={t('tourismDirham')}
+          note={t('tourismDirhamNote')}
+          value={formatMoney(price.tourismDirham.total, price.currency, locale)}
+        />
+        <Row
+          label={t('vat', { rate: price.vat.ratePercent })}
+          value={formatMoney(price.vat.total, price.currency, locale)}
+        />
+      </dl>
+
+      <div className={styles.sideTotal}>
+        <span className={styles.sideTotalLabel}>{t('total')}</span>
+        <span className={styles.sideTotalAmount}>
+          {formatMoney(price.grandTotal, price.currency, locale)}
+        </span>
+        {/* The pay-at-check-in model must be explicit before the guest
+            commits — they are confirming a booking that takes no money. */}
+        <p className={styles.sideTotalNote}>{t('payAtCheckIn')}</p>
+      </div>
+    </>
   );
 }
 
@@ -193,11 +214,13 @@ export function StaySummary({
  * field submitted with the booking, and pressing Enter here must not submit
  * anything else.
  */
-function VoucherField({
+export function VoucherField({
+  locale,
   voucher,
   onApply,
   onRemove,
 }: {
+  locale: Locale;
   voucher: VoucherPreview | null;
   onApply: (code: string) => Promise<string | null>;
   onRemove: () => void;
@@ -211,7 +234,7 @@ function VoucherField({
     return (
       <div className={styles.voucherApplied}>
         <p className={styles.voucherAppliedText}>
-          {t('voucherApplied', { name: voucher.name.en })}
+          {t('voucherApplied', { name: voucher.name[locale] })}
         </p>
         <button
           type="button"

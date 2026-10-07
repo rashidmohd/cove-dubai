@@ -10,7 +10,12 @@
  * Needs the API running. Creates its own code over the admin API and removes it
  * afterwards, so it cannot disturb a real campaign.
  */
-import { expect, test, type Page, type APIRequestContext } from '@playwright/test';
+import {
+  expect,
+  test,
+  type Page,
+  type APIRequestContext,
+} from '@playwright/test';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:4000';
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'admin@covedubai.local';
@@ -63,17 +68,19 @@ async function chooseDatesAndRoom(page: Page) {
   await page.getByTestId('check-availability').click();
 
   await page.getByTestId('room-deluxe-king-room').click();
+  // The code is entered on the price step, after the room.
+  await page.getByTestId('continue-to-details').click();
 }
 
 /**
- * Every AED figure in the summary, in order.
+ * Every AED figure in the price step's breakdown, in order.
  *
  * Read out of the rendered text rather than from test ids, matching how
  * `reserve.spec.ts` already checks the breakdown — what is under test is what
  * the guest can actually see.
  */
 async function summaryAmounts(page: Page): Promise<number[]> {
-  const text = await page.locator('aside').innerText();
+  const text = await page.getByTestId('review-stay').innerText();
   return [...text.matchAll(/AED\s([\d,]+(?:\.\d+)?)/g)].map((match) =>
     Number((match[1] as string).replace(/,/g, '')),
   );

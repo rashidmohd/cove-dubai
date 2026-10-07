@@ -1312,3 +1312,28 @@ offered **2 × Deluxe Twin Room**, the way large booking sites do it — the gue
 > out), so `reserve.spec.ts` and two `room-detail.spec.ts` tests fail with "no rooms" — test data, as described
 > under *Checks*. Clear the e2e bookings with the SQL in [Cleaning up test bookings](#cleaning-up-test-bookings).
 
+
+## Mobile booking pass, and a fourth step for the price (7 Oct 2026)
+
+Reviewed the reserve flow at phone width (iPhone 13 / SE, EN and AR). On a phone the summary panel sat below the
+whole form, so a guest chose a room — and confirmed — with the price and the button both a long scroll away, and
+the discount-code field came *after* "Confirm reservation".
+
+- **New step 3, "Your stay"** (`ReviewStay.tsx`): every line of the price plus the discount code, before the
+  guest's details, on every screen size. The flow is now Dates → Room → Your stay → Details. The breakdown is the
+  sidebar's own `StayBreakdown`, recoloured by `.reviewPanel`, so the two cannot disagree. The sidebar is not
+  rendered on this step; the discount code now lives only here. A room-page link with dates lands on this step.
+- **Action row pinned to the bottom on phones** (≤1000px), with the total beside Continue / Confirm. Sticky, not
+  fixed, so there is still one set of buttons in the page.
+- **Room details dialog is a bottom sheet on phones** (≤700px), with price + Select pinned to its foot and the
+  close button pinned to its top.
+- **Smaller fixes:** empty "Your stay" panel hidden on phones at step 1; step labels collapse to numbers on phones
+  except the current one; invalid guest details move focus to the first bad field; error alerts scroll into view;
+  the "code applied" line used the English discount name in Arabic; `children` props renamed `childCount`.
+- **New copy awaiting Arabic:** `reserve.steps.review` ("Your stay"), `reserve.review.title` ("Review your stay").
+- **E2E updated** (`reserve`, `room-led`, `voucher` specs) for the extra step — **not yet run**: Playwright's
+  bundled browser is not installed on the dev machine (`npx playwright install`). Verified by hand-driven
+  Playwright scripts against system Chrome instead.
+- **Still open from the review:** inputs at 15px make iOS zoom on focus (should be 16px); the guest counter buttons
+  are 26px and calendar days ~32px (target 44px); the calendar is a 272px popover rather than a phone sheet.
+- **Pre-existing lint error** in `ReserveFlow.tsx`: `react-hooks/set-state-in-effect` on the voucher-reset effect.

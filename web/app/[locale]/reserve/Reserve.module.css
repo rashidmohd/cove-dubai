@@ -908,6 +908,90 @@
   line-height: 1.9;
 }
 
+/* --- Price step ------------------------------------------------------------
+ * The stay and its price in the main column (`ReviewStay`). The breakdown is
+ * the sidebar's own markup, so its classes are recoloured here for the light
+ * surface rather than written twice. The sidebar is not rendered on this step,
+ * so the page drops to one column and the panel is held to a readable measure.
+ */
+
+.page[data-step='3'] {
+  grid-template-columns: 1fr;
+}
+
+.reviewPanel {
+  max-width: 36rem;
+  padding: var(--space-8);
+  border: 0.5px solid rgba(196, 154, 82, 0.3);
+  background: #fff;
+}
+
+/* The panel's own border is the top edge; a second rule just inside it read
+   as an empty row. */
+.reviewPanel .sideRows {
+  border-top: none;
+}
+
+.reviewPanel .sideRow:first-child {
+  padding-top: 0;
+}
+
+.reviewPanel .sideRow {
+  border-bottom-color: rgba(28, 20, 16, 0.08);
+}
+
+.reviewPanel .sideKey,
+.reviewPanel .sideNote,
+.reviewPanel .sideTotalLabel,
+.reviewPanel .sideTotalNote {
+  color: var(--fog);
+}
+
+.reviewPanel .sideValue,
+.reviewPanel .sideTotalAmount {
+  color: var(--ink);
+}
+
+.reviewPanel .sideTotal {
+  border-top-color: rgba(196, 154, 82, 0.35);
+}
+
+.reviewPanel .voucherLabel,
+.reviewPanel .voucherRemove {
+  color: var(--fog);
+}
+
+.reviewPanel .voucherInput {
+  color: var(--ink);
+  background: var(--w);
+}
+
+.reviewPanel .voucherInput::placeholder {
+  color: var(--fog);
+}
+
+/* The sidebar's error colour is tuned for the dark panel; this is the light
+   surface's. */
+.reviewPanel .voucherError {
+  color: var(--orange);
+}
+
+.reviewPanel .voucherApply {
+  color: #fff;
+  background: var(--bronze);
+  border-color: var(--bronze);
+}
+
+.reviewPanel .voucherApply:hover:not(:disabled) {
+  background: var(--dark);
+}
+
+@media (max-width: 700px) {
+  .reviewPanel {
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
 /* --- Confirmation -------------------------------------------------------- */
 
 .success {
@@ -995,6 +1079,18 @@
 @media (max-width: 1000px) {
   .page {
     grid-template-columns: 1fr;
+  }
+
+  /* Four steps' labels do not fit across a phone. The numbers all show, and
+     the label of the step the guest is on; the others are still read out, as
+     the same visually-hidden pattern as the global utility. */
+  .step:not(.stepActive) .stepLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .formSide {
@@ -1705,7 +1801,10 @@
     linear-gradient(45deg, transparent 50%, var(--fog) 50%) no-repeat,
     linear-gradient(135deg, var(--fog) 50%, transparent 50%) no-repeat,
     var(--w);
-  background-size: 5px 5px, 5px 5px, auto;
+  background-size:
+    5px 5px,
+    5px 5px,
+    auto;
   background-position:
     calc(100% - 1.05rem) 55%,
     calc(100% - 0.75rem) 55%,
