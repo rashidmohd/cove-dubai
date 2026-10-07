@@ -60,7 +60,13 @@ export function StaySummary({
 
 
   return (
-    <aside className={styles.side} aria-label={t('title')}>
+    <aside
+      className={styles.side}
+      aria-label={t('title')}
+      // Nothing chosen yet. A phone hides the panel then: it would only repeat
+      // the pay-at-check-in line printed under the heading.
+      data-empty={!room || !price || undefined}
+    >
       <Weave opacity={0.05} gap={22} />
       <Glow width={320} height={320} strength={0.07} />
 

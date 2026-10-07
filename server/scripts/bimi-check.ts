@@ -16,7 +16,15 @@
  *   3. The SVG is in the SVG Tiny PS profile inboxes require: square, titled,
  *      no scripts, no embedded images, no outside links, small.
  */
-import { resolveTxt } from 'node:dns/promises';
+import { Resolver } from 'node:dns/promises';
+
+/**
+ * Public DNS, not this machine's resolver. A local cache (a VPN, an ad blocker,
+ * the router) can hold a "no such record" answer for 30 minutes after a record
+ * is added, and report a correct setup as broken. Inboxes see public DNS.
+ */
+const resolver = new Resolver();
+resolver.setServers(['1.1.1.1', '8.8.8.8']);
 
 type Result = { ok: boolean; label: string; detail?: string };
 const results: Result[] = [];
@@ -25,7 +33,7 @@ const check = (ok: boolean, label: string, detail?: string) =>
 
 async function txt(name: string): Promise<string[]> {
   try {
-    return (await resolveTxt(name)).map((parts) => parts.join(''));
+    return (await resolver.resolveTxt(name)).map((parts) => parts.join(''));
   } catch {
     return [];
   }

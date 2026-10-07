@@ -11,7 +11,7 @@
  * everything again server-side and is the authority — nothing in this file is
  * trusted by the booking layer.
  */
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
 import type { GuestForm } from './useBookingState';
@@ -25,6 +25,8 @@ interface GuestDetailsProps {
   onChangeRequests: (value: string) => void;
   onBack: () => void;
   onSubmit: () => void;
+  /** The total, shown in the action row a phone pins to the screen's foot. */
+  barTotal?: ReactNode;
 }
 
 type FieldErrors = Partial<Record<keyof GuestForm, string>>;
@@ -37,6 +39,7 @@ export function GuestDetails({
   onChangeRequests,
   onBack,
   onSubmit,
+  barTotal,
 }: GuestDetailsProps) {
   const t = useTranslations('reserve.step3');
   const tReserve = useTranslations('reserve');
@@ -64,6 +67,13 @@ export function GuestDetails({
     }
 
     setErrors(next);
+
+    // Into the first field to fix. On a phone the confirm button is pinned to
+    // the foot of the screen, and the field it is complaining about can be a
+    // full keyboard's height above it — a red border nobody can see.
+    const first = (Object.keys(next) as (keyof GuestForm)[])[0];
+    if (first) document.getElementById(first)?.focus();
+
     return Object.keys(next).length === 0;
   }
 
@@ -142,6 +152,7 @@ export function GuestDetails({
         <button type="button" className={styles.btnBack} onClick={onBack}>
           {tReserve('back')}
         </button>
+        {barTotal}
         <button
           type="submit"
           className={styles.btnPrimary}

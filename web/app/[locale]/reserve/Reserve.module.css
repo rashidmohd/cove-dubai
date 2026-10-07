@@ -772,6 +772,12 @@
   color: var(--ink);
 }
 
+/* The total in the action row. Only a phone shows it — wider screens have the
+   summary beside the form — so it is hidden here and revealed below. */
+.barTotal {
+  display: none;
+}
+
 /* --- Feedback ------------------------------------------------------------ */
 
 .alert {
@@ -1074,6 +1080,86 @@
   .step {
     margin-inline-end: 1.5rem;
   }
+
+  /* Nothing chosen yet, so nothing to summarise; it would only repeat the
+     pay-at-check-in line under the heading. */
+  .side[data-empty] {
+    display: none;
+  }
+
+  /* The action row pins to the foot of the screen while the step is in view,
+     with the total beside the button. On a phone the summary is below the
+     whole form, so otherwise the guest chooses a room — or confirms — with
+     the price and the button both a long scroll away. Sticky rather than
+     fixed: once the form ends the row settles back into its place above the
+     summary, and there is still only one set of buttons in the page. */
+  .actions {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 2;
+    margin-inline: -1.5rem;
+    padding: 0.75rem 1.5rem;
+    /* Clear of the home indicator on notched phones. */
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    gap: 1rem;
+    background: var(--w);
+    box-shadow: 0 -8px 24px rgba(24, 14, 6, 0.08);
+  }
+
+  /* The total keeps its width; the button gives way, wrapping a long label
+     such as "Confirm reservation" onto two lines rather than covering the
+     price. */
+  .barTotal {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    gap: 0.1rem;
+  }
+
+  .barLabel {
+    font-size: 0.6875rem;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--fog);
+  }
+
+  .barAmount {
+    font-family: var(--s);
+    font-size: 1.3rem;
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--ink);
+    /* A figure broken across two lines reads as two figures. */
+    white-space: nowrap;
+  }
+
+  .barHint {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--fog);
+  }
+
+  /* A thumb-sized target; the text alone was a 20px strip. */
+  .btnBack {
+    min-height: 2.75rem;
+    padding-inline: 0;
+  }
+
+  /* Tighter tracking than on desktop, so a long label needs fewer lines. */
+  .btnPrimary {
+    flex: 0 1 auto;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.9rem 1.2rem;
+    letter-spacing: 0.12em;
+    text-indent: 0.12em;
+  }
+}
+
+:global([lang='ar']) .barLabel {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.875rem;
 }
 
 /* --- Room swatches -------------------------------------------------------
@@ -1408,29 +1494,105 @@
   font-size: 0.9375rem;
 }
 
+/* On a phone the dialog is a bottom sheet, and the price and the select button
+   are pinned to its foot. A centred card made the guest scroll past every
+   photograph and amenity to reach the one thing the dialog is for; pinned, the
+   choice is always under the thumb while they read. */
 @media (max-width: 700px) {
   .detailDialog {
     padding: 0;
   }
 
+  /* Rises from the bottom edge. The strip of backdrop left above it is still
+     the dialog element, so tapping it dismisses as before. */
+  .detailDialog[open] {
+    place-items: end center;
+  }
+
   .detailCard {
     width: 100%;
-    max-height: 100dvh;
+    max-height: 92dvh;
+    overscroll-behavior: contain;
+    animation: detailSheetIn var(--transition) both;
   }
 
+  /* No bottom padding: the pinned footer carries its own, so the sheet ends
+     flush with it rather than with a strip of empty card beneath. */
   .detailBody {
-    padding: var(--space-6);
+    padding: var(--space-6) var(--space-6) 0;
   }
 
+  /* Sticky against the card, which is the scroll container. It stays put
+     while any of the body is on screen — which, as the body is the card's last
+     child, is always once the photograph has scrolled. The negative inline
+     margins take it out to the card's edges so the background covers the
+     text scrolling beneath it. */
   .detailFooter {
-    /* Full-width action on a phone: side by side, the price and the button
-       each get too little room and the button stops looking pressable. */
+    position: sticky;
+    inset-block-end: 0;
+    margin-inline: calc(-1 * var(--space-6));
+    margin-top: var(--space-6);
+    padding: var(--space-4) var(--space-6);
+    /* Clear of the home indicator on notched phones. */
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+    background: var(--w);
+    box-shadow: 0 -8px 24px rgba(24, 14, 6, 0.08);
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  /* Amount over nights, stacked, so the button gets the width. The label is
+     dropped: on a bar this size the figure beside "Select" says it already. */
+  .detailPrice {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 0.1rem;
+    flex-shrink: 0;
+  }
+
+  .detailPriceLabel {
+    display: none;
+  }
+
+  /* Pinned to the top of the sheet, so it is still there once the photograph
+     has scrolled away. Sticky takes room in the flow, so the negative bottom
+     margin hands its height back and the photograph still starts at the top
+     edge, under it, as before. */
+  .detailClose {
+    position: sticky;
+    inset-block-start: var(--space-3);
+    margin-block: var(--space-3) calc(-1 * (2.25rem + var(--space-3)));
+    margin-inline: auto var(--space-3);
+    width: 2.75rem;
+    height: 2.75rem;
+    /* Once the photograph has scrolled, it sits on the pale card instead —
+       where the translucent fill reads as a grey smudge, not a button. */
+    background: rgba(24, 14, 6, 0.7);
+  }
+
+  .detailAmount {
+    font-size: 1.3rem;
+    line-height: 1.1;
   }
 
   .detailAction {
+    flex: 1;
+    min-height: 3rem;
+    padding: 0.9rem 1rem;
     text-align: center;
+  }
+}
+
+@keyframes detailSheetIn {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detailCard {
+    animation: none;
   }
 }
 

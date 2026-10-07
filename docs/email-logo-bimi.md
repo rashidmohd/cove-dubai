@@ -16,6 +16,25 @@ Pass the domain after the `@` in `EMAIL_FROM`. The examples use `covedubai.com` 
 
 ---
 
+## Cove's actual values (3 Oct 2026)
+
+| | |
+|---|---|
+| Emails are sent from | `reservations@covehotels.ae` — so BIMI and DMARC are looked up on **`covehotels.ae`** itself |
+| DNS is hosted at | **Cloudflare** (`kurt` / `nancy.ns.cloudflare.com`) — Cloudflare appends the domain, so type names without it |
+| Office mail | Yahoo Business Mail (MX `mx-biz.mail.am0.yahoodns.net`) — needs its SPF/DKIM before DMARC is enforced |
+| BIMI record | TXT, Name **`default._bimi`**, Content `v=BIMI1; l=https://dev.covehotels.ae/bimi/cove-logo.svg; a=;` |
+| Logo | Live and passing at `https://dev.covehotels.ae/bimi/cove-logo.svg`; move to the production domain before launch |
+| Check | `npm run bimi:check -- covehotels.ae` |
+
+The first BIMI record was added as `default._bimi.mail`, which is only read for mail sent from
+`@mail.covehotels.ae` — not our case. Rename it to `default._bimi`.
+
+**Gmail shows no BIMI logo without a VMC/CMC certificate** (step 7), whatever else is right. The free route for
+Gmail is a Google Account on `reservations@covehotels.ae` with the monogram as its public profile photo.
+
+The examples below use the placeholder `covedubai.com`; read them with the values above.
+
 ## Before you start
 
 | Need | From |

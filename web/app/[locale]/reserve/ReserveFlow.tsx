@@ -18,6 +18,7 @@ import { ApiError, bookingApi } from '@/lib/api/client';
 import type {
   AvailableRoomType,
   Locale,
+  PriceBreakdown,
   Reservation,
   RoomType,
   UnavailableRoomType,
@@ -139,6 +140,16 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
   const [voucher, setVoucher] = useState<VoucherPreview | null>(null);
 
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
+
+  // The alert renders at the top of the form, and on a phone the button that
+  // raised it is pinned to the bottom of the screen — a whole page away. Bring
+  // it into view so the guest is not left pressing a button that seems to do
+  // nothing.
+  useEffect(() => {
+    if (error) alertRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [error]);
+
 
   const nights =
     state.checkIn && state.checkOut
@@ -149,6 +160,9 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
     () => rooms.find((room) => room.code === state.roomTypeCode) ?? null,
     [rooms, state.roomTypeCode],
   );
+
+  /** The price for the bar pinned under the guest's thumb on a phone. */
+  const barPrice = voucher?.price ?? selectedRoom?.price ?? null;
 
   /** The room chosen before dates, as the catalogue describes it. */
   const chosenRoom = useMemo(
@@ -529,7 +543,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         {error ? (
           // `alert` so the message is announced immediately — a guest who has
           // just lost a room to someone else needs to know now, not on next tab.
-          <div className={styles.alert} role="alert">
+          <div className={styles.alert} role="alert" ref={alertRef}>
             {error}
           </div>
         ) : null}
@@ -850,6 +864,11 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
               >
                 {t('back')}
               </button>
+              <BarTotal
+                price={barPrice}
+                locale={locale}
+                hint={tErrors('selectRoom')}
+              />
               <button
                 type="button"
                 className={styles.btnPrimary}
@@ -896,6 +915,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
             onChangeRequests={(value) => update({ specialRequests: value })}
             onBack={() => goToStep(2)}
             onSubmit={submitBooking}
+            barTotal={<BarTotal price={barPrice} locale={locale} />}
           />
         )}
       </div>
@@ -915,6 +935,46 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
         onRemoveVoucher={() => setVoucher(null)}
       />
     </div>
+  );
+}
+
+/**
+ * The total, for the action row a phone pins to the bottom of the screen.
+ *
+ * On a phone the summary panel sits below the whole form, so without this the
+ * guest picks a room — or confirms the booking — without the price in sight.
+ * Hidden on wider screens, where the summary is beside the form. Figures come
+ * straight from the API's breakdown, as in the summary; nothing is computed.
+ *
+ * With no room chosen yet it says what the button needs instead, so pressing it
+ * is never a surprise.
+ */
+function BarTotal({
+  price,
+  locale,
+  hint,
+}: {
+  price: PriceBreakdown | null;
+  locale: Locale;
+  hint?: string;
+}) {
+  const t = useTranslations('reserve.summary');
+
+  if (!price) {
+    return hint ? (
+      <span className={styles.barTotal}>
+        <span className={styles.barHint}>{hint}</span>
+      </span>
+    ) : null;
+  }
+
+  return (
+    <span className={styles.barTotal} data-testid="bar-total">
+      <span className={styles.barLabel}>{t('total')}</span>
+      <span className={styles.barAmount}>
+        {formatMoney(price.grandTotal, price.currency, locale)}
+      </span>
+    </span>
   );
 }
 
