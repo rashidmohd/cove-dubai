@@ -7,10 +7,8 @@
  * pathname. Everything it renders comes from message keys, so it works in both
  * languages without knowing which one it is in.
  *
- * The mockups link to seven destinations. Experiences has no page yet and
- * points at the coming-soon page — the client's decision, so the approved nav is
- * preserved without a dead link. Members is the guest account: sign in, or see
- * your bookings once signed in.
+ * The seven destinations the mockups link to all have pages now. Members is the
+ * guest account: sign in, or see your bookings once signed in.
  */
 import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -26,7 +24,7 @@ const NAV_ITEMS = [
   { key: 'offers', href: '/offers' },
   { key: 'dining', href: '/dining' },
   { key: 'wellness', href: '/wellness' },
-  { key: 'experiences', href: '/coming-soon' },
+  { key: 'experiences', href: '/experiences' },
   { key: 'members', href: '/account' },
 ] as const;
 

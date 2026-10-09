@@ -1,0 +1,64 @@
+/**
+ * Experiences — the Wellness page's venue layout, photograph beside copy.
+ * Logical properties only, so it mirrors on /ar with no direction rules.
+ */
+
+.hero {
+  position: relative;
+}
+
+.intro {
+  margin-top: var(--space-8);
+  max-width: 56ch;
+}
+
+.spaced {
+  margin-top: var(--space-6);
+}
+
+.experience {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.visual {
+  position: relative;
+  overflow: hidden;
+  /* The supplied photograph is landscape, 3:2 — cropping it to the venue
+     layout's 4:5 would cut the rider out of frame. */
+  aspect-ratio: 3 / 2;
+  background: linear-gradient(150deg, #d9b98a, #8a6438);
+}
+
+.kind {
+  font-size: 0.6875rem;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+
+.name {
+  font-family: var(--s);
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: var(--fog);
+  margin: 0.5rem 0 var(--space-6);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 900px) {
+  .experience {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+}

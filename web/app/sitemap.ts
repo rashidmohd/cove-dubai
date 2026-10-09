@@ -23,6 +23,9 @@ const ROUTES = [
   '/offers',
   '/dining',
   '/wellness',
+  '/experiences',
+  '/spa',
+  '/dining/reserve',
 ] as const;
 
 /**

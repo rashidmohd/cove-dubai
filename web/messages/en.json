@@ -545,6 +545,23 @@
     "gallery": "Gallery",
     "spaCta": "Request a spa treatment"
   },
+  "experiences": {
+    "label": "Experiences",
+    "title": "Dubai,",
+    "titleAccent": "beyond the door.",
+    "intro": "The desert is an hour from the hotel. Our concierge arranges the day for you.",
+    "safari": {
+      "kind": "Desert",
+      "name": "Desert Safari",
+      "title": "Dunes, dust",
+      "titleAccent": "and an open sky.",
+      "body1": "Quad biking across the dunes outside the city, led by experienced guides.",
+      "body2": "Our concierge arranges it for you — tell us the day and how many of you are going.",
+      "cta": "Ask our concierge",
+      "enquirySubject": "Desert safari enquiry",
+      "alt": "A rider on a quad bike sending up a spray of sand in the desert"
+    }
+  },
   "requests": {
     "duration": "{minutes} minutes",
     "hours": "Tables {from} – {to}",

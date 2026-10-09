@@ -40,7 +40,7 @@ const COLUMNS = [
     links: [
       { key: 'dining', href: '/dining' },
       { key: 'wellness', href: '/wellness' },
-      { key: 'experiences', href: '/coming-soon' },
+      { key: 'experiences', href: '/experiences' },
       { key: 'events', href: '/coming-soon' },
     ],
   },
