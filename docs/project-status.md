@@ -1,8 +1,8 @@
 # Project status
 
-**Last updated:** 2 October 2026
-**Phase 1 progress:** milestones M0–M7 complete · **not yet deployed to Railway**
-**In flight:** vouchers, offers, and guest accounts — see [`promotions-and-accounts.md`](promotions-and-accounts.md)
+**Last updated:** 9 October 2026
+**Phase 1 progress:** milestones M0–M7 complete · **deployed to Railway (staging)**
+**Vouchers, offers, and guest accounts:** built 9 Oct 2026 — see [`promotions-and-accounts.md`](promotions-and-accounts.md)
 
 Read this alongside [`CLAUDE.md`](../CLAUDE.md) before starting work, and update it as you go.
 
@@ -702,7 +702,8 @@ with this script today.
 ### Still to do here
 
 - **No screen for the audit log.** The endpoint exists and is ADMIN-only; nothing renders it yet.
-- **No rate-plan editing.** Seasonal overrides and minimum stays are seeded data; only the base rate is editable.
+- ~~**No rate-plan editing.**~~ Done 9 Oct 2026: Admin → **Rates & offers**. Editing a room's base rate now
+  changes prices too — the seeded "Standard Rate" plans that silently overrode it were removed.
 - **The Arabic panel is in English.** All 130-odd admin keys are placeholders in `ar.json`, like the rest of the
   site — the layout mirrors correctly, the copy awaits the client.
 
@@ -745,26 +746,19 @@ holding a booking reference cancel a stranger's stay.
 
 ---
 
-## What's next — deploying to Railway
+## Deployed to Railway (confirmed 9 Oct 2026)
 
-Everything is built; nothing is deployed. The runbook is [`deploying.md`](deploying.md); both services carry a
-committed `railway.json`, so build and start commands are in version control rather than typed into a dashboard.
+Staging is live on Railway, following the runbook in [`deploying.md`](deploying.md). The user confirmed that all of
+these work:
 
-1. **Provision** Postgres, `server`, and `web` in one Railway project.
-2. **Set the environment variables** from the tables in the runbook. `CORS_ALLOWED_ORIGINS` and `WEB_BASE_URL`
-   cannot be set until the `web` service has a URL, so the server is deployed twice on the first pass.
-3. **Seed once**, with `SEED_ADMIN_PASSWORD` set, then set a real admin password.
-4. **Verify the cross-origin cookie first** — see below.
-5. **Verify the Resend domain** before the client sees staging, or no email leaves the building.
+1. Postgres, `server`, and `web` are provisioned in one Railway project, with environment variables set
+   (including `CORS_ALLOWED_ORIGINS` and `WEB_BASE_URL`).
+2. The database is seeded and the admin has a real password.
+3. Admin login survives a reload across the two origins (`SameSite=None; Secure`).
+4. The hotel's domain is verified in Resend, so real email goes out.
+5. The two R2 media variables are corrected on Railway, so uploaded photographs appear.
 
-### The one thing to get right early
-
-Admin sessions cross **two origins** on Railway — `web` and `server` are different domains — so the cookie needs
-`SameSite=None; Secure`. The config supports it and refuses to boot on a mismatched pairing, and login works end
-to end **locally**, where both services are `localhost` and `SameSite=Lax` is enough. That is precisely why this
-is still the risk: passing locally proves nothing about the cross-site case. A dropped cookie looks like a
-successful login followed by every request being anonymous, so the test that matters is **signing in and then
-reloading the page**. On AWS both services sit behind one domain and it tightens back to `Lax` with no code change.
+On AWS both services will sit behind one domain and the cookie tightens back to `Lax` with no code change.
 
 ---
 
@@ -990,12 +984,11 @@ are scoped to `cove-dev`.
 **`server/.env` is corrected** (endpoint without the path segment, bucket `cove-dev`; previous file kept as
 `.env.bak-media-fix`). That fixes *future* uploads, and needs an API restart to take effect.
 
-> ⚠️ **Two things are still outstanding.**
+> ⚠️ **One thing may still be outstanding locally.**
 > 1. **The 5 existing objects are at the wrong key** and need copying from `r2-cove-dev/room-types/…` to
 >    `room-types/…` — or simply re-uploading in the admin panel once the API is restarted. Until then those
 >    rooms render their gradient. Attempting the copy was correctly refused as a shared-resource change.
-> 2. **Railway carries the same two variables** and will have the same fault. Fix them there before the client
->    sees staging, or every photograph they upload will silently fail to appear.
+> 2. ~~Railway carries the same two variables~~ — **fixed on Railway** (confirmed 9 Oct 2026).
 
 > ⚠️ **A 404 photograph shows the browser's broken-image glyph**, it does not fall back cleanly to the gradient
 > underneath. `Photo`'s own docstring claims the gradient is "the loading state and the failure state at once",
@@ -1027,7 +1020,7 @@ None of these block development.
 | **Photography** | All imagery is CSS gradients, as in the mockups. `imageKey` on `RoomType` is the hook for real images. |
 | **Age rules** | Two **placeholder** settings in **Admin → Settings**: `guests_adult_from_age` **12** and `guests_infant_up_to_age` **1**. The hotel sets them. |
 | **Occupancy and extra-guest charges per room** | All in **Admin → Rooms → Edit**, set by the hotel: sleeps, max adults, max children, cots, guests included in the rate, extra adult and extra child fee per night. Seeded to admit exactly the parties and charge exactly the prices as before (max children = sleeps − 1, 1 cot, 2 guests included, **fees 0**). The hotel should fill in its real terms before launch. |
-| **Resend domain** | **Not verified — this now blocks real email.** The templates and sending are built and tested, but nothing leaves the building until the hotel's domain is verified in Resend and `EMAIL_FROM` points at an address on it. Until then the console transport logs messages instead. |
+| **Resend domain** | **Verified** (confirmed 9 Oct 2026). Real email is sent on staging. |
 
 ---
 
@@ -1343,3 +1336,24 @@ the discount-code field came *after* "Confirm reservation".
 - **Still open from the review:** inputs at 15px make iOS zoom on focus (should be 16px); the guest counter buttons
   are 26px and calendar days ~32px (target 44px); the calendar is a 272px popover rather than a phone sheet.
 - **Pre-existing lint error** in `ReserveFlow.tsx`: `react-hooks/set-state-in-effect` on the voucher-reset effect.
+
+---
+
+## Dev database wiped and rebuilt (9 Oct 2026)
+
+A `prisma migrate diff` run pointed its **shadow database** at the dev database, and Prisma resets a shadow
+database before use — every table was emptied. Staging was not affected. Rebuilt the same day: the schema from
+the migrations (history recorded with `prisma migrate resolve --applied`, no data touched), then `npm run seed`.
+
+- **Restored by the seed:** the three room types on sale (with Arabic), 19 amenities, 7 settings, 550 days of
+  inventory. The three retired room types were not recreated.
+- **Still to redo by hand:** an admin account (`SEED_ADMIN_PASSWORD=… npm run seed`), room photographs (re-upload
+  in Admin → Rooms; the files are still in R2), and any admin-panel edits made since seeding.
+- **New rule:** before anything that deletes data, run `npm run db:export` in `server/` — it writes every table to
+  `db-backups/cove-<timestamp>.json` beside the repo. Never pass a database that holds data as
+  `--shadow-database-url`.
+
+> ⚠️ **Found while building accounts, not yet fixed:** `GET /api/reservations/:reference` is public and returns the
+> guest's name, email and phone to anyone with a reference. References are 6 random digits per year and reads are
+> limited to 120/min per IP, so they can be guessed. The cancel page is its only guest caller and already holds
+> the cancellation token — requiring that token for the lookup would close it.

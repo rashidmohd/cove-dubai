@@ -14,11 +14,16 @@
 import { getBookingProvider } from '../booking/index.js';
 import type { Reservation } from '../booking/types.js';
 import { config } from '../config.js';
+import type { GuestAccount } from '@prisma/client';
+
 import {
+  accountExistsEmail,
   cancellationEmail,
   confirmationEmail,
   hotelCancellationEmail,
   hotelNotificationEmail,
+  passwordResetEmail,
+  verificationEmail,
 } from './templates.js';
 import { sendEmail } from './transport.js';
 
@@ -118,3 +123,45 @@ async function readCancellationHours(): Promise<number | undefined> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Guest accounts
+//
+// Same rule as the booking emails: sent after the response, never thrown. A
+// guest who does not receive one can ask again from the page.
+// ---------------------------------------------------------------------------
+
+type AccountRecipient = Pick<GuestAccount, 'email' | 'firstName' | 'preferredLocale'>;
+
+function localeOf(account: AccountRecipient) {
+  return account.preferredLocale === 'AR' ? 'ar' : 'en';
+}
+
+export async function sendVerificationEmail(
+  account: AccountRecipient,
+  token: string,
+): Promise<void> {
+  await sendEmail({
+    to: account.email,
+    ...verificationEmail({ firstName: account.firstName, locale: localeOf(account), token }),
+  });
+}
+
+export async function sendPasswordResetEmail(
+  account: AccountRecipient,
+  token: string,
+): Promise<void> {
+  await sendEmail({
+    to: account.email,
+    ...passwordResetEmail({ locale: localeOf(account), token }),
+  });
+}
+
+export async function sendAccountExistsEmail(
+  account: AccountRecipient,
+  token: string,
+): Promise<void> {
+  await sendEmail({
+    to: account.email,
+    ...accountExistsEmail({ firstName: account.firstName, locale: localeOf(account), token }),
+  });
+}

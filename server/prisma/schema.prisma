@@ -69,16 +69,16 @@ model RoomType {
 
   /// Guests the nightly rate includes. Each guest beyond this, per room, is
   /// charged the extra-guest fee below. Infants are never charged.
-  baseOccupancy      Int
+  baseOccupancy    Int
   /// Per night, per extra adult. 0 means extra adults stay free.
-  extraAdultFeeAed   Decimal @default(0) @db.Decimal(10, 2)
+  extraAdultFeeAed Decimal @default(0) @db.Decimal(10, 2)
   /// Per night, per extra child who takes a bed.
-  extraChildFeeAed   Decimal @default(0) @db.Decimal(10, 2)
+  extraChildFeeAed Decimal @default(0) @db.Decimal(10, 2)
 
   /// Rooms of this type the hotel owns. Seeds RoomTypeInventory.totalRooms; the
   /// per-date rows are authoritative once created, so a closure or maintenance
   /// block on one date does not require changing this.
-  totalRooms   Int
+  totalRooms Int
 
   /// Identifies the CSS treatment in the mockups (`img-suite`, `img-terrace`).
   /// The mockups are image-free and render rooms with CSS, so this is a style
@@ -186,6 +186,11 @@ model RatePlan {
   roomTypeId String
   roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
 
+  /// The plan's public identity — a slug such as `summer-escape`, unique
+  /// within its room type. Every PMS identifies rate plans by a code, and the
+  /// admin API addresses them by room type plus this, never by row id.
+  code String
+
   nameEn String
   nameAr String
 
@@ -238,6 +243,7 @@ model RatePlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([roomTypeId, code])
   @@index([roomTypeId, isActive, startDate, endDate])
   @@index([isPublicOffer, isActive])
   @@map("rate_plans")
@@ -337,9 +343,9 @@ model Reservation {
   /// Departure day. Exclusive — a 12th-to-14th booking occupies 2 nights.
   checkOut DateTime @db.Date
 
-  adults     Int @default(1)
-  children   Int @default(0)
-  roomsCount Int @default(1)
+  adults     Int   @default(1)
+  children   Int   @default(0)
+  roomsCount Int   @default(1)
   /// Age of each child at check-in, as the guest gave it. Kept rather than
   /// collapsed into a count because the hotel's age rules can change after
   /// the booking, and every PMS takes child ages. Empty for bookings made
@@ -492,9 +498,42 @@ model GuestAccount {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tokens GuestAccountToken[]
+  tokens   GuestAccountToken[]
+  sessions GuestSession[]
 
   @@map("guest_accounts")
+}
+
+/// A signed-in guest's session.
+///
+/// **Separate from `AdminSession` on purpose** — a different table, a different
+/// cookie, and a different middleware. A guest session carries no role and no
+/// field an admin check could ever read, so holding one can never open an
+/// admin route.
+///
+/// The cookie carries a random token; only its SHA-256 is stored, exactly like
+/// `GuestAccountToken`. A leaked backup must not be a list of live sessions.
+model GuestSession {
+  id String @id @default(cuid())
+
+  accountId String
+  account   GuestAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  /// SHA-256 of the cookie value. The plaintext is never stored.
+  tokenHash String @unique
+
+  /// Synchroniser token for the guest's own mutating requests. The cookie is
+  /// `SameSite=None` on Railway, so this replaces the browser's protection.
+  csrfToken String
+
+  /// Pushed forward as the guest uses the site — the idle timeout.
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([accountId])
+  @@index([expiresAt])
+  @@map("guest_sessions")
 }
 
 /// A single-use token for verifying an address or resetting a password.

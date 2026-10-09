@@ -2,7 +2,7 @@
   "name": "cove-dubai-server",
   "version": "0.1.0",
   "private": true,
-  "description": "Cove Dubai booking API — the swappable reservation engine seam (Phase 1)",
+  "description": "Cove Dubai booking API \u2014 the swappable reservation engine seam (Phase 1)",
   "type": "module",
   "main": "dist/index.js",
   "engines": {
@@ -25,7 +25,8 @@
     "admin:password": "tsx --env-file-if-exists=.env scripts/set-admin-password.ts",
     "email:preview": "tsx --env-file-if-exists=.env scripts/email-preview.ts",
     "email:test": "tsx --env-file-if-exists=.env scripts/email-test.ts",
-    "bimi:check": "tsx scripts/bimi-check.ts"
+    "bimi:check": "tsx scripts/bimi-check.ts",
+    "db:export": "tsx --env-file-if-exists=.env scripts/export-db.ts"
   },
   "prisma": {
     "seed": "tsx --env-file-if-exists=.env prisma/seed.ts"

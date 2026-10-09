@@ -120,6 +120,18 @@ export interface AdminVoucher {
   createdAt: string;
 }
 
+/** One booking that used a code. Cancelled bookings stay: the use is not returned. */
+export interface VoucherRedemption {
+  reference: string;
+  guestName: string;
+  roomTypeCode: string;
+  checkIn: IsoDate;
+  checkOut: IsoDate;
+  status: ReservationStatus;
+  discount: number;
+  redeemedAt: string;
+}
+
 export interface VoucherInput {
   name: LocalizedText;
   discountType: DiscountType;
@@ -130,6 +142,41 @@ export interface VoucherInput {
   minimumNights?: number;
   minimumSpend?: number | null;
   roomTypeCodes?: string[];
+}
+
+/**
+ * A rate plan: a seasonal rate, a weekday rate, or — flagged `isPublicOffer` —
+ * an offer on the public site. Addressed by room type plus `code`.
+ */
+export interface AdminRatePlan {
+  roomTypeCode: string;
+  code: string;
+  name: LocalizedText;
+  description: LocalizedText | null;
+  nightlyRate: number;
+  /** Both set or both null. */
+  validFrom: IsoDate | null;
+  validTo: IsoDate | null;
+  /** `0` = Sunday. Never empty. */
+  daysOfWeek: number[];
+  minimumStayNights: number;
+  priority: number;
+  isActive: boolean;
+  isPublicOffer: boolean;
+  createdAt: string;
+}
+
+export interface RatePlanInput {
+  name: LocalizedText;
+  description?: LocalizedText | null;
+  nightlyRate: number;
+  validFrom?: IsoDate | null;
+  validTo?: IsoDate | null;
+  daysOfWeek?: number[];
+  minimumStayNights?: number;
+  priority?: number;
+  isActive?: boolean;
+  isPublicOffer?: boolean;
 }
 
 export interface ReservationListFilter {
@@ -479,10 +526,57 @@ export const adminApi = {
     return data.voucher;
   },
 
+  listVoucherRedemptions(
+    code: string,
+  ): Promise<{ redemptions: VoucherRedemption[]; totalDiscount: number }> {
+    return request(
+      `/api/admin/vouchers/${encodeURIComponent(code)}/redemptions`,
+    );
+  },
+
   async deleteVoucher(code: string): Promise<void> {
     await request(`/api/admin/vouchers/${encodeURIComponent(code)}`, {
       method: 'DELETE',
     });
+  },
+
+  // --- Rate plans ------------------------------------------------------------
+
+  async listRatePlans(): Promise<AdminRatePlan[]> {
+    const data = await request<{ ratePlans: AdminRatePlan[] }>(
+      '/api/admin/rate-plans',
+    );
+    return data.ratePlans;
+  },
+
+  async createRatePlan(
+    roomTypeCode: string,
+    draft: RatePlanInput & { code: string },
+  ): Promise<AdminRatePlan> {
+    const data = await request<{ ratePlan: AdminRatePlan }>(
+      `/api/admin/room-types/${encodeURIComponent(roomTypeCode)}/rate-plans`,
+      { method: 'POST', body: draft },
+    );
+    return data.ratePlan;
+  },
+
+  async updateRatePlan(
+    roomTypeCode: string,
+    planCode: string,
+    changes: Partial<RatePlanInput>,
+  ): Promise<AdminRatePlan> {
+    const data = await request<{ ratePlan: AdminRatePlan }>(
+      `/api/admin/room-types/${encodeURIComponent(roomTypeCode)}/rate-plans/${encodeURIComponent(planCode)}`,
+      { method: 'PATCH', body: changes },
+    );
+    return data.ratePlan;
+  },
+
+  async deleteRatePlan(roomTypeCode: string, planCode: string): Promise<void> {
+    await request(
+      `/api/admin/room-types/${encodeURIComponent(roomTypeCode)}/rate-plans/${encodeURIComponent(planCode)}`,
+      { method: 'DELETE' },
+    );
   },
 
   // --- Availability calendar ----------------------------------------------

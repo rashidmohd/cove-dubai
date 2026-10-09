@@ -520,6 +520,8 @@ function layout(args: {
   body: string;
   /** The "why you are receiving this" line — for guests, not for staff. */
   footerReason?: boolean;
+  /** That line's wording, when it is not about a reservation. */
+  footerText?: string;
 }): string {
   const { l } = args;
   const copy = COPY[l.locale];
@@ -568,7 +570,7 @@ function layout(args: {
                 ${
                   args.footerReason === false
                     ? ''
-                    : `<div style="margin-top:14px;font-size:11px;color:#a89b8b;">${escapeHtml(copy.footerReason)}</div>`
+                    : `<div style="margin-top:14px;font-size:11px;color:#a89b8b;">${escapeHtml(args.footerText ?? copy.footerReason)}</div>`
                 }
               </td>
             </tr>
@@ -881,4 +883,217 @@ export function hotelNotificationEmail(reservation: Reservation): RenderedEmail 
  */
 export function hotelCancellationEmail(reservation: Reservation): RenderedEmail {
   return staffEmail(reservation, 'cancelled');
+}
+
+// ---------------------------------------------------------------------------
+// Guest accounts — verification, password reset, "you already have an account"
+// ---------------------------------------------------------------------------
+
+interface AccountCopy {
+  verifySubject: string;
+  verifyPreheader: string;
+  verifyEyebrow: string;
+  verifyHeadline: (firstName: string) => string;
+  verifyBody: string;
+  verifyButton: string;
+  verifyExpiry: string;
+  resetSubject: string;
+  resetPreheader: string;
+  resetEyebrow: string;
+  resetHeadline: string;
+  resetBody: string;
+  resetButton: string;
+  resetExpiry: string;
+  existsSubject: string;
+  existsPreheader: string;
+  existsHeadline: (firstName: string) => string;
+  existsBody: string;
+  signInButton: string;
+  notYou: string;
+  footerReason: string;
+}
+
+const ACCOUNT_COPY: Record<Locale, AccountCopy> = {
+  en: {
+    verifySubject: 'Confirm your email address',
+    verifyPreheader: 'One click to confirm your Cove Dubai account.',
+    verifyEyebrow: 'Your account',
+    verifyHeadline: (firstName) => `Welcome, ${firstName}.`,
+    verifyBody:
+      'Confirm this email address to finish creating your account. Once it is confirmed, every reservation made with it appears in one place.',
+    verifyButton: 'Confirm my email',
+    verifyExpiry: 'The link works once, for the next 48 hours.',
+    resetSubject: 'Reset your password',
+    resetPreheader: 'A link to choose a new password for your Cove Dubai account.',
+    resetEyebrow: 'Your account',
+    resetHeadline: 'Choose a new password.',
+    resetBody:
+      'We received a request to reset the password for your account. Use the button below to choose a new one.',
+    resetButton: 'Choose a new password',
+    resetExpiry: 'The link works once, for the next hour.',
+    existsSubject: 'You already have an account',
+    existsPreheader: 'Someone tried to create an account with this address.',
+    existsHeadline: (firstName) => `You already have an account, ${firstName}.`,
+    existsBody:
+      'Someone — probably you — tried to create a new account with this email address. There is already one, so nothing has changed. Sign in as usual, or choose a new password if you have forgotten it.',
+    signInButton: 'Sign in',
+    notYou:
+      'If this was not you, you can ignore this email. Your account and password are unchanged.',
+    footerReason:
+      'You are receiving this email because an account at Cove Dubai uses this address.',
+  },
+  // Draft Arabic for the client's copywriter, like the rest of the Arabic copy.
+  ar: {
+    verifySubject: 'تأكيد عنوان بريدك الإلكتروني',
+    verifyPreheader: 'نقرة واحدة لتأكيد حسابك في كوف دبي.',
+    verifyEyebrow: 'حسابك',
+    verifyHeadline: (firstName) => `أهلاً بك، ${firstName}.`,
+    verifyBody:
+      'أكّد عنوان البريد الإلكتروني هذا لإكمال إنشاء حسابك. بعد التأكيد، تظهر كل الحجوزات التي تمت به في مكان واحد.',
+    verifyButton: 'تأكيد بريدي الإلكتروني',
+    verifyExpiry: 'يعمل الرابط مرة واحدة، خلال الساعات الثماني والأربعين القادمة.',
+    resetSubject: 'إعادة تعيين كلمة المرور',
+    resetPreheader: 'رابط لاختيار كلمة مرور جديدة لحسابك في كوف دبي.',
+    resetEyebrow: 'حسابك',
+    resetHeadline: 'اختر كلمة مرور جديدة.',
+    resetBody:
+      'تلقينا طلباً لإعادة تعيين كلمة مرور حسابك. استخدم الزر أدناه لاختيار كلمة مرور جديدة.',
+    resetButton: 'اختيار كلمة مرور جديدة',
+    resetExpiry: 'يعمل الرابط مرة واحدة، خلال الساعة القادمة.',
+    existsSubject: 'لديك حساب بالفعل',
+    existsPreheader: 'حاول أحدهم إنشاء حساب بهذا العنوان.',
+    existsHeadline: (firstName) => `لديك حساب بالفعل، ${firstName}.`,
+    existsBody:
+      'حاول أحدهم — على الأرجح أنت — إنشاء حساب جديد بعنوان البريد الإلكتروني هذا. يوجد حساب بالفعل، لذا لم يتغير شيء. سجّل الدخول كالمعتاد، أو اختر كلمة مرور جديدة إن كنت قد نسيتها.',
+    signInButton: 'تسجيل الدخول',
+    notYou: 'إن لم تكن أنت، يمكنك تجاهل هذه الرسالة. حسابك وكلمة مرورك لم يتغيرا.',
+    footerReason: 'تصلك هذه الرسالة لأن حساباً في كوف دبي يستخدم هذا العنوان.',
+  },
+};
+
+/** The account pages' links. The token rides in the query string, read once by the page. */
+export function accountUrl(
+  path: 'verify' | 'reset' | '',
+  locale: Locale,
+  token?: string,
+): string {
+  const base = siteUrl(`/${locale}/account${path ? `/${path}` : ''}`);
+  return token ? `${base}?token=${encodeURIComponent(token)}` : base;
+}
+
+/** One message shape for all three: a headline, a paragraph, a button, small print. */
+function accountEmail(args: {
+  locale: Locale;
+  subject: string;
+  preheader: string;
+  eyebrow: string;
+  headline: string;
+  body: string;
+  button: { href: string; text: string };
+  secondary?: { href: string; text: string };
+  smallPrint: string[];
+}): RenderedEmail {
+  const l = look(args.locale);
+  const copy = COPY[args.locale];
+  const accountCopy = ACCOUNT_COPY[args.locale];
+
+  const html = `
+    ${eyebrow(args.eyebrow, l)}
+    ${headline(args.headline, l)}
+    ${paragraph(args.body, l)}
+    ${button(args.button.href, args.button.text, l, 'dark')}
+    ${args.secondary ? button(args.secondary.href, args.secondary.text, l, 'outline') : ''}
+    ${paragraph(copy.linkFallback, l, FOG)}
+    <p dir="ltr" style="margin:0 0 24px;font-family:${SANS};font-size:12px;line-height:1.6;color:${FOG};word-break:break-all;">${escapeHtml(args.button.href)}</p>
+    ${ruled(args.smallPrint.map((line) => paragraph(line, l, FOG)).join(''))}
+    ${signOff(l)}
+  `;
+
+  const text = [
+    args.eyebrow.toUpperCase(),
+    args.headline,
+    '',
+    args.body,
+    '',
+    `${args.button.text}: ${args.button.href}`,
+    ...(args.secondary ? [`${args.secondary.text}: ${args.secondary.href}`] : []),
+    '',
+    ...args.smallPrint,
+    '',
+    copy.signOff,
+    copy.hotelName,
+    '',
+    accountCopy.footerReason,
+  ].join('\n');
+
+  return {
+    subject: args.subject,
+    html: layout({
+      l,
+      title: args.subject,
+      preheader: args.preheader,
+      body: html,
+      footerText: accountCopy.footerReason,
+    }),
+    text,
+  };
+}
+
+export function verificationEmail(args: {
+  firstName: string;
+  locale: Locale;
+  token: string;
+}): RenderedEmail {
+  const c = ACCOUNT_COPY[args.locale];
+  return accountEmail({
+    locale: args.locale,
+    subject: c.verifySubject,
+    preheader: c.verifyPreheader,
+    eyebrow: c.verifyEyebrow,
+    headline: c.verifyHeadline(args.firstName),
+    body: c.verifyBody,
+    button: { href: accountUrl('verify', args.locale, args.token), text: c.verifyButton },
+    smallPrint: [c.verifyExpiry, c.notYou],
+  });
+}
+
+export function passwordResetEmail(args: {
+  locale: Locale;
+  token: string;
+}): RenderedEmail {
+  const c = ACCOUNT_COPY[args.locale];
+  return accountEmail({
+    locale: args.locale,
+    subject: c.resetSubject,
+    preheader: c.resetPreheader,
+    eyebrow: c.resetEyebrow,
+    headline: c.resetHeadline,
+    body: c.resetBody,
+    button: { href: accountUrl('reset', args.locale, args.token), text: c.resetButton },
+    smallPrint: [c.resetExpiry, c.notYou],
+  });
+}
+
+/**
+ * Sent instead of a verification email when someone registers an address that
+ * already has a confirmed account. The person at the form is told only "check
+ * your inbox"; the owner of the inbox is told what happened.
+ */
+export function accountExistsEmail(args: {
+  firstName: string;
+  locale: Locale;
+  token: string;
+}): RenderedEmail {
+  const c = ACCOUNT_COPY[args.locale];
+  return accountEmail({
+    locale: args.locale,
+    subject: c.existsSubject,
+    preheader: c.existsPreheader,
+    eyebrow: c.verifyEyebrow,
+    headline: c.existsHeadline(args.firstName),
+    body: c.existsBody,
+    button: { href: accountUrl('', args.locale), text: c.signInButton },
+    secondary: { href: accountUrl('reset', args.locale, args.token), text: c.resetButton },
+    smallPrint: [c.resetExpiry, c.notYou],
+  });
 }

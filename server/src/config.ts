@@ -39,6 +39,12 @@ const configSchema = z.object({
   sessionIdleTimeoutMinutes: z.coerce.number().int().positive().default(30),
   sessionCookieSameSite: z.enum(['lax', 'strict', 'none']).default('lax'),
   sessionCookieSecure: booleanFromString.default('false'),
+  /**
+   * How long a signed-in guest stays signed in without visiting. Longer than
+   * the admin timeout: a guest checks their bookings now and then, and a
+   * guest session can only read their own stays.
+   */
+  guestSessionIdleDays: z.coerce.number().int().positive().default(30),
 
   /** Empty in local dev -> the console email transport is used instead. */
   emailApiKey: z.string().optional(),
@@ -102,6 +108,7 @@ function loadConfig(): Config {
     sessionIdleTimeoutMinutes: process.env.SESSION_IDLE_TIMEOUT_MINUTES,
     sessionCookieSameSite: process.env.SESSION_COOKIE_SAMESITE,
     sessionCookieSecure: process.env.SESSION_COOKIE_SECURE,
+    guestSessionIdleDays: process.env.GUEST_SESSION_IDLE_DAYS,
     emailApiKey: process.env.EMAIL_API_KEY || undefined,
     emailFrom: process.env.EMAIL_FROM,
     emailHotelNotificationAddress: process.env.EMAIL_HOTEL_NOTIFICATION_ADDRESS,

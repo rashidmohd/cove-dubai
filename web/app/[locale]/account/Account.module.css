@@ -1,0 +1,276 @@
+/**
+ * Guest account pages — sign in, register, verify, reset, and "my bookings".
+ *
+ * The same centred card as the cancellation page, so everything a guest
+ * reaches from an email looks like one family. Logical properties throughout,
+ * so it mirrors on /ar with no direction-specific rules (`arabic-rtl`).
+ *
+ * Inputs are 16px and every control is at least 44px tall: smaller text makes
+ * iOS zoom on focus, and smaller targets fail on a phone, which is where these
+ * links are opened.
+ */
+
+.wrap {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-24) var(--space-4);
+  background: var(--linen);
+}
+
+.card {
+  width: 100%;
+  max-width: 34rem;
+  padding: var(--space-12) var(--space-8);
+  background: var(--w);
+  border: var(--border-hairline) solid rgba(196, 154, 82, 0.35);
+  border-radius: var(--radius);
+}
+
+.cardWide {
+  max-width: 48rem;
+}
+
+.title {
+  font-family: var(--s);
+  font-size: 2rem;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: var(--space-6);
+}
+
+.body {
+  font-family: var(--b);
+  font-size: 1rem;
+  line-height: var(--line-height-base);
+  color: var(--fog);
+  margin-bottom: var(--space-6);
+}
+
+.status {
+  font-family: var(--b);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--fog);
+}
+
+.error,
+.notice {
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  font-family: var(--b);
+  font-size: 1rem;
+  line-height: var(--line-height-base);
+  border-radius: var(--radius);
+}
+
+.error {
+  color: var(--orange);
+  background: rgba(184, 82, 40, 0.08);
+  border: var(--border-hairline) solid rgba(184, 82, 40, 0.3);
+}
+
+.notice {
+  color: var(--ink);
+  background: rgba(196, 154, 82, 0.14);
+  border: var(--border-hairline) solid rgba(196, 154, 82, 0.4);
+}
+
+/* --- Forms ---------------------------------------------------------------- */
+
+.form {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-6);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.label {
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--fog);
+}
+
+.hint {
+  font-family: var(--b);
+  font-size: 0.875rem;
+  color: var(--fog);
+}
+
+.input {
+  min-height: 2.75rem;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--b);
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--w);
+  border: var(--border-hairline) solid rgba(28, 20, 16, 0.25);
+  border-radius: var(--radius);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 1px;
+  border-color: var(--bronze);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-6);
+}
+
+/* The primary action. Dark, not gold: gold is for dark surfaces only
+   (`cove-design-system`), and this sits on near-white. */
+.primary {
+  min-height: 2.75rem;
+  padding: var(--space-3) var(--space-8);
+  font-family: var(--b);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--w);
+  background: var(--ink);
+  border: var(--border-hairline) solid var(--ink);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.primary:hover {
+  opacity: 0.88;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.primary:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 2px;
+}
+
+/* A quiet text action — "forgot your password", "sign out". */
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0;
+  font-family: var(--b);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: var(--border-hairline) solid var(--bronze);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.link:hover {
+  color: var(--bronze);
+}
+
+.footnote {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+  font-family: var(--b);
+  font-size: 0.9375rem;
+  color: var(--fog);
+}
+
+/* --- My bookings ----------------------------------------------------------- */
+
+.headRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.headRow .title {
+  margin-bottom: 0;
+}
+
+.bookings {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  list-style: none;
+  padding: 0;
+}
+
+.booking {
+  padding: var(--space-6);
+  border: var(--border-hairline) solid rgba(28, 20, 16, 0.12);
+  border-radius: var(--radius);
+}
+
+.bookingTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.room {
+  font-family: var(--s);
+  font-size: 1.375rem;
+  color: var(--ink);
+}
+
+.badge {
+  font-family: var(--b);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--bronze);
+}
+
+.badgeMuted {
+  color: var(--fog);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-3) var(--space-6);
+}
+
+.factLabel {
+  font-family: var(--b);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--fog);
+}
+
+.factValue {
+  /* Browsers indent a <dd> by default. */
+  margin: 0;
+  font-family: var(--b);
+  font-size: 1rem;
+  color: var(--ink);
+}

@@ -128,7 +128,18 @@ export function useApiErrorMessage() {
     if (caught.code === 'VOUCHER_NOT_APPLICABLE') {
       return t('errors.voucherNotApplicable');
     }
-    if (caught.code === 'VOUCHER_CODE_IN_USE') return t('errors.voucherInUse');
+    if (caught.code === 'VOUCHER_CODE_IN_USE') {
+      // One code, two causes: deleting a redeemed code (which carries its
+      // redemption count) or creating a code that already exists.
+      return caught.details?.redemptionCount !== undefined
+        ? t('errors.voucherInUse')
+        : t('errors.voucherCodeTaken');
+    }
+    if (caught.code === 'RATE_PLAN_CODE_IN_USE') {
+      return t('errors.ratePlanCodeInUse');
+    }
+    if (caught.code === 'RATE_PLAN_NOT_FOUND') return t('errors.ratePlanNotFound');
+    if (caught.code === 'INVALID_RATE_PLAN') return t('errors.invalidRatePlan');
     if (caught.code === 'CSRF_TOKEN_INVALID') return t('errors.signedOut');
 
     return caught.message;

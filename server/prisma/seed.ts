@@ -280,7 +280,7 @@ async function seedRoomTypeAmenities() {
 
 async function seedRoomTypesAndRates() {
   for (const room of ROOM_TYPES) {
-    const roomType = await prisma.roomType.upsert({
+    await prisma.roomType.upsert({
       where: { code: room.code },
       // Re-running must not silently revert edits the hotel made in the admin
       // panel, so an existing row keeps its copy and rates. Only the fields
@@ -308,24 +308,10 @@ async function seedRoomTypesAndRates() {
       },
     });
 
-    // The always-applicable default plan. Seasonal plans are added by the hotel
-    // later, with a higher priority and a date window.
-    const existingDefault = await prisma.ratePlan.findFirst({
-      where: { roomTypeId: roomType.id, startDate: null, endDate: null },
-    });
-
-    if (!existingDefault) {
-      await prisma.ratePlan.create({
-        data: {
-          roomTypeId: roomType.id,
-          nameEn: 'Standard Rate',
-          nameAr: 'السعر القياسي',
-          nightlyRateAed: new Prisma.Decimal(room.baseRateAed),
-          minimumStayNights: 1,
-          priority: 0,
-        },
-      });
-    }
+    // No rate plans are seeded. A night no plan covers is priced at the base
+    // rate above, so a room is sellable without one — and an always-on plan
+    // copying the base rate would outrank it, leaving a base-rate edit in the
+    // admin with no effect. Seasonal rates and offers are added in the panel.
   }
 }
 

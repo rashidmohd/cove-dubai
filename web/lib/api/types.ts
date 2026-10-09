@@ -284,5 +284,14 @@ export type ApiErrorCode =
   | 'VOUCHER_EXHAUSTED'
   | 'VOUCHER_NOT_APPLICABLE'
   | 'VOUCHER_CODE_IN_USE'
+  | 'RATE_PLAN_NOT_FOUND'
+  | 'RATE_PLAN_CODE_IN_USE'
+  /** A one-sided date window, or no nights of the week. */
+  | 'INVALID_RATE_PLAN'
+  // --- Guest accounts ------------------------------------------------------
+  /** An emailed link that is unknown, expired, or already used. */
+  | 'INVALID_TOKEN'
+  /** Signed in, but bookings stay hidden until the address is confirmed. */
+  | 'EMAIL_NOT_VERIFIED'
   /** Raised by the client itself when the API cannot be reached at all. */
   | 'NETWORK_ERROR';

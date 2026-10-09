@@ -12,6 +12,7 @@ import cookieParser from 'cookie-parser';
 import { config } from './config.js';
 import { sessionMiddleware } from './auth/session.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
+import { accountRouter } from './routes/account.routes.js';
 import { adminRouter } from './routes/admin.routes.js';
 import { authRouter } from './routes/auth.routes.js';
 import { bookingRouter } from './routes/booking.routes.js';
@@ -49,6 +50,9 @@ export function createApp() {
   app.use('/api', bookingRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/admin', adminRouter);
+  // Guest accounts carry their own session, cookie and middleware — nothing
+  // above is shared with the admin side.
+  app.use('/api/account', accountRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

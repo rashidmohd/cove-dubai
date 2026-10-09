@@ -299,6 +299,84 @@ describe('managing codes', () => {
     }
   });
 
+  it('reports which bookings used a code, and what they saved', async () => {
+    const code = `${PREFIX}-REPORT`;
+    const admin = await signIn(ADMIN_EMAIL);
+    await fetch(
+      `${baseUrl}/api/admin/vouchers`,
+      authed(admin, { method: 'POST', body: JSON.stringify(voucherBody({ code })) }),
+    );
+
+    const voucher = await prisma.voucher.findFirstOrThrow({ where: { code } });
+    // Two bookings of its own, so the test does not depend on what else the
+    // shared database holds.
+    const roomType = await prisma.roomType.findFirstOrThrow({ where: { isActive: true } });
+    const guest = await prisma.guest.create({
+      data: {
+        firstName: 'Report',
+        lastName: 'Test',
+        email: `report@${TEST_DOMAIN}`,
+        phone: '+971500000000',
+      },
+    });
+    const reservations = await Promise.all(
+      [1, 2].map((n) =>
+        prisma.reservation.create({
+          data: {
+            bookingReference: `CV-2031-${String(900000 + n * 1111 + Math.floor(Math.random() * 1000))}`,
+            guestId: guest.id,
+            roomTypeId: roomType.id,
+            checkIn: new Date('2031-06-01'),
+            checkOut: new Date('2031-06-03'),
+            priceBreakdown: {},
+            totalAmountAed: '0',
+          },
+        }),
+      ),
+    );
+    await prisma.voucherRedemption.createMany({
+      data: reservations.map((reservation, index) => ({
+        voucherId: voucher.id,
+        reservationId: reservation.id,
+        discountAed: index === 0 ? '120.50' : '79.50',
+      })),
+    });
+
+    try {
+      // Staff can read it: the front desk is asked whether a discount applied.
+      const staff = await signIn(STAFF_EMAIL);
+      const response = await fetch(
+        `${baseUrl}/api/admin/vouchers/${code.toLowerCase()}/redemptions`,
+        authed(staff),
+      );
+      expect(response.status).toBe(200);
+      const body = (await response.json()) as {
+        redemptions: Array<{ reference: string; discount: number }>;
+        totalDiscount: number;
+      };
+
+      expect(body.totalDiscount).toBe(200);
+      expect(body.redemptions.map((r) => r.reference).sort()).toEqual(
+        reservations.map((r) => r.bookingReference).sort(),
+      );
+      // No row ids cross the boundary — bookings are named by reference.
+      expect(JSON.stringify(body)).not.toContain(reservations[0]!.id);
+    } finally {
+      await prisma.voucherRedemption.deleteMany({ where: { voucherId: voucher.id } });
+      await prisma.reservation.deleteMany({ where: { guestId: guest.id } });
+      await prisma.guest.delete({ where: { id: guest.id } });
+    }
+  });
+
+  it('reports an unknown code as not found in the redemption report', async () => {
+    const session = await signIn(ADMIN_EMAIL);
+    const response = await fetch(
+      `${baseUrl}/api/admin/vouchers/${PREFIX}-NOBODY/redemptions`,
+      authed(session),
+    );
+    expect(response.status).toBe(404);
+  });
+
   it('will not lower the cap below what has already been redeemed', async () => {
     const session = await signIn(ADMIN_EMAIL);
     const code = `${PREFIX}-CAP`;

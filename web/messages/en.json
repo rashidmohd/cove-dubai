@@ -186,6 +186,86 @@
     "cancelledBody": "We are sorry not to be welcoming you this time. You are welcome to book again whenever suits.",
     "backHome": "Back to the hotel"
   },
+  "account": {
+    "title": "Your account",
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "passwordHint": "At least {count} characters. A short phrase is easier to remember and harder to guess.",
+      "firstName": "First name",
+      "lastName": "Last name"
+    },
+    "signIn": {
+      "title": "Sign in",
+      "intro": "Sign in to see your reservations with us in one place. You never need an account to book.",
+      "submit": "Sign in",
+      "busy": "Signing in…",
+      "forgot": "Forgotten your password?",
+      "noAccount": "New here?",
+      "register": "Create an account"
+    },
+    "register": {
+      "title": "Create an account",
+      "intro": "See every reservation made with your email address in one place. Booking never requires an account.",
+      "emailHint": "Use the address you book with — your reservations are matched to it.",
+      "submit": "Create account",
+      "busy": "Creating…",
+      "sentTitle": "Check your inbox",
+      "sent": "We have sent an email to {email}.",
+      "sentBody": "Follow the link in it to confirm your address. If you already have an account, the email will tell you how to sign in instead. It can take a minute or two to arrive.",
+      "haveAccount": "Already have an account?",
+      "toSignIn": "Sign in"
+    },
+    "verify": {
+      "title": "Confirm your email",
+      "body": "Confirm this address to see your reservations.",
+      "submit": "Confirm my email",
+      "done": "Your email address is confirmed.",
+      "toAccount": "Go to your account"
+    },
+    "reset": {
+      "requestTitle": "Reset your password",
+      "requestIntro": "Enter the email address for your account and we will send you a link to choose a new password.",
+      "requestSubmit": "Send the link",
+      "sent": "If {email} has an account with us, a link is on its way. It works for one hour.",
+      "setTitle": "Choose a new password",
+      "setSubmit": "Save new password",
+      "done": "Your password has been changed, and you have been signed out everywhere else. Sign in with your new password.",
+      "toSignIn": "Back to sign in"
+    },
+    "bookings": {
+      "greeting": "Welcome, {name}",
+      "intro": "Every reservation made with your email address, latest first.",
+      "none": "There are no reservations under your email address yet.",
+      "unverified": "Confirm your email address to see your reservations. We sent a link to {email}.",
+      "resend": "Send the link again",
+      "resent": "A new link is on its way.",
+      "howToCancel": "To cancel a reservation, use the link in its confirmation email, or contact the hotel.",
+      "bookAnother": "Make a reservation",
+      "signOut": "Sign out",
+      "reference": "Reference",
+      "stay": "Stay",
+      "guests": "Guests",
+      "total": "Total",
+      "party": "{adults, plural, one {# adult} other {# adults}}{children, plural, =0 {} one {, # child} other {, # children}}",
+      "status": {
+        "held": "Held",
+        "confirmed": "Confirmed",
+        "cancelled": "Cancelled",
+        "checked-in": "Checked in",
+        "checked-out": "Stayed"
+      }
+    },
+    "errors": {
+      "invalidCredentials": "That email and password do not match an account.",
+      "invalidToken": "This link has expired or has already been used. Request a new one.",
+      "signedOut": "You have been signed out. Please sign in again.",
+      "checkFields": "Please check the details and try again.",
+      "passwordsDiffer": "The two passwords do not match."
+    }
+  },
   "footer": {
     "tagline": "A hotel in Dubai. Considered rooms. Open now.",
     "columns": {
@@ -207,7 +287,8 @@
       "wellness": "Wellness & spa",
       "experiences": "Experiences",
       "events": "Events",
-      "gettingHere": "Getting here"
+      "gettingHere": "Getting here",
+      "account": "Your bookings"
     },
     "email": "reservations@cove.com",
     "phone": "+971 4 000 0000",
@@ -554,7 +635,8 @@
         "property": "Property",
         "system": "System"
       },
-      "vouchers": "Discount codes"
+      "vouchers": "Discount codes",
+      "rates": "Rates & offers"
     },
     "roles": {
       "admin": "Administrator",
@@ -585,7 +667,11 @@
       "voucherExpired": "That code has expired.",
       "voucherExhausted": "That code has already been fully redeemed.",
       "voucherNotApplicable": "That code does not apply to this stay.",
-      "voucherInUse": "That code has been redeemed and cannot be deleted. Deactivate it instead."
+      "voucherInUse": "That code has been redeemed and cannot be deleted. Deactivate it instead.",
+      "ratePlanCodeInUse": "That room type already has a plan with this code. Choose another.",
+      "invalidRatePlan": "Check the dates and nights: give both dates or neither, and tick at least one night.",
+      "ratePlanNotFound": "That rate plan no longer exists. The list has been refreshed.",
+      "voucherCodeTaken": "A code with that name already exists. Choose another."
     },
     "dashboard": {
       "arrivals": "Arriving today",
@@ -746,6 +832,47 @@
         "accessibility": "Accessibility"
       }
     },
+    "rates": {
+      "count": "{count, plural, one {# rate plan} other {# rate plans}}",
+      "add": "Add a rate plan",
+      "editTitle": "Edit rate plan",
+      "howItWorks": "Each night is priced by the highest-priority active plan that covers it, by its dates and its nights of the week. A night no plan covers is charged at the room's base rate. Tick “Show on the offers page” to advertise a plan as an offer. Bookings already made keep the price they were quoted.",
+      "formHint": "Leave both dates empty for a plan that applies all year.",
+      "baseRate": "Base rate {rate} a night",
+      "noneOnRoom": "No rate plans. Every night is charged at the base rate.",
+      "noRooms": "No room types yet.",
+      "plan": "Plan",
+      "roomType": "Room type",
+      "code": "Plan code",
+      "codeHint": "Lowercase letters, numbers and hyphens, for example summer-escape. Fixed once saved.",
+      "nightlyRate": "Nightly rate",
+      "dates": "Dates",
+      "validFrom": "From",
+      "validTo": "Until",
+      "datesHint": "Both dates, or neither.",
+      "allDates": "All year",
+      "nights": "Nights of the week",
+      "nightsHint": "A night belongs to the day it is slept on: a Thursday check-in to Saturday check-out is a Thursday night and a Friday night.",
+      "everyNight": "Every night",
+      "priority": "Priority",
+      "priorityHint": "Where plans overlap, the higher number wins.",
+      "visibility": "Status",
+      "activeLabel": "Active — use this plan to price stays",
+      "offerLabel": "Show on the offers page",
+      "offerHint": "An offer is shown on the public offers page with its description, and links straight into booking.",
+      "offer": "Offer",
+      "descriptionEn": "Offer description (English)",
+      "descriptionAr": "Offer description (Arabic)",
+      "alwaysOnWarning": "With no dates and every night ticked, this plan prices every night of the year in place of the base rate, wherever it has the highest priority.",
+      "bothDates": "Give the plan both a start and an end date, or leave both empty.",
+      "pickADay": "Tick at least one night of the week.",
+      "bothDescriptions": "Give the offer description in both English and Arabic, or leave both empty.",
+      "saved": "{name} saved.",
+      "deleted": "{name} deleted.",
+      "edit": "Edit",
+      "confirmDeleteTitle": "Delete this rate plan?",
+      "confirmDelete": "Delete {name} from {room}? Stays it would have priced are charged by the next plan that covers them, or the base rate. Bookings already made keep their price."
+    },
     "vouchers": {
       "count": "{count} in the list",
       "intro": "A discount comes off the accommodation charge. VAT is then charged on what remains, and the Tourism Dirham is never discounted.",
@@ -787,7 +914,23 @@
       "deleted": "{code} deleted.",
       "confirmDeleteTitle": "Delete this code?",
       "confirmDelete": "Delete {code}? A code that has never been used leaves no record behind. Deactivating it instead keeps it available to bring back.",
-      "taxNote": "The discount applies to the accommodation charge only. VAT is charged on the discounted amount, and the Tourism Dirham is never discounted."
+      "taxNote": "The discount applies to the accommodation charge only. VAT is charged on the discounted amount, and the Tourism Dirham is never discounted.",
+      "edit": "Edit",
+      "editTitle": "Edit {code}",
+      "editHint": "Changes apply to stays booked from now on. Bookings already made keep the discount they were quoted.",
+      "capHint": "Used {count, plural, one {once} other {# times}} so far — the limit cannot go below that. Leave blank for no limit.",
+      "minimumSpend": "Minimum spend (AED)",
+      "minimumSpendHint": "The accommodation charge the stay must reach. Leave blank for none.",
+      "noMinimum": "No minimum",
+      "bookings": "Bookings",
+      "bookingsTitle": "Bookings that used {code}",
+      "bookingsSummary": "{count, plural, =0 {No bookings yet} one {One booking} other {# bookings}} · {total} off in total",
+      "noBookings": "No booking has used this code yet.",
+      "reference": "Reference",
+      "guest": "Guest",
+      "stay": "Stay",
+      "saving": "Discount",
+      "close": "Close"
     }
   },
   "offers": {

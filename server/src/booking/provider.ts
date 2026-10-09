@@ -25,6 +25,7 @@
  */
 import type {
   AdminAmenity,
+  AdminRatePlan,
   AdminRoomType,
   AdminVoucher,
   AmenityChanges,
@@ -38,6 +39,8 @@ import type {
   Offer,
   OperationalSetting,
   PriceBreakdown,
+  RatePlanChanges,
+  RatePlanDraft,
   Reservation,
   ReservationChanges,
   ReservationDraft,
@@ -48,6 +51,7 @@ import type {
   VoucherChanges,
   VoucherDraft,
   VoucherPreview,
+  VoucherRedemptionRecord,
 } from './types.js';
 
 export interface BookingProvider {
@@ -131,6 +135,16 @@ export interface BookingProvider {
    * Returns null once the token has been burned by a cancellation.
    */
   getCancellationToken(reference: string): Promise<string | null>;
+
+  /**
+   * Every booking made with an email address, newest stay first — what a
+   * signed-in guest sees under "my bookings".
+   *
+   * Matched case-insensitively on the address given at booking. The caller is
+   * responsible for having proved the address belongs to whoever is asking;
+   * this method only reads.
+   */
+  listReservationsForGuestEmail(email: string): Promise<Reservation[]>;
 
   /** Admin list view: filter by date, status and room type; search by name. */
   listReservations(
@@ -277,6 +291,45 @@ export interface BookingProvider {
    */
   listPublicOffers(): Promise<Offer[]>;
 
+  // --- Rate plans ----------------------------------------------------------
+  //
+  // Seasonal rates, weekday rates and offers are all rate plans — the same
+  // rows `checkAvailability` prices against — so editing them is pricing, and
+  // pricing is what a PMS takes over.
+
+  /** Every plan on every room type, active or not, for the admin screen. */
+  listRatePlans(): Promise<AdminRatePlan[]>;
+
+  /**
+   * Add a plan to a room type.
+   *
+   * Throws `INVALID_RATE_PLAN` for a one-sided date window or an empty set of
+   * weekdays — both would otherwise misprice silently — and
+   * `RATE_PLAN_CODE_IN_USE` when the room type already has the code.
+   */
+  createRatePlan(
+    roomTypeCode: string,
+    draft: RatePlanDraft,
+  ): Promise<AdminRatePlan>;
+
+  /**
+   * Change a plan. The rules are checked against the plan as it would be
+   * saved, so clearing one end of a window without the other is refused.
+   *
+   * Existing reservations are unaffected: each carries its own price snapshot.
+   */
+  updateRatePlan(
+    roomTypeCode: string,
+    planCode: string,
+    changes: RatePlanChanges,
+  ): Promise<AdminRatePlan>;
+
+  /**
+   * Remove a plan. Always allowed — no reservation refers to a plan; each
+   * carries the prices it was quoted.
+   */
+  deleteRatePlan(roomTypeCode: string, planCode: string): Promise<void>;
+
   // --- Vouchers ------------------------------------------------------------
   //
   // Behind the seam because promotions are pricing, and pricing is exactly what
@@ -298,6 +351,12 @@ export interface BookingProvider {
    * which stops it being usable without erasing what it cost.
    */
   deleteVoucher(code: string): Promise<void>;
+
+  /**
+   * The bookings that used a code, newest first — the record of what a
+   * campaign cost and who it reached.
+   */
+  listVoucherRedemptions(code: string): Promise<VoucherRedemptionRecord[]>;
 
   /**
    * Price a stay as though a code were applied, **without claiming a use**.

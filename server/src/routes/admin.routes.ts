@@ -38,6 +38,7 @@ import {
   auditLogFilterSchema,
   cancelReservationSchema,
   createAmenitySchema,
+  createRatePlanSchema,
   createVoucherSchema,
   dateRangeSchema,
   dateSchema,
@@ -49,6 +50,7 @@ import {
   setRoomTypeAmenitiesSchema,
   updateAmenitySchema,
   updateInventorySchema,
+  updateRatePlanSchema,
   updateRoomTypeSchema,
   updateSettingSchema,
   updateVoucherSchema,
@@ -516,6 +518,131 @@ adminRouter.patch(
 );
 
 // ---------------------------------------------------------------------------
+// Rate plans — seasonal rates, weekday rates, and offers
+// ---------------------------------------------------------------------------
+
+/**
+ * Open to STAFF for the same reason vouchers are: the front desk is asked what
+ * a night costs and which offers are running. Changing them changes prices,
+ * so writes are ADMIN-only like every other pricing control.
+ */
+adminRouter.get(
+  '/rate-plans',
+  asyncRoute(async (_req, res) => {
+    res.json({ ratePlans: await getBookingProvider().listRatePlans() });
+  }),
+);
+
+adminRouter.post(
+  '/room-types/:code/rate-plans',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const roomTypeCode = String(req.params.code);
+    const draft = createRatePlanSchema.parse(req.body);
+    const ratePlan = await getBookingProvider().createRatePlan(
+      roomTypeCode,
+      draft,
+    );
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'rate_plan.create',
+      entityType: 'rate_plan',
+      entityId: `${roomTypeCode}/${ratePlan.code}`,
+      details: {
+        nightlyRate: ratePlan.nightlyRate,
+        validFrom: ratePlan.validFrom,
+        validTo: ratePlan.validTo,
+        daysOfWeek: ratePlan.daysOfWeek,
+        priority: ratePlan.priority,
+        isPublicOffer: ratePlan.isPublicOffer,
+      },
+    });
+
+    res.status(201).json({ ratePlan });
+  }),
+);
+
+adminRouter.patch(
+  '/room-types/:code/rate-plans/:planCode',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const roomTypeCode = String(req.params.code);
+    const planCode = String(req.params.planCode);
+    const changes = updateRatePlanSchema.parse(req.body);
+
+    const before = (await getBookingProvider().listRatePlans()).find(
+      (plan) => plan.roomTypeCode === roomTypeCode && plan.code === planCode,
+    );
+
+    const ratePlan = await getBookingProvider().updateRatePlan(
+      roomTypeCode,
+      planCode,
+      changes,
+    );
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'rate_plan.update',
+      entityType: 'rate_plan',
+      entityId: `${roomTypeCode}/${planCode}`,
+      // A rate change is worth its before and after in full: it is the edit
+      // that alters what future guests pay.
+      details: {
+        changed: Object.keys(changes).filter(
+          (key) => changes[key as keyof typeof changes] !== undefined,
+        ),
+        ...(changes.nightlyRate !== undefined
+          ? {
+              rateFrom: before?.nightlyRate ?? null,
+              rateTo: ratePlan.nightlyRate,
+            }
+          : {}),
+      },
+    });
+
+    res.json({ ratePlan });
+  }),
+);
+
+adminRouter.delete(
+  '/room-types/:code/rate-plans/:planCode',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const roomTypeCode = String(req.params.code);
+    const planCode = String(req.params.planCode);
+
+    const before = (await getBookingProvider().listRatePlans()).find(
+      (plan) => plan.roomTypeCode === roomTypeCode && plan.code === planCode,
+    );
+
+    await getBookingProvider().deleteRatePlan(roomTypeCode, planCode);
+
+    // The deleted plan's terms go in the log: once the row is gone, this is
+    // the only record of what the hotel was charging under it.
+    await recordAudit({
+      ...auditContextOf(req),
+      action: 'rate_plan.delete',
+      entityType: 'rate_plan',
+      entityId: `${roomTypeCode}/${planCode}`,
+      ...(before
+        ? {
+            details: {
+              nightlyRate: before.nightlyRate,
+              validFrom: before.validFrom,
+              validTo: before.validTo,
+              daysOfWeek: before.daysOfWeek,
+              isPublicOffer: before.isPublicOffer,
+            },
+          }
+        : {}),
+    });
+
+    res.json({ ok: true });
+  }),
+);
+
+// ---------------------------------------------------------------------------
 // Vouchers
 // ---------------------------------------------------------------------------
 
@@ -528,6 +655,28 @@ adminRouter.get(
   '/vouchers',
   asyncRoute(async (_req, res) => {
     res.json({ vouchers: await getBookingProvider().listVouchers() });
+  }),
+);
+
+/**
+ * Which bookings used a code. Open to STAFF like the list: "did my booking get
+ * the discount" is a front-desk question.
+ */
+adminRouter.get(
+  '/vouchers/:code/redemptions',
+  asyncRoute(async (req, res) => {
+    const code = String(req.params.code);
+    const redemptions = await getBookingProvider().listVoucherRedemptions(code);
+    res.json({
+      redemptions,
+      // Summed here rather than on the screen, so the panel does no money
+      // arithmetic of its own (`pms-readiness`).
+      totalDiscount:
+        Math.round(
+          redemptions.reduce((sum, redemption) => sum + redemption.discount, 0) *
+            100,
+        ) / 100,
+    });
   }),
 );
 

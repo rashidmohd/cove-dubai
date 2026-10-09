@@ -30,6 +30,7 @@ const COLUMNS = [
     links: [
       { key: 'rooms', href: '/rooms' },
       { key: 'reserve', href: '/reserve' },
+      { key: 'account', href: '/account' },
       { key: 'longStays', href: '/coming-soon' },
       { key: 'giftCards', href: '/coming-soon' },
     ],

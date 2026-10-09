@@ -1,7 +1,8 @@
 # Vouchers, offers, and guest accounts
 
-The working plan for three features added to Phase 1 scope on **15 August 2026**. The voucher engine is built and
-tested; offers and guest accounts have their data model in place and nothing above it.
+The working plan for three features added to Phase 1 scope on **15 August 2026**. **All three are built and tested
+as of 9 October 2026**: vouchers (with editing and a per-code bookings report), offers (edited as rate plans in the
+admin), and guest accounts (register, confirm email, sign in, reset password, "my bookings").
 
 Read [`project-status.md`](project-status.md) first for where the rest of the project stands.
 
@@ -15,16 +16,13 @@ Read [`project-status.md`](project-status.md) first for where the rest of the pr
 
 | | Data model | Engine | API | Admin UI | Guest UI | Tests |
 |---|---|---|---|---|---|---|
-| **Vouchers** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ 31 + 3 e2e |
-| **Offers** | ✅ | — reuses rate plans | ✅ | ❌ | ✅ | ✅ 11 |
-| **Guest accounts** | ✅ | ❌ | ❌ | n/a | ❌ | ❌ |
+| **Vouchers** | ✅ | ✅ | ✅ | ✅ edit + bookings report | ✅ | ✅ 33 + 3 e2e |
+| **Offers** | ✅ | — reuses rate plans | ✅ | ✅ Rates & offers screen | ✅ | ✅ 11 + 10 |
+| **Guest accounts** | ✅ | n/a | ✅ | n/a | ✅ `/account` | ✅ 11 |
 
-**106 server tests pass**, plus 3 browser tests for the discount flow. Nothing here is half-applied: the migration
-is deployed, everything typechecks, and the tables for the unbuilt features are empty and inert.
-
-⚠️ **The Railway database now has empty `vouchers`, `voucher_room_types`, `voucher_redemptions`,
-`guest_accounts`, and `guest_account_tokens` tables, plus three new columns on `rate_plans`.** Harmless, but they
-are there and unused until the work below is done.
+**150+ server tests pass** on the dev database, plus 3 browser tests for the discount flow. The account pages were
+checked by hand in Chrome in English (desktop) and Arabic (phone width): sign in, "my bookings", staying signed in
+across a reload, and sign out.
 
 ---
 
@@ -78,8 +76,9 @@ Recorded so they are not re-litigated later. Each is reversible, but each has a 
 
 - Should a voucher be usable by the **same guest more than once**? Currently yes, unless a global cap stops them.
   Per-guest limits would need a rule about what identifies a guest, given emails are not unique.
-- Do offers need a **dedicated page**, or do they sit on the Rooms page? The mockups have neither.
-- Should a guest account be **offered during booking** ("save these details"), or only from a separate sign-up?
+- ~~Do offers need a dedicated page?~~ Decided 18 Aug 2026: their own page, in the nav.
+- ~~Should a guest account be offered during booking?~~ Decided 9 Oct 2026: a separate sign-up page only, for now.
+- Should the nav's **Members** link go to `/account`? It still points at the coming-soon page.
 
 ---
 
@@ -87,7 +86,7 @@ Recorded so they are not re-litigated later. Each is reversible, but each has a 
 
 Dependency order. Each step ends somewhere the suite is green and the app runs.
 
-### 1 · Voucher API and admin — **done**
+### 1 · Voucher API and admin — **done** (editing and report added 9 Oct 2026)
 
 Built and verified end to end in a browser: a code created in the panel, applied in the reserve flow, with the
 summary reconciling line by line.
@@ -111,13 +110,17 @@ Two things worth knowing about the shape of it:
 - **A rejected code fails inline, not as a booking error.** `applyVoucher` returns a message rather than throwing,
   so a mistyped code does not put the whole flow into its error state.
 
-#### Left undone in step 1
+#### Added 9 Oct 2026
 
-- **No editing of an existing code's fields from the panel** — only activate, deactivate, and delete. Changing a
-  discount value or window is a `PATCH` the API supports and the screen does not yet offer.
-- **No redemption report.** The count is visible per code; which bookings used it is not.
+- **Editing a code's fields** from the panel — discount, window, cap, minimum nights, minimum spend, room types.
+  The code itself is fixed once created (guests already have it). The cap cannot go below the uses already made.
+- **Bookings report per code** — `GET /admin/vouchers/:code/redemptions`, open to STAFF: reference, guest, stay,
+  status and discount for every booking that used it, with the total given away. Cancelled bookings stay listed,
+  because cancelling does not return a use.
+- Fixed on the way: the voucher form's room-type checkboxes used CSS classes that did not exist and rendered
+  unstyled; and creating a duplicate code showed "redeemed and cannot be deleted" instead of "already exists".
 
-### 2 · Offers — **guest side done, admin editing outstanding**
+### 2 · Offers — **done** (admin editing added 9 Oct 2026)
 
 **Where offers live was decided on 18 Aug 2026:** their own nav entry and page, between Rooms and Dining. That is
 the standard position on hotel sites — Hilton, and the hotel-website structure guides, all put Offers in the core
@@ -153,34 +156,55 @@ Decisions taken here:
   `?room=<code>` from the start, but nothing in `useBookingState` read it, so every offer landed on step 1 with
   no room chosen. Found while building the room detail page, which needs the same parameter. See
   [`project-status.md`](project-status.md#room-detail-pages-16-sep-2026).
-- **No admin editing of rate plans**, so offers can only be created with SQL — the same gap vouchers had before
-  step 1. This is the remaining work: `createRatePlan` / `updateRatePlan` / `deleteRatePlan` behind the seam,
-  routes under `/admin/room-types/:code/rate-plans`, and a screen. It also closes the "no rate-plan editing" gap
-  already recorded in `project-status.md`.
+- ~~**No admin editing of rate plans.**~~ **Done 9 Oct 2026.** Admin → **Rates & offers** lists every plan by
+  room type and adds, edits, (de)activates and deletes them; ticking "Show on the offers page" makes a plan an
+  offer. Behind the seam as `listRatePlans` / `createRatePlan` / `updateRatePlan` / `deleteRatePlan`; routes
+  `GET /admin/rate-plans` (STAFF) and `POST|PATCH|DELETE /admin/room-types/:code/rate-plans[/:planCode]` (ADMIN,
+  audited with before/after rates). Tests: `tests/rate-plans-api.test.ts` (10), which check that an edit changes
+  the price `/api/rates` quotes.
+  - Plans now have a **`code`** (a slug, unique per room type) — the admin API addresses them by room type plus
+    code, never by row id. Migration `20261009090000_rate_plan_codes` backfilled codes.
+  - The same migration **deleted the seeded "Standard Rate" plans**, and the seed no longer creates them. Each
+    copied its room's base rate with no dates on every night, so it *outranked* the base rate: editing a base
+    rate in Admin → Rooms changed nothing a guest paid. Only rows still exactly mirroring the base rate were
+    removed, so no price changed. Railway staging gets this on its next deploy.
+  - A one-sided date window or no weekdays is refused (as the database CHECKs already required), both in the
+    form and in the API, checked against the plan *as it would be saved*.
 - **No per-offer page.** The list links straight into the booking flow. If marketing wants to link to a single
   offer from an email, `RatePlan` needs a `slug` — a small migration, deliberately not done on spec.
 
-### 3 · Guest accounts
+### 3 · Guest accounts — **done 9 Oct 2026**
 
-The largest of the three, and the only one that is genuinely new machinery rather than an extension.
+Sign-up is a separate page only (decided 9 Oct 2026): nothing in the booking flow offers an account, and booking
+never requires one. Linked from the footer as **Your bookings**. The nav's **Members** link still goes to the
+coming-soon page — pointing it at `/account` is the client's call.
 
-- **Auth** — reuse `scrypt` from `server/src/auth/password.ts`. Sessions must be **separate from admin sessions**:
-  a different cookie name and a guest-only middleware. A guest must never be able to reach an admin route by
-  holding a session, so do not add a role field to the existing admin session and branch on it.
-- **Email** — verification and password-reset messages, in `server/src/emails/templates.ts` alongside the existing
-  three. Tokens are stored **hashed** (`GuestAccountToken.tokenHash`), single-use, and expiring; the schema is
-  already shaped for it.
-- **Routes** — register, verify, sign in, sign out, request reset, reset, and `GET /api/account/reservations`.
-- **The join** — a signed-in account sees reservations whose guest email matches its own, case-insensitively.
-  There is no foreign key from `Reservation` to `GuestAccount` on purpose: bookings made before an account existed
-  must appear, and the account is a view over them rather than their owner.
-- **Guest UI** — `web/app/[locale]/account/` — sign in, register, verify, reset, and "my bookings".
-- **Rate limit** registration and reset requests as tightly as admin login. Both send email to an
-  attacker-supplied address.
-- **Never require an account to book.** The guest flow must keep working end to end for someone who has never been
-  here and never will again.
+| Piece | Where |
+|---|---|
+| Sessions | `server/src/accounts/guest-session.ts` — own cookie `cove.guest`, own table `guest_sessions` (migration `20261009120000_guest_sessions`), own middleware. Only a SHA-256 of the cookie is stored. Idle timeout `GUEST_SESSION_IDLE_DAYS` (default 30), rolled forward at most hourly. |
+| Routes | `server/src/routes/account.routes.ts`, under `/api/account`: `register`, `verify`, `verification` (resend), `login`, `session`, `logout`, `password-reset/request`, `password-reset`, `reservations` |
+| Bookings read | `BookingProvider.listReservationsForGuestEmail` — matched on the address, case-insensitively, so bookings made before the account existed appear |
+| Emails | `verificationEmail`, `passwordResetEmail`, `accountExistsEmail` in `server/src/emails/templates.ts` (draft Arabic included) |
+| Guest UI | `web/app/[locale]/account/` — sign in / my bookings, `register`, `verify`, `reset` |
+| Tests | `server/tests/guest-accounts.test.ts` (11) — follows the real emailed links via a captured transport |
 
----
+How the privacy rules are met:
+
+- **No route says whether an address has an account.** Register and reset-request always answer `202 {ok:true}`;
+  the email differs. Registering an address that already has a confirmed account emails its owner ("you already
+  have an account", with sign-in and reset links) and changes nothing. Registering an unconfirmed one re-sends
+  the confirmation and does **not** overwrite the first registrant's password.
+- **Bookings need a confirmed address** (`403 EMAIL_NOT_VERIFIED` otherwise). Completing a password reset also
+  confirms the address — the link arrived in that inbox.
+- **Emailed links are single-use**, stored hashed, and expire (confirm 48h, reset 1h). Asking again withdraws the
+  previous link. A reset signs the account out everywhere.
+- **A guest session opens nothing on the admin side** — tested against `/api/admin/*` and `/api/auth/session`.
+- **Rate limits** on everything that sends email: 3 per address and 20 per IP per 15 minutes. Sign-in: 10 failed
+  attempts per IP per 15 minutes, with a decoy hash so a wrong address and a wrong password take the same time.
+- Signed-in writes (resend confirmation) need the `X-CSRF-Token` from `login`/`session`, as admin writes do.
+
+Left for later: cancelling from "my bookings" (it still goes through the emailed link, and the page says so),
+editing name or password while signed in, and deleting an account.
 
 ## Things that will bite
 
@@ -203,7 +227,8 @@ The largest of the three, and the only one that is genuinely new machinery rathe
 ## Checks
 
 ```bash
-cd server && npm run typecheck && npm test     # 74 tests
+cd server && npm run db:export                 # tests write to the shared dev database — back it up first
+cd server && npm run typecheck && npm test     # 150+ tests
 cd web    && npm run typecheck && npm test && npm run build
 cd web    && npx playwright test               # needs the API running
 ```

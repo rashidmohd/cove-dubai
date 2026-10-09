@@ -5,6 +5,7 @@
  * never touches the database; all reservation work here goes through the
  * `BookingProvider` interface (see the `pms-readiness` skill).
  */
+import { sweepExpiredGuestSessions } from './accounts/guest-session.js';
 import { createApp } from './app.js';
 import { config } from './config.js';
 import { disconnectPrisma } from './db/prisma.js';
@@ -14,6 +15,10 @@ const server = createApp().listen(config.port, () => {
     `[cove-dubai/server] listening on port ${config.port} (${config.nodeEnv})`,
   );
 });
+
+// Expired guest sessions are already ignored on read; this only reclaims the
+// rows. Unref'd so it is never what keeps the process alive.
+setInterval(() => void sweepExpiredGuestSessions(), 60 * 60 * 1000).unref();
 
 // Let the platform replace the process cleanly on deploy: stop accepting new
 // connections, then close the database pool. Skipping the disconnect leaves

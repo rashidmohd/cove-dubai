@@ -48,6 +48,7 @@ async function makePlan(
   await prisma.ratePlan.create({
     data: {
       roomTypeId,
+      code: `${PREFIX} ${name}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       nameEn: `${PREFIX} ${name}`,
       nameAr: `${PREFIX} ${name}`,
       nightlyRateAed: '900.00',

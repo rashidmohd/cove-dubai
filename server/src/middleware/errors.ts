@@ -40,6 +40,9 @@ const STATUS_BY_CODE: Record<BookingErrorCode, number> = {
   VOUCHER_EXHAUSTED: 409,
   VOUCHER_NOT_APPLICABLE: 409,
   VOUCHER_CODE_IN_USE: 409,
+  RATE_PLAN_NOT_FOUND: 404,
+  RATE_PLAN_CODE_IN_USE: 409,
+  INVALID_RATE_PLAN: 400,
   MEDIA_NOT_FOUND: 404,
   // 409: the request is well-formed, it just no longer describes the gallery.
   MEDIA_ORDER_MISMATCH: 409,

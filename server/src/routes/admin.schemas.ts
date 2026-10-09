@@ -286,3 +286,76 @@ export const updateVoucherSchema = z
       v.discountValue <= 100,
     'A percentage discount cannot exceed 100.',
   );
+
+// --- Rate plans --------------------------------------------------------------
+
+/** A slug, like an amenity code — it appears in the admin API's URLs. */
+const ratePlanCode = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(2)
+  .max(60)
+  .regex(
+    /^[a-z0-9]+(-[a-z0-9]+)*$/,
+    'Use lowercase letters, numbers and hyphens (for example "summer-escape").',
+  );
+
+/** `0` = Sunday … `6` = Saturday, matching the pricing engine. */
+const daysOfWeek = z.array(z.number().int().min(0).max(6)).min(1).max(7);
+
+/**
+ * Both languages or none. Null clears the copy, which is a real edit on a plan
+ * that stops being advertised.
+ */
+const nullableDescription = localizedText(2000).nullable();
+
+/** A window is both dates or neither; one end alone is ambiguous to price. */
+function windowIsComplete(v: {
+  validFrom?: string | null | undefined;
+  validTo?: string | null | undefined;
+}): boolean {
+  return !v.validFrom === !v.validTo;
+}
+
+export const createRatePlanSchema = z
+  .object({
+    code: ratePlanCode,
+    name: localizedText(120),
+    description: nullableDescription.optional(),
+    nightlyRate: z.number().min(0).max(1_000_000),
+    validFrom: nullableIsoDate.optional(),
+    validTo: nullableIsoDate.optional(),
+    daysOfWeek: daysOfWeek.optional(),
+    minimumStayNights: z.number().int().min(1).max(365).optional(),
+    priority: z.number().int().min(-1000).max(1000).optional(),
+    isActive: z.boolean().optional(),
+    isPublicOffer: z.boolean().optional(),
+  })
+  .refine(windowIsComplete, 'Give both a start and an end date, or neither.')
+  .refine(
+    (v) => !v.validFrom || !v.validTo || v.validTo >= v.validFrom,
+    'The plan cannot end before it starts.',
+  );
+
+/**
+ * A partial edit. The window rule is checked again in the provider against the
+ * plan as it would be saved, since a request may change only one end.
+ */
+export const updateRatePlanSchema = z
+  .object({
+    name: localizedText(120).optional(),
+    description: nullableDescription.optional(),
+    nightlyRate: z.number().min(0).max(1_000_000).optional(),
+    validFrom: nullableIsoDate.optional(),
+    validTo: nullableIsoDate.optional(),
+    daysOfWeek: daysOfWeek.optional(),
+    minimumStayNights: z.number().int().min(1).max(365).optional(),
+    priority: z.number().int().min(-1000).max(1000).optional(),
+    isActive: z.boolean().optional(),
+    isPublicOffer: z.boolean().optional(),
+  })
+  .refine(
+    (changes) => Object.values(changes).some((value) => value !== undefined),
+    'Provide at least one field to change.',
+  );

@@ -55,6 +55,7 @@ import { deleteObject, publicUrlFor } from '../media/storage.js';
 import {
   BookingError,
   type AdminAmenity,
+  type AdminRatePlan,
   type AdminRoomType,
   type AdminVoucher,
   type Amenity,
@@ -72,6 +73,8 @@ import {
   type Offer,
   type OperationalSetting,
   type PriceBreakdown,
+  type RatePlanChanges,
+  type RatePlanDraft,
   type Reservation,
   type ReservationChanges,
   type ReservationDraft,
@@ -86,6 +89,7 @@ import {
   type VoucherChanges,
   type VoucherDraft,
   type VoucherPreview,
+  type VoucherRedemptionRecord,
 } from './types.js';
 
 /** How many times to retry a booking whose generated reference collided. */
@@ -312,6 +316,21 @@ export class CustomDbProvider implements BookingProvider {
       select: { cancellationToken: true },
     });
     return reservation?.cancellationToken ?? null;
+  }
+
+  async listReservationsForGuestEmail(email: string): Promise<Reservation[]> {
+    // Joined on the address rather than a foreign key, deliberately: bookings
+    // made before an account existed must appear, and a hotel has families
+    // sharing one address, so `Guest.email` is not unique.
+    const reservations = await this.prisma.reservation.findMany({
+      where: { guest: { email: { equals: email.trim(), mode: 'insensitive' } } },
+      include: { guest: true, roomType: true },
+      orderBy: [{ checkIn: 'desc' }, { createdAt: 'desc' }],
+      // A bound, not a page: one address with more stays than this is a
+      // corporate booker, and the front desk is the place for that history.
+      take: 100,
+    });
+    return reservations.map(toDomainReservation);
   }
 
   async listReservations(
@@ -1812,6 +1831,140 @@ export class CustomDbProvider implements BookingProvider {
   }
 
   // -------------------------------------------------------------------------
+  // Rate plans
+  // -------------------------------------------------------------------------
+
+  async listRatePlans(): Promise<AdminRatePlan[]> {
+    const plans = await this.prisma.ratePlan.findMany({
+      include: { roomType: true },
+      // Grouped by room in the hotel's own order, then in the order pricing
+      // considers them, so the screen reads the way a night is resolved.
+      orderBy: [
+        { roomType: { sortOrder: 'asc' } },
+        { priority: 'desc' },
+        { startDate: 'asc' },
+        { createdAt: 'asc' },
+      ],
+    });
+    return plans.map(toAdminRatePlan);
+  }
+
+  async createRatePlan(
+    roomTypeCode: string,
+    draft: RatePlanDraft,
+  ): Promise<AdminRatePlan> {
+    const roomType = await this.requireRoomType(roomTypeCode);
+
+    const validFrom = draft.validFrom ?? null;
+    const validTo = draft.validTo ?? null;
+    const daysOfWeek = normaliseDaysOfWeek(draft.daysOfWeek ?? ALL_DAYS);
+    assertValidRatePlan({ validFrom, validTo, daysOfWeek });
+
+    try {
+      const plan = await this.prisma.ratePlan.create({
+        data: {
+          roomTypeId: roomType.id,
+          code: draft.code,
+          nameEn: draft.name.en,
+          nameAr: draft.name.ar,
+          descriptionEn: draft.description?.en ?? null,
+          descriptionAr: draft.description?.ar ?? null,
+          nightlyRateAed: new Prisma.Decimal(draft.nightlyRate),
+          startDate: validFrom ? toUtcDate(validFrom) : null,
+          endDate: validTo ? toUtcDate(validTo) : null,
+          daysOfWeek,
+          minimumStayNights: draft.minimumStayNights ?? 1,
+          priority: draft.priority ?? 0,
+          isActive: draft.isActive ?? true,
+          isPublicOffer: draft.isPublicOffer ?? false,
+        },
+        include: { roomType: true },
+      });
+      return toAdminRatePlan(plan);
+    } catch (error) {
+      // The unique index is the authority, not a lookup beforehand: two admins
+      // saving the same code at once must not both succeed.
+      if (isUniqueConstraintError(error, 'code')) {
+        throw new BookingError(
+          'RATE_PLAN_CODE_IN_USE',
+          `${roomType.nameEn} already has a rate plan with the code "${draft.code}".`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  async updateRatePlan(
+    roomTypeCode: string,
+    planCode: string,
+    changes: RatePlanChanges,
+  ): Promise<AdminRatePlan> {
+    const plan = await this.requireRatePlan(roomTypeCode, planCode);
+
+    // Checked against the plan as it would be saved, not the request alone:
+    // clearing only one end of a window is a one-sided window all the same.
+    const validFrom =
+      changes.validFrom !== undefined
+        ? changes.validFrom
+        : plan.startDate
+          ? toIsoDate(plan.startDate)
+          : null;
+    const validTo =
+      changes.validTo !== undefined
+        ? changes.validTo
+        : plan.endDate
+          ? toIsoDate(plan.endDate)
+          : null;
+    const daysOfWeek = normaliseDaysOfWeek(changes.daysOfWeek ?? plan.daysOfWeek);
+    assertValidRatePlan({ validFrom, validTo, daysOfWeek });
+
+    // Explicit, like `updateRoomType`: this is where a domain shape becomes a
+    // row, and an unmapped key must not reach a column by accident.
+    const data: Prisma.RatePlanUpdateInput = {};
+
+    if (changes.name) {
+      data.nameEn = changes.name.en;
+      data.nameAr = changes.name.ar;
+    }
+    // `null` clears the copy, so this tests for `undefined` rather than falsiness.
+    if (changes.description !== undefined) {
+      data.descriptionEn = changes.description?.en ?? null;
+      data.descriptionAr = changes.description?.ar ?? null;
+    }
+    if (changes.nightlyRate !== undefined) {
+      data.nightlyRateAed = new Prisma.Decimal(changes.nightlyRate);
+    }
+    if (changes.validFrom !== undefined || changes.validTo !== undefined) {
+      data.startDate = validFrom ? toUtcDate(validFrom) : null;
+      data.endDate = validTo ? toUtcDate(validTo) : null;
+    }
+    if (changes.daysOfWeek !== undefined) data.daysOfWeek = daysOfWeek;
+    if (changes.minimumStayNights !== undefined) {
+      data.minimumStayNights = changes.minimumStayNights;
+    }
+    if (changes.priority !== undefined) data.priority = changes.priority;
+    if (changes.isActive !== undefined) data.isActive = changes.isActive;
+    if (changes.isPublicOffer !== undefined) {
+      data.isPublicOffer = changes.isPublicOffer;
+    }
+
+    const updated = await this.prisma.ratePlan.update({
+      where: { id: plan.id },
+      data,
+      include: { roomType: true },
+    });
+
+    // Existing reservations keep the price they were quoted: each carries its
+    // own snapshot and is never repriced.
+    return toAdminRatePlan(updated);
+  }
+
+  async deleteRatePlan(roomTypeCode: string, planCode: string): Promise<void> {
+    const plan = await this.requireRatePlan(roomTypeCode, planCode);
+    await this.prisma.ratePlan.delete({ where: { id: plan.id } });
+  }
+
+  // -------------------------------------------------------------------------
   // Vouchers
   // -------------------------------------------------------------------------
 
@@ -1965,6 +2118,29 @@ export class CustomDbProvider implements BookingProvider {
     await this.prisma.voucher.delete({ where: { id: voucher.id } });
   }
 
+  async listVoucherRedemptions(
+    code: string,
+  ): Promise<VoucherRedemptionRecord[]> {
+    const voucher = await this.requireVoucher(code);
+
+    const redemptions = await this.prisma.voucherRedemption.findMany({
+      where: { voucherId: voucher.id },
+      orderBy: { createdAt: 'desc' },
+      include: { reservation: { include: { guest: true, roomType: true } } },
+    });
+
+    return redemptions.map(({ reservation, discountAed, createdAt }) => ({
+      reference: reservation.bookingReference,
+      guestName: `${reservation.guest.firstName} ${reservation.guest.lastName}`,
+      roomTypeCode: reservation.roomType.code,
+      checkIn: toIsoDate(reservation.checkIn),
+      checkOut: toIsoDate(reservation.checkOut),
+      status: toDomainStatus(reservation.status),
+      discount: discountAed.toNumber(),
+      redeemedAt: createdAt.toISOString(),
+    }));
+  }
+
   /**
    * Price a stay with a code applied, claiming nothing.
    *
@@ -2113,6 +2289,20 @@ export class CustomDbProvider implements BookingProvider {
   }
 
   /** Look a room type up by code, or raise the domain error for a bad code. */
+  private async requireRatePlan(roomTypeCode: string, planCode: string) {
+    const roomType = await this.requireRoomType(roomTypeCode);
+    const plan = await this.prisma.ratePlan.findUnique({
+      where: { roomTypeId_code: { roomTypeId: roomType.id, code: planCode } },
+    });
+    if (!plan) {
+      throw new BookingError(
+        'RATE_PLAN_NOT_FOUND',
+        `${roomType.nameEn} has no rate plan with the code "${planCode}".`,
+      );
+    }
+    return plan;
+  }
+
   private async requireRoomType(code: string): Promise<PrismaRoomType> {
     const roomType = await this.prisma.roomType.findUnique({ where: { code } });
     if (!roomType) {
@@ -2366,6 +2556,72 @@ function toAdminVoucher(
     isActive: voucher.isActive,
     createdAt: voucher.createdAt.toISOString(),
   };
+}
+
+function toAdminRatePlan(
+  plan: PrismaRatePlan & { roomType: PrismaRoomType },
+): AdminRatePlan {
+  return {
+    roomTypeCode: plan.roomType.code,
+    code: plan.code,
+    name: { en: plan.nameEn, ar: plan.nameAr },
+    description:
+      plan.descriptionEn && plan.descriptionAr
+        ? { en: plan.descriptionEn, ar: plan.descriptionAr }
+        : null,
+    nightlyRate: plan.nightlyRateAed.toNumber(),
+    validFrom: plan.startDate ? toIsoDate(plan.startDate) : null,
+    validTo: plan.endDate ? toIsoDate(plan.endDate) : null,
+    daysOfWeek: plan.daysOfWeek,
+    minimumStayNights: plan.minimumStayNights,
+    priority: plan.priority,
+    isActive: plan.isActive,
+    isPublicOffer: plan.isPublicOffer,
+    createdAt: plan.createdAt.toISOString(),
+  };
+}
+
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
+/** Sorted and de-duplicated, so the stored array reads the same however it was ticked. */
+function normaliseDaysOfWeek(days: number[]): number[] {
+  return [...new Set(days)].sort((a, b) => a - b);
+}
+
+/**
+ * The rules a plan must meet as it will be saved.
+ *
+ * The database enforces both with CHECK constraints too; checking here turns a
+ * constraint violation into a message an admin can act on.
+ */
+function assertValidRatePlan(plan: {
+  validFrom: IsoDate | null;
+  validTo: IsoDate | null;
+  daysOfWeek: number[];
+}): void {
+  if ((plan.validFrom === null) !== (plan.validTo === null)) {
+    throw new BookingError(
+      'INVALID_RATE_PLAN',
+      'Give the plan both a start and an end date, or neither.',
+    );
+  }
+  if (plan.validFrom && plan.validTo && plan.validTo < plan.validFrom) {
+    throw new BookingError(
+      'INVALID_RATE_PLAN',
+      'The plan cannot end before it starts.',
+    );
+  }
+  if (
+    plan.daysOfWeek.length === 0 ||
+    plan.daysOfWeek.some((day) => !Number.isInteger(day) || day < 0 || day > 6)
+  ) {
+    // An empty set must be refused rather than read as "every day" — that is
+    // the misreading that would silently price all seven nights.
+    throw new BookingError(
+      'INVALID_RATE_PLAN',
+      'Choose at least one night of the week for the plan to apply to.',
+    );
+  }
 }
 
 function toDomainSetting(setting: PrismaSetting): OperationalSetting {

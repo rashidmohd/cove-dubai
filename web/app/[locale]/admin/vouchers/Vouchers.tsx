@@ -8,7 +8,7 @@
  * reports how many uses are left — it never works out what a code is worth
  * (`pms-readiness`).
  *
- * Two behaviours worth knowing:
+ * Three behaviours worth knowing:
  *
  *   - **Deactivate, don't delete.** A code that has been redeemed cannot be
  *     deleted: the redemptions are the financial record of the campaign, and
@@ -18,6 +18,9 @@
  *     accommodation charge, and VAT is then charged on what remains. The
  *     summary line on this screen says so, because it is the thing people
  *     assume works the other way.
+ *   - **An edit never reprices a booking.** Each reservation carries the
+ *     discount it was quoted, so changing a code affects future stays only.
+ *     The bookings list under each code shows what it has already given away.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -27,6 +30,7 @@ import {
   type AdminRoomType,
   type AdminVoucher,
   type DiscountType,
+  type VoucherRedemption,
 } from '@/lib/api/admin-client';
 import type { Locale } from '@/lib/api/types';
 import { formatMoney, formatNumber, formatStayDate } from '@/lib/format';
@@ -47,6 +51,7 @@ import {
   Num,
   SavedNote,
   Select,
+  StatusPill,
   useApiErrorMessage,
 } from '../pieces';
 import styles from '../Admin.module.css';
@@ -62,7 +67,10 @@ export function Vouchers({ locale }: { locale: Locale }) {
   const [roomTypes, setRoomTypes] = useState<AdminRoomType[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
+  /** The form: `'new'` to add a code, or the code being edited. */
+  const [editing, setEditing] = useState<AdminVoucher | 'new' | null>(null);
+  /** Whose bookings are listed below the table, if anyone's. */
+  const [reportCode, setReportCode] = useState<string | null>(null);
   const [busyCode, setBusyCode] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
@@ -112,12 +120,12 @@ export function Vouchers({ locale }: { locale: Locale }) {
       title={t('nav.vouchers')}
       meta={vouchers ? t('vouchers.count', { count: vouchers.length }) : null}
       actions={
-        canEdit && !adding ? (
+        canEdit && !editing ? (
           <Button
             variant="primary"
             onClick={() => {
               setNotice(null);
-              setAdding(true);
+              setEditing('new');
             }}
           >
             {t('vouchers.add')}
@@ -128,15 +136,22 @@ export function Vouchers({ locale }: { locale: Locale }) {
       <ErrorNote message={error} />
       <SavedNote message={notice} />
 
-      {adding ? (
+      {editing ? (
         <VoucherForm
+          key={editing === 'new' ? 'new' : editing.code}
+          voucher={editing === 'new' ? null : editing}
           roomTypes={roomTypes}
           locale={locale}
-          onCancel={() => setAdding(false)}
+          onCancel={() => setEditing(null)}
           onSaved={async (code) => {
-            setAdding(false);
+            const created = editing === 'new';
+            setEditing(null);
             await load();
-            setNotice(t('vouchers.created', { code }));
+            setNotice(
+              created
+                ? t('vouchers.created', { code })
+                : t('vouchers.saved', { code }),
+            );
           }}
           onError={setError}
         />
@@ -144,7 +159,7 @@ export function Vouchers({ locale }: { locale: Locale }) {
 
       {!vouchers && !error ? <Loading /> : null}
 
-      {vouchers && vouchers.length === 0 && !adding ? (
+      {vouchers && vouchers.length === 0 && !editing ? (
         <Empty message={t('vouchers.none')} />
       ) : null}
 
@@ -161,7 +176,7 @@ export function Vouchers({ locale }: { locale: Locale }) {
                   <th scope="col">{t('vouchers.used')}</th>
                   <th scope="col">{t('vouchers.appliesTo')}</th>
                   <th scope="col">{t('reservations.status')}</th>
-                  {canEdit ? <th scope="col">{t('reservations.actions')}</th> : null}
+                  <th scope="col">{t('reservations.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -216,49 +231,84 @@ export function Vouchers({ locale }: { locale: Locale }) {
                     <td>
                       <VoucherState voucher={voucher} />
                     </td>
-                    {canEdit ? (
-                      <td>
-                        <div className={styles.rowActions}>
-                          <Button
-                            size="small"
-                            disabled={busyCode === voucher.code}
-                            onClick={() =>
-                              void act(
-                                voucher.code,
-                                () =>
-                                  adminApi.updateVoucher(voucher.code, {
-                                    isActive: !voucher.isActive,
-                                  }),
-                                t('vouchers.saved', { code: voucher.code }),
-                              )
-                            }
-                          >
-                            {voucher.isActive
-                              ? t('vouchers.deactivate')
-                              : t('vouchers.activate')}
-                          </Button>
-
-                          {/* Only ever offered on an unredeemed code — the API
-                              refuses otherwise, and a button that can only
-                              fail is worse than no button. */}
-                          {voucher.redemptionCount === 0 ? (
+                    <td>
+                      <div className={styles.rowActions}>
+                        {/* Open to staff: "did my booking get the discount"
+                            is asked at the front desk. */}
+                        <Button
+                          size="small"
+                          aria-expanded={reportCode === voucher.code}
+                          onClick={() =>
+                            setReportCode(
+                              reportCode === voucher.code ? null : voucher.code,
+                            )
+                          }
+                        >
+                          {t('vouchers.bookings')}
+                        </Button>
+                        {canEdit ? (
+                          <>
                             <Button
                               size="small"
                               disabled={busyCode === voucher.code}
-                              onClick={() => setPendingDelete(voucher.code)}
+                              onClick={() => {
+                                setNotice(null);
+                                setEditing(voucher);
+                              }}
                             >
-                              {t('vouchers.delete')}
+                              {t('vouchers.edit')}
                             </Button>
-                          ) : null}
-                        </div>
-                      </td>
-                    ) : null}
+                            <Button
+                              size="small"
+                              disabled={busyCode === voucher.code}
+                              onClick={() =>
+                                void act(
+                                  voucher.code,
+                                  () =>
+                                    adminApi.updateVoucher(voucher.code, {
+                                      isActive: !voucher.isActive,
+                                    }),
+                                  t('vouchers.saved', { code: voucher.code }),
+                                )
+                              }
+                            >
+                              {voucher.isActive
+                                ? t('vouchers.deactivate')
+                                : t('vouchers.activate')}
+                            </Button>
+
+                            {/* Only ever offered on an unredeemed code — the API
+                              refuses otherwise, and a button that can only
+                              fail is worse than no button. */}
+                            {voucher.redemptionCount === 0 ? (
+                              <Button
+                                size="small"
+                                disabled={busyCode === voucher.code}
+                                onClick={() => setPendingDelete(voucher.code)}
+                              >
+                                {t('vouchers.delete')}
+                              </Button>
+                            ) : null}
+                          </>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </Card>
+      ) : null}
+
+      {reportCode ? (
+        <RedemptionReport
+          key={reportCode}
+          code={reportCode}
+          roomTypes={roomTypes}
+          locale={locale}
+          onClose={() => setReportCode(null)}
+        />
       ) : null}
 
       <ConfirmDialog
@@ -348,12 +398,15 @@ function VoucherState({ voucher }: { voucher: AdminVoucher }) {
 }
 
 function VoucherForm({
+  voucher,
   roomTypes,
   locale,
   onCancel,
   onSaved,
   onError,
 }: {
+  /** Null when adding a new code. */
+  voucher: AdminVoucher | null;
   roomTypes: AdminRoomType[];
   locale: Locale;
   onCancel: () => void;
@@ -363,37 +416,60 @@ function VoucherForm({
   const t = useTranslations('admin');
   const describeError = useApiErrorMessage();
 
-  const [code, setCode] = useState('');
-  const [nameEn, setNameEn] = useState('');
-  const [nameAr, setNameAr] = useState('');
-  const [discountType, setDiscountType] = useState<DiscountType>('percentage');
-  const [discountValue, setDiscountValue] = useState('10');
-  const [validFrom, setValidFrom] = useState('');
-  const [validTo, setValidTo] = useState('');
-  const [maxRedemptions, setMaxRedemptions] = useState('');
-  const [minimumNights, setMinimumNights] = useState('1');
-  const [restricted, setRestricted] = useState<Set<string>>(new Set());
+  const [code, setCode] = useState(voucher?.code ?? '');
+  const [nameEn, setNameEn] = useState(voucher?.name.en ?? '');
+  const [nameAr, setNameAr] = useState(voucher?.name.ar ?? '');
+  const [discountType, setDiscountType] = useState<DiscountType>(
+    voucher?.discountType ?? 'percentage',
+  );
+  const [discountValue, setDiscountValue] = useState(
+    String(voucher?.discountValue ?? 10),
+  );
+  const [validFrom, setValidFrom] = useState(voucher?.validFrom ?? '');
+  const [validTo, setValidTo] = useState(voucher?.validTo ?? '');
+  const [maxRedemptions, setMaxRedemptions] = useState(
+    voucher?.maxRedemptions == null ? '' : String(voucher.maxRedemptions),
+  );
+  const [minimumNights, setMinimumNights] = useState(
+    String(voucher?.minimumNights ?? 1),
+  );
+  const [minimumSpend, setMinimumSpend] = useState(
+    voucher?.minimumSpend == null ? '' : String(voucher.minimumSpend),
+  );
+  const [restricted, setRestricted] = useState<Set<string>>(
+    () => new Set(voucher?.roomTypeCodes ?? []),
+  );
   const [busy, setBusy] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
 
+    const fields = {
+      name: { en: nameEn.trim(), ar: nameAr.trim() },
+      discountType,
+      discountValue: Number(discountValue),
+      // Blank means no limit, which is not the same as zero.
+      validFrom: validFrom || null,
+      validTo: validTo || null,
+      maxRedemptions:
+        maxRedemptions.trim() === '' ? null : Number(maxRedemptions),
+      minimumNights: Number(minimumNights),
+      minimumSpend: minimumSpend.trim() === '' ? null : Number(minimumSpend),
+      roomTypeCodes: [...restricted],
+    };
+
     try {
-      await adminApi.createVoucher({
-        code: code.trim().toUpperCase(),
-        name: { en: nameEn.trim(), ar: nameAr.trim() },
-        discountType,
-        discountValue: Number(discountValue),
-        // Blank means no limit, which is not the same as zero.
-        validFrom: validFrom || null,
-        validTo: validTo || null,
-        maxRedemptions:
-          maxRedemptions.trim() === '' ? null : Number(maxRedemptions),
-        minimumNights: Number(minimumNights),
-        roomTypeCodes: [...restricted],
-      });
-      await onSaved(code.trim().toUpperCase());
+      if (voucher) {
+        await adminApi.updateVoucher(voucher.code, fields);
+        await onSaved(voucher.code);
+      } else {
+        await adminApi.createVoucher({
+          code: code.trim().toUpperCase(),
+          ...fields,
+        });
+        await onSaved(code.trim().toUpperCase());
+      }
     } catch (caught) {
       onError(describeError(caught));
       setBusy(false);
@@ -402,9 +478,12 @@ function VoucherForm({
 
   return (
     <Card>
-      <CardHeader title={t('vouchers.add')} description={t('vouchers.formHint')} />
+      <CardHeader
+        title={voucher ? t('vouchers.editTitle', { code: voucher.code }) : t('vouchers.add')}
+        description={voucher ? t('vouchers.editHint') : t('vouchers.formHint')}
+      />
       <CardBody>
-        <form onSubmit={submit}>
+        <form onSubmit={submit} className={styles.stack}>
           <div className={styles.formGrid}>
             <Field label={t('vouchers.code')} hint={t('vouchers.codeHint')}>
               <Input
@@ -415,6 +494,8 @@ function VoucherForm({
                 minLength={3}
                 maxLength={40}
                 dir="ltr"
+                // The code is what guests were given, so it cannot change.
+                disabled={voucher !== null}
                 required
               />
             </Field>
@@ -472,11 +553,15 @@ function VoucherForm({
 
             <Field
               label={t('vouchers.maxRedemptions')}
-              hint={t('vouchers.unlimitedHint')}
+              hint={
+                voucher && voucher.redemptionCount > 0
+                  ? t('vouchers.capHint', { count: voucher.redemptionCount })
+                  : t('vouchers.unlimitedHint')
+              }
             >
               <Input
                 type="number"
-                min="1"
+                min={Math.max(1, voucher?.redemptionCount ?? 1)}
                 value={maxRedemptions}
                 onChange={(event) => setMaxRedemptions(event.target.value)}
                 placeholder={t('vouchers.unlimited')}
@@ -511,15 +596,31 @@ function VoucherForm({
                 required
               />
             </Field>
+
+            <Field
+              label={t('vouchers.minimumSpend')}
+              hint={t('vouchers.minimumSpendHint')}
+            >
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={minimumSpend}
+                onChange={(event) => setMinimumSpend(event.target.value)}
+                placeholder={t('vouchers.noMinimum')}
+                dir="ltr"
+              />
+            </Field>
           </div>
 
-          <fieldset className={styles.amenityGroup}>
-            <legend className={styles.label}>{t('vouchers.appliesTo')}</legend>
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>{t('vouchers.appliesTo')}</legend>
             <p className={styles.hint}>{t('vouchers.allRoomsHint')}</p>
-            <div className={styles.amenityOptions}>
+            <div className={styles.checkOptions}>
               {roomTypes.map((roomType) => (
-                <label key={roomType.code} className={styles.amenityOption}>
+                <label key={roomType.code} className={styles.checkOption}>
                   <input
+                    className={styles.checkbox}
                     type="checkbox"
                     checked={restricted.has(roomType.code)}
                     onChange={(event) => {
@@ -537,7 +638,7 @@ function VoucherForm({
 
           <p className={styles.hint}>{t('vouchers.taxNote')}</p>
 
-          <div className={styles.rowActions}>
+          <div className={styles.formActions}>
             <Button variant="primary" type="submit" disabled={busy}>
               {busy ? t('saving') : t('save')}
             </Button>
@@ -547,6 +648,129 @@ function VoucherForm({
           </div>
         </form>
       </CardBody>
+    </Card>
+  );
+}
+
+/**
+ * The bookings that used one code, and what they saved between them.
+ *
+ * Cancelled bookings are listed too, with their status: cancelling does not
+ * give a use back, so they still count against the code's limit, and the list
+ * should add up to the "used" figure in the table above.
+ */
+function RedemptionReport({
+  code,
+  roomTypes,
+  locale,
+  onClose,
+}: {
+  code: string;
+  roomTypes: AdminRoomType[];
+  locale: Locale;
+  onClose: () => void;
+}) {
+  const t = useTranslations('admin');
+  const describeError = useApiErrorMessage();
+
+  const [report, setReport] = useState<{
+    redemptions: VoucherRedemption[];
+    totalDiscount: number;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    adminApi
+      .listVoucherRedemptions(code)
+      .then((next) => {
+        if (live) setReport(next);
+      })
+      .catch((caught: unknown) => {
+        if (live) setError(describeError(caught));
+      });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
+
+  return (
+    <Card>
+      <CardHeader
+        title={t('vouchers.bookingsTitle', { code })}
+        description={
+          report
+            ? t('vouchers.bookingsSummary', {
+                count: report.redemptions.length,
+                total: formatMoney(report.totalDiscount, 'AED', locale),
+              })
+            : undefined
+        }
+        actions={
+          <Button size="small" onClick={onClose}>
+            {t('vouchers.close')}
+          </Button>
+        }
+        tight
+      />
+
+      <ErrorNote message={error} />
+      {!report && !error ? <Loading /> : null}
+
+      {report && report.redemptions.length === 0 ? (
+        <CardBody>
+          <p className={styles.hint}>{t('vouchers.noBookings')}</p>
+        </CardBody>
+      ) : null}
+
+      {report && report.redemptions.length > 0 ? (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th scope="col">{t('vouchers.reference')}</th>
+                <th scope="col">{t('vouchers.guest')}</th>
+                <th scope="col">{t('vouchers.stay')}</th>
+                <th scope="col">{t('reservations.status')}</th>
+                <th scope="col">{t('vouchers.saving')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.redemptions.map((redemption) => (
+                <tr key={redemption.reference}>
+                  <td className={styles.mono}>
+                    <Num>{redemption.reference}</Num>
+                  </td>
+                  <td>
+                    <bdi>{redemption.guestName}</bdi>
+                    <span className={styles.cellSub}>
+                      <bdi>
+                        {roomTypes.find(
+                          (r) => r.code === redemption.roomTypeCode,
+                        )?.name[locale] ?? redemption.roomTypeCode}
+                      </bdi>
+                    </span>
+                  </td>
+                  <td className={styles.numeric}>
+                    <Num>
+                      {formatStayDate(redemption.checkIn, locale)}
+                      {' – '}
+                      {formatStayDate(redemption.checkOut, locale)}
+                    </Num>
+                  </td>
+                  <td>
+                    <StatusPill status={redemption.status} />
+                  </td>
+                  <td className={styles.numeric}>
+                    <Num>{formatMoney(redemption.discount, 'AED', locale)}</Num>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </Card>
   );
 }

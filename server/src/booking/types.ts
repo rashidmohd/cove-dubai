@@ -450,6 +450,79 @@ export interface AdminVoucher {
 
 export type DiscountType = 'percentage' | 'fixed';
 
+/**
+ * One booking that used a voucher, for the campaign report.
+ *
+ * `discount` is what came off that booking's accommodation charge, as recorded
+ * when it was made. A cancelled booking stays in the list: cancelling does not
+ * give the use back, so it still counts against the code's limit.
+ */
+export interface VoucherRedemptionRecord {
+  reference: string;
+  guestName: string;
+  roomTypeCode: string;
+  checkIn: IsoDate;
+  checkOut: IsoDate;
+  status: ReservationStatus;
+  discount: number;
+  redeemedAt: string;
+}
+
+/**
+ * A rate plan as the admin sees it — seasonal pricing, weekday pricing, and
+ * offers, which are rate plans flagged for display.
+ *
+ * Identified by `roomTypeCode` plus `code`, never a row id. A plan with no
+ * date window and every day of the week prices every night it is active, and
+ * so outranks the room type's base rate whenever its priority wins.
+ */
+export interface AdminRatePlan {
+  roomTypeCode: string;
+  code: string;
+  name: LocalizedText;
+  /** Marketing copy for the offers page. Null on an ordinary plan. */
+  description: LocalizedText | null;
+  nightlyRate: number;
+  /** Both set or both null — a one-sided window is refused. */
+  validFrom: IsoDate | null;
+  validTo: IsoDate | null;
+  /** `0` = Sunday. Never empty. */
+  daysOfWeek: number[];
+  minimumStayNights: number;
+  /** Higher wins where plans overlap. */
+  priority: number;
+  isActive: boolean;
+  isPublicOffer: boolean;
+  createdAt: string;
+}
+
+export interface RatePlanDraft {
+  code: string;
+  name: LocalizedText;
+  description?: LocalizedText | null | undefined;
+  nightlyRate: number;
+  validFrom?: IsoDate | null | undefined;
+  validTo?: IsoDate | null | undefined;
+  daysOfWeek?: number[] | undefined;
+  minimumStayNights?: number | undefined;
+  priority?: number | undefined;
+  isActive?: boolean | undefined;
+  isPublicOffer?: boolean | undefined;
+}
+
+export interface RatePlanChanges {
+  name?: LocalizedText | undefined;
+  description?: LocalizedText | null | undefined;
+  nightlyRate?: number | undefined;
+  validFrom?: IsoDate | null | undefined;
+  validTo?: IsoDate | null | undefined;
+  daysOfWeek?: number[] | undefined;
+  minimumStayNights?: number | undefined;
+  priority?: number | undefined;
+  isActive?: boolean | undefined;
+  isPublicOffer?: boolean | undefined;
+}
+
 export interface VoucherDraft {
   code: string;
   name: LocalizedText;
@@ -574,6 +647,11 @@ export type BookingErrorCode =
   /** Real and live, but not for this stay: too short, wrong room, too cheap. */
   | 'VOUCHER_NOT_APPLICABLE'
   | 'VOUCHER_CODE_IN_USE'
+  | 'RATE_PLAN_NOT_FOUND'
+  /** The room type already has a plan with this code. */
+  | 'RATE_PLAN_CODE_IN_USE'
+  /** The plan as it would be saved breaks a rule: a one-sided date window, say. */
+  | 'INVALID_RATE_PLAN'
   /** A reservation cannot move to the requested status from its current one. */
   | 'INVALID_STATUS_TRANSITION'
   /** No such image, or it is not attached to the room type named. */
