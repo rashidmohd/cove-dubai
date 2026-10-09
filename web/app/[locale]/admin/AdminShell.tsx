@@ -19,12 +19,14 @@ import {
   AmenitiesIcon,
   CloseIcon,
   DashboardIcon,
+  DiningIcon,
   InventoryIcon,
   MenuIcon,
   RatesIcon,
   ReservationsIcon,
   RoomsIcon,
   SettingsIcon,
+  SpaIcon,
   VouchersIcon,
   SignOutIcon,
 } from './icons';
@@ -44,6 +46,10 @@ const NAV_GROUPS = [
     items: [
       { href: '/admin', key: 'dashboard', Icon: DashboardIcon },
       { href: '/admin/reservations', key: 'reservations', Icon: ReservationsIcon },
+      // Requests the team answers every day, so they sit with reservations
+      // rather than with the property set-up below.
+      { href: '/admin/spa', key: 'spa', Icon: SpaIcon },
+      { href: '/admin/dining', key: 'dining', Icon: DiningIcon },
     ],
   },
   {

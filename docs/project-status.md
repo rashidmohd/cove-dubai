@@ -1366,3 +1366,39 @@ the migrations (history recorded with `prisma migrate resolve --applied`, no dat
 > reference. The cancel page already had the token. One side effect: once a booking is cancelled its token is
 > burned, so reopening the same link shows "not valid, may already have been used" rather than the booking.
 > Tests: `server/tests/reservation-lookup.test.ts`.
+
+---
+
+## Spa and table requests (9 Oct 2026)
+
+Guests can now ask to reserve a **spa treatment** (`/spa`) or a **table** (`/dining/reserve`). These are
+**requests, not bookings**: nothing is held, and the team confirms or declines from the admin panel, which emails
+the guest. Nothing is paid online — prices are shown and paid at the hotel, like rooms. Requests are standalone,
+not attached to a room booking (decided 9 Oct 2026).
+
+| Piece | Where |
+|---|---|
+| Data | `service_offerings` (the menu) and `service_requests`, migration `20261009150000_service_requests`, with CHECKs on slot format and order, party size, price |
+| Module | `server/src/service-requests/` — `store.ts` is the only place this data is read or written; routes never touch Prisma. Deliberately **not** behind `BookingProvider`: spa and restaurant bookings usually live in their own systems, so this has its own seam |
+| Guest API | `GET /api/{spa,dining}/offerings`, `POST /api/{spa,dining}/requests` (10 per 15 min per IP) |
+| Admin API | `GET/PATCH /api/admin/{spa,dining}/requests[/:reference]` (STAFF), menu `GET` (STAFF) and `POST/PATCH/DELETE` (ADMIN); every write audited |
+| Emails | Guest: received, confirmed (with the confirmed time and the team's note), declined, cancelled. Hotel: a notice of each new request, to `EMAIL_HOTEL_NOTIFICATION_ADDRESS` |
+| Pages | `/spa` and `/dining/reserve` (shared `components/requests/`); linked from Wellness ("Request a spa treatment") and Dining ("Reserve a table", The Loom, and Chef's Table "Enquire") |
+| Admin | **Spa requests** and **Table requests** in the nav (`/admin/spa`, `/admin/dining`) — answer requests, edit the menu |
+| Tests | `server/tests/service-requests.test.ts` (14) |
+
+Rules the API enforces: the time must be one of the item's half-hour slots and not already past **in Dubai**
+(UTC+4, no DST), up to a year ahead, party within the item's limit. A new request can be confirmed (at the time
+asked or another) or declined; a confirmed one can be moved or cancelled; declined and cancelled are final. An
+item guests have asked for cannot be deleted, only hidden, so the record survives.
+
+Signed-in members have their name, email and phone filled in, as on the room booking form.
+
+> ⚠️ **For the client:**
+> - **The spa menu is placeholder** — four invented treatments with invented lengths and prices, and the renders
+>   show no spa at all. Replace it in Admin → Spa requests → Treatment menu.
+> - **Restaurant times** are inside the hours on the Dining page (The Loom 07:00–22:00, The Atelier 09:00–23:30,
+>   Chef's Table 19:00–21:00); the hotel should set the real ones. The Atelier's page copy says "Walk-ins welcome".
+> - **All notices go to the one hotel address.** If the spa and restaurants have their own inboxes, that is a
+>   small change to route by kind.
+> - Arabic for all of it is a draft for the copywriter, like the rest.

@@ -16,6 +16,7 @@ import { accountRouter } from './routes/account.routes.js';
 import { adminRouter } from './routes/admin.routes.js';
 import { authRouter } from './routes/auth.routes.js';
 import { bookingRouter } from './routes/booking.routes.js';
+import { serviceRequestRouter } from './routes/service-requests.routes.js';
 
 export function createApp() {
   const app = express();
@@ -48,6 +49,7 @@ export function createApp() {
   });
 
   app.use('/api', bookingRouter);
+  app.use('/api', serviceRequestRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/admin', adminRouter);
   // Guest accounts carry their own session, cookie and middleware — nothing

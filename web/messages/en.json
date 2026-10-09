@@ -518,7 +518,8 @@
       "body": "Six seats. No printed menu. What arrives is what was best that morning. Selected evenings only.",
       "cta": "Enquire"
     },
-    "gallery": "Gallery"
+    "gallery": "Gallery",
+    "reserveCta": "Reserve a table"
   },
   "wellness": {
     "label": "Wellness",
@@ -541,7 +542,66 @@
       "body1": "Cardio machines facing the glass, free weights, and a studio corner with space to stretch.",
       "body2": "Early or late, it is there when you are."
     },
-    "gallery": "Gallery"
+    "gallery": "Gallery",
+    "spaCta": "Request a spa treatment"
+  },
+  "requests": {
+    "duration": "{minutes} minutes",
+    "hours": "Tables {from} – {to}",
+    "notABooking": "This sends a request, not a booking. Our team checks availability and confirms by email, usually within a few hours.",
+    "filledFromAccount": "We've filled in your details from your account.",
+    "date": "Date",
+    "time": "Time",
+    "guests": "Guests",
+    "chooseTime": "Choose a time",
+    "chooseDateFirst": "Choose a date first",
+    "noTimesLeft": "No times are left today. Please choose another date.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "sending": "Sending…",
+    "payAtHotel": "Nothing is charged now. You pay at the hotel.",
+    "errors": {
+      "notOnMenu": "That is no longer on the menu. Please choose again.",
+      "choiceUnavailable": "That date, time or party size is not available. Please choose again.",
+      "checkFields": "Please check your details and try again.",
+      "chooseAll": "Please choose a date and a time."
+    },
+    "sent": {
+      "title": "Request sent",
+      "reference": "Your reference",
+      "summary": "{item}, {date} at {time}, {guests, plural, one {# guest} other {# guests}}.",
+      "body": "We have emailed {email}. This is not yet confirmed — our team will reply to that address with a confirmation, usually within a few hours."
+    },
+    "spa": {
+      "label": "Spa",
+      "pageTitle": "Spa",
+      "title": "An hour",
+      "titleAccent": "that is yours.",
+      "intro": "Massages, facials and a hammam ritual. Choose a treatment and a time, and our spa team will confirm it with you.",
+      "menuTitle": "Treatments",
+      "unavailable": "Spa requests are not available online at the moment. Please contact the hotel.",
+      "formTitle": "Request a treatment",
+      "itemLabel": "Treatment",
+      "notesLabel": "Anything we should know? (optional)",
+      "submit": "Send request",
+      "requestThis": "Request this treatment"
+    },
+    "dining": {
+      "label": "Dining",
+      "pageTitle": "Reserve a table",
+      "title": "A table,",
+      "titleAccent": "kept for you.",
+      "intro": "Choose a restaurant, a day and a time, and our team will confirm your table.",
+      "menuTitle": "Restaurants",
+      "unavailable": "Table requests are not available online at the moment. Please contact the hotel.",
+      "formTitle": "Request a table",
+      "itemLabel": "Restaurant",
+      "notesLabel": "Occasion, allergies or requests (optional)",
+      "submit": "Request a table",
+      "requestThis": "Request a table here"
+    }
   },
   "about": {
     "label": "About Cove",
@@ -638,7 +698,9 @@
         "system": "System"
       },
       "vouchers": "Discount codes",
-      "rates": "Rates & offers"
+      "rates": "Rates & offers",
+      "spa": "Spa requests",
+      "dining": "Table requests"
     },
     "roles": {
       "admin": "Administrator",
@@ -673,7 +735,10 @@
       "ratePlanCodeInUse": "That room type already has a plan with this code. Choose another.",
       "invalidRatePlan": "Check the dates and nights: give both dates or neither, and tick at least one night.",
       "ratePlanNotFound": "That rate plan no longer exists. The list has been refreshed.",
-      "voucherCodeTaken": "A code with that name already exists. Choose another."
+      "voucherCodeTaken": "A code with that name already exists. Choose another.",
+      "offeringInUse": "Guests have asked for this, so it cannot be deleted. Hide it instead.",
+      "offeringCodeInUse": "Something on this menu already has that code. Choose another.",
+      "requestAlreadyAnswered": "That request has already been answered. The list has been refreshed."
     },
     "dashboard": {
       "arrivals": "Arriving today",
@@ -933,6 +998,119 @@
       "stay": "Stay",
       "saving": "Discount",
       "close": "Close"
+    },
+    "services": {
+      "count": "{count, plural, one {# request} other {# requests}}",
+      "filterLabel": "Show requests",
+      "filters": {
+        "new": "Waiting for an answer",
+        "confirmed": "Confirmed",
+        "declined": "Declined",
+        "cancelled": "Cancelled",
+        "all": "All"
+      },
+      "empty": {
+        "new": "Nothing waiting for an answer.",
+        "confirmed": "No confirmed requests.",
+        "declined": "No declined requests.",
+        "cancelled": "No cancelled requests.",
+        "all": "No requests yet."
+      },
+      "requestsTitle": "Requests",
+      "intro": {
+        "spa": "Guests ask for a treatment and a time; nothing is held until you confirm. Your answer is emailed to the guest.",
+        "dining": "Guests ask for a table and a time; nothing is held until you confirm. Your answer is emailed to the guest."
+      },
+      "reference": "Reference",
+      "guest": "Guest",
+      "when": "Date and time",
+      "status": "Status",
+      "actions": "Actions",
+      "item": {
+        "spa": "Treatment",
+        "dining": "Restaurant"
+      },
+      "guests": "{count, plural, one {# guest} other {# guests}}",
+      "guestsLabel": "Guests",
+      "timeMoved": "Asked {asked} · confirmed {confirmed}",
+      "statuses": {
+        "new": "Waiting",
+        "confirmed": "Confirmed",
+        "declined": "Declined",
+        "cancelled": "Cancelled"
+      },
+      "answer": "Answer",
+      "change": "Change",
+      "answerTitle": "Answer {reference}",
+      "answerHint": "The guest is emailed whatever you choose, with your note if you add one.",
+      "date": "Date",
+      "askedFor": "Time asked for",
+      "language": "Language",
+      "arabic": "Arabic",
+      "english": "English",
+      "guestNote": "Guest's note:",
+      "confirmAt": "Confirm at",
+      "confirmAtHint": "The time asked for, or another you can offer.",
+      "noteToGuest": "Note to the guest",
+      "noteHint": "Optional. Included in the email — a room number, what to bring, why the time changed.",
+      "confirm": "Confirm",
+      "moveTime": "Confirm new time",
+      "decline": "Decline",
+      "cancelBooking": "Cancel booking",
+      "close": "Close",
+      "answered": {
+        "confirmed": "{reference} confirmed. The guest has been emailed.",
+        "declined": "{reference} declined. The guest has been emailed.",
+        "cancelled": "{reference} cancelled. The guest has been emailed."
+      },
+      "menuTitle": {
+        "spa": "Treatment menu",
+        "dining": "Restaurants"
+      },
+      "menuHint": {
+        "spa": "What guests can request on the Spa page. Prices are shown, and paid at the hotel.",
+        "dining": "What guests can request on the table reservation page."
+      },
+      "add": {
+        "spa": "Add a treatment",
+        "dining": "Add a restaurant"
+      },
+      "menuEmpty": "Nothing on the menu yet.",
+      "name": "Name",
+      "lengthAndPrice": "Length · price",
+      "maxParty": "Largest party",
+      "times": "Times guests can ask for",
+      "minutes": "{count} min",
+      "onMenu": "On the menu",
+      "offMenu": "Hidden",
+      "hide": "Hide",
+      "show": "Show",
+      "edit": "Edit",
+      "delete": "Delete",
+      "saved": "{name} saved.",
+      "deleted": "{name} deleted.",
+      "confirmDeleteTitle": "Delete this from the menu?",
+      "confirmDelete": "Delete {name}? Nobody has asked for it yet, so nothing else is affected.",
+      "editTitle": "Edit menu item",
+      "formHint": "Times are in Dubai, every half hour from the first to the last.",
+      "nameEn": "Name (English)",
+      "nameAr": "Name (Arabic)",
+      "code": "Code",
+      "codeHint": "Lowercase letters, numbers and hyphens. Fixed once saved.",
+      "duration": "Length (minutes)",
+      "price": "Price (AED)",
+      "priceHint": "Leave blank to show no price.",
+      "firstSlot": "First time",
+      "lastSlot": "Last time",
+      "slotHint": "On the hour or half hour.",
+      "maxGuests": "Largest party per request",
+      "descriptionEn": "Description (English)",
+      "descriptionAr": "Description (Arabic)",
+      "halfHours": "Use times on the hour or half hour, such as 10:00 or 19:30.",
+      "slotOrder": "The last time cannot be before the first.",
+      "bothDescriptions": "Give the description in both English and Arabic, or leave both empty.",
+      "saving": "Saving…",
+      "save": "Save"
     }
   },
   "offers": {

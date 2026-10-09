@@ -18,11 +18,15 @@ import type {
   ApiErrorCode,
   AvailabilityResult,
   CreateReservationInput,
+  CreateServiceRequestInput,
   IsoDate,
   Offer,
   PriceBreakdown,
   Reservation,
   RoomType,
+  ServiceKind,
+  ServiceOffering,
+  ServiceRequest,
   VoucherPreview,
 } from './types';
 
@@ -236,6 +240,31 @@ export const bookingApi = {
       { cache: 'no-store' },
     );
     return data.reservation;
+  },
+
+  /**
+   * The spa or restaurant menu. Cached for five minutes: it changes when the
+   * hotel edits it in the admin panel, and the times on it are only what may
+   * be asked for — the team confirms each request by hand.
+   */
+  async getServiceOfferings(kind: ServiceKind): Promise<ServiceOffering[]> {
+    const data = await request<{ offerings: ServiceOffering[] }>(
+      `/api/${kind}/offerings`,
+      { revalidate: 300 },
+    );
+    return data.offerings;
+  },
+
+  /** Send a spa or table request. Not a booking: the team confirms by email. */
+  async createServiceRequest(
+    kind: ServiceKind,
+    input: CreateServiceRequestInput,
+  ): Promise<ServiceRequest> {
+    const data = await request<{ request: ServiceRequest }>(
+      `/api/${kind}/requests`,
+      { method: 'POST', body: input, cache: 'no-store' },
+    );
+    return data.request;
   },
 
   async cancelReservation(

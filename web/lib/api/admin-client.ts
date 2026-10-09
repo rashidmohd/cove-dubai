@@ -31,6 +31,10 @@ import type {
   Reservation,
   ReservationStatus,
   RoomType,
+  ServiceKind,
+  ServiceOffering,
+  ServiceRequest,
+  ServiceRequestStatus,
 } from './types';
 
 export type AdminRole = 'ADMIN' | 'STAFF';
@@ -177,6 +181,28 @@ export interface RatePlanInput {
   priority?: number;
   isActive?: boolean;
   isPublicOffer?: boolean;
+}
+
+/** A spa treatment or restaurant as the admin sees it. */
+export interface AdminServiceOffering extends ServiceOffering {
+  firstSlot: string;
+  lastSlot: string;
+  sortOrder: number;
+  isActive: boolean;
+  /** Requests naming it — one with any is deactivated, never deleted. */
+  requestCount: number;
+}
+
+export interface ServiceOfferingInput {
+  name: LocalizedText;
+  description?: LocalizedText | null;
+  durationMinutes?: number | null;
+  price?: number | null;
+  firstSlot: string;
+  lastSlot: string;
+  maxGuests?: number;
+  sortOrder?: number;
+  isActive?: boolean;
 }
 
 export interface ReservationListFilter {
@@ -577,6 +603,68 @@ export const adminApi = {
       `/api/admin/room-types/${encodeURIComponent(roomTypeCode)}/rate-plans/${encodeURIComponent(planCode)}`,
       { method: 'DELETE' },
     );
+  },
+
+  // --- Spa and dining requests -------------------------------------------------
+
+  listServiceRequests(
+    kind: ServiceKind,
+    filter: { status?: ServiceRequestStatus; limit?: number; offset?: number } = {},
+  ): Promise<{ requests: ServiceRequest[]; total: number }> {
+    return request(`/api/admin/${kind}/requests${query({ ...filter })}`);
+  },
+
+  /** Confirm (optionally at another time), decline, or cancel. The guest is emailed. */
+  async respondToServiceRequest(
+    kind: ServiceKind,
+    reference: string,
+    answer: {
+      status: 'confirmed' | 'declined' | 'cancelled';
+      confirmedTime?: string;
+      responseNote?: string;
+    },
+  ): Promise<ServiceRequest> {
+    const data = await request<{ request: ServiceRequest }>(
+      `/api/admin/${kind}/requests/${encodeURIComponent(reference)}`,
+      { method: 'PATCH', body: answer },
+    );
+    return data.request;
+  },
+
+  async listServiceOfferings(kind: ServiceKind): Promise<AdminServiceOffering[]> {
+    const data = await request<{ offerings: AdminServiceOffering[] }>(
+      `/api/admin/${kind}/offerings`,
+    );
+    return data.offerings;
+  },
+
+  async createServiceOffering(
+    kind: ServiceKind,
+    draft: ServiceOfferingInput & { code: string },
+  ): Promise<AdminServiceOffering> {
+    const data = await request<{ offering: AdminServiceOffering }>(
+      `/api/admin/${kind}/offerings`,
+      { method: 'POST', body: draft },
+    );
+    return data.offering;
+  },
+
+  async updateServiceOffering(
+    kind: ServiceKind,
+    code: string,
+    changes: Partial<ServiceOfferingInput>,
+  ): Promise<AdminServiceOffering> {
+    const data = await request<{ offering: AdminServiceOffering }>(
+      `/api/admin/${kind}/offerings/${encodeURIComponent(code)}`,
+      { method: 'PATCH', body: changes },
+    );
+    return data.offering;
+  },
+
+  async deleteServiceOffering(kind: ServiceKind, code: string): Promise<void> {
+    await request(`/api/admin/${kind}/offerings/${encodeURIComponent(code)}`, {
+      method: 'DELETE',
+    });
   },
 
   // --- Availability calendar ----------------------------------------------

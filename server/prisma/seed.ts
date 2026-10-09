@@ -405,6 +405,9 @@ async function main() {
   console.log('- settings');
   await seedSettings();
 
+  console.log('- spa and dining menus');
+  await seedServiceOfferings();
+
   console.log('- admin user');
   await seedAdminUser();
 
@@ -425,6 +428,66 @@ async function main() {
     `\nDone. ${types} active room types (${totalRooms} rooms), ` +
       `${inventory} inventory rows, ${amenities} amenities, ${settings} settings.`,
   );
+}
+
+/**
+ * What a guest can ask to reserve outside a room booking.
+ *
+ * **The spa treatments are placeholders** — names, lengths and prices invented
+ * so the request form has something to show. The renders have no spa yet, and
+ * the client supplies the real menu. The restaurants are the three on the
+ * Dining page, with bookable times inside their published hours.
+ *
+ * Created only when missing: re-running the seed must never revert a name,
+ * price or time the hotel has changed in the admin panel.
+ */
+const SERVICE_OFFERINGS = [
+  // --- Spa (placeholders) ---
+  { kind: 'SPA', code: 'signature-massage', nameEn: 'Cove Signature Massage', nameAr: 'تدليك كوف المميز',
+    descriptionEn: 'Full-body massage with warm oils, at a pace set by you.',
+    descriptionAr: 'تدليك كامل للجسم بالزيوت الدافئة، بالإيقاع الذي تختاره.',
+    durationMinutes: 60, priceAed: '450', firstSlot: '10:00', lastSlot: '20:00', maxGuests: 2, sortOrder: 1 },
+  { kind: 'SPA', code: 'deep-tissue-massage', nameEn: 'Deep Tissue Massage', nameAr: 'تدليك الأنسجة العميقة',
+    descriptionEn: 'Slow, firm pressure for tired muscles after a long flight.',
+    descriptionAr: 'ضغط بطيء وثابت للعضلات المتعبة بعد رحلة طويلة.',
+    durationMinutes: 90, priceAed: '600', firstSlot: '10:00', lastSlot: '19:30', maxGuests: 2, sortOrder: 2 },
+  { kind: 'SPA', code: 'hydrating-facial', nameEn: 'Hydrating Facial', nameAr: 'علاج الوجه المرطِّب',
+    descriptionEn: 'Cleanse, mask and massage, for skin dried by the desert air.',
+    descriptionAr: 'تنظيف وقناع وتدليك، للبشرة التي جففها هواء الصحراء.',
+    durationMinutes: 60, priceAed: '420', firstSlot: '10:00', lastSlot: '20:00', maxGuests: 2, sortOrder: 3 },
+  { kind: 'SPA', code: 'hammam-ritual', nameEn: 'Hammam Ritual', nameAr: 'طقوس الحمّام',
+    descriptionEn: 'Steam, a black-soap scrub and a rinse of warm water.',
+    descriptionAr: 'بخار، وتقشير بالصابون الأسود، وشطف بالماء الدافئ.',
+    durationMinutes: 75, priceAed: '520', firstSlot: '10:00', lastSlot: '19:30', maxGuests: 2, sortOrder: 4 },
+  // --- Dining: the venues on the Dining page ---
+  { kind: 'DINING', code: 'the-loom', nameEn: 'The Loom', nameAr: 'ذا لوم',
+    descriptionEn: 'All-day dining from the open kitchen, breakfast through dinner.',
+    descriptionAr: 'مطعم طوال اليوم من المطبخ المفتوح، من الإفطار حتى العشاء.',
+    durationMinutes: null, priceAed: null, firstSlot: '07:00', lastSlot: '22:00', maxGuests: 10, sortOrder: 1 },
+  { kind: 'DINING', code: 'the-atelier', nameEn: 'The Atelier', nameAr: 'ذا أتيليه',
+    descriptionEn: 'Bar and café, from morning coffee to a late glass.',
+    descriptionAr: 'بار ومقهى، من قهوة الصباح حتى كأس المساء المتأخر.',
+    durationMinutes: null, priceAed: null, firstSlot: '09:00', lastSlot: '23:30', maxGuests: 8, sortOrder: 2 },
+  { kind: 'DINING', code: 'chefs-table', nameEn: "Chef's Table", nameAr: 'طاولة الشيف',
+    descriptionEn: 'A private table at the kitchen pass, by arrangement.',
+    descriptionAr: 'طاولة خاصة عند ممر المطبخ، بترتيب مسبق.',
+    durationMinutes: null, priceAed: null, firstSlot: '19:00', lastSlot: '21:00', maxGuests: 8, sortOrder: 3 },
+] as const;
+
+async function seedServiceOfferings() {
+  for (const offering of SERVICE_OFFERINGS) {
+    const { kind, code, priceAed, ...rest } = offering;
+    await prisma.serviceOffering.upsert({
+      where: { kind_code: { kind, code } },
+      update: {},
+      create: {
+        kind,
+        code,
+        ...rest,
+        priceAed: priceAed === null ? null : new Prisma.Decimal(priceAed),
+      },
+    });
+  }
 }
 
 main()

@@ -784,3 +784,121 @@ model RoomTypeImage {
   @@index([roomTypeId, sortOrder])
   @@map("room_type_images")
 }
+
+// ---------------------------------------------------------------------------
+// Spa and dining requests
+// ---------------------------------------------------------------------------
+
+/// What a request is for. One model serves both: a spa treatment and a
+/// restaurant table are both "this thing, on this day, at about this time, for
+/// this many people", confirmed by a person rather than by live inventory.
+enum ServiceKind {
+  SPA
+  DINING
+}
+
+/// Something a guest can ask to reserve outside a room booking — a spa
+/// treatment, or a table at one of the restaurants.
+///
+/// Deliberately not behind `BookingProvider`: room inventory is what a PMS
+/// owns. Spa and restaurant bookings live in their own systems at most hotels
+/// (spa software, a table-booking service), so this is its own small module
+/// with its own seam — `server/src/service-requests/` — rather than a corner
+/// of the room engine.
+model ServiceOffering {
+  id String @id @default(cuid())
+
+  kind ServiceKind
+  /// A slug, unique within its kind — `signature-massage`, `the-loom`.
+  code String
+
+  nameEn String
+  nameAr String
+
+  descriptionEn String?
+  descriptionAr String?
+
+  /// Spa treatments have a length; a restaurant table does not.
+  durationMinutes Int?
+  /// Spa treatments have a price; restaurants are à la carte. Shown, never
+  /// charged — like rooms, everything is paid at the hotel.
+  priceAed        Decimal? @db.Decimal(10, 2)
+
+  /// The first and last times a guest may ask for, `HH:MM` in Dubai time, on
+  /// the same day. Requests are offered every half hour between them.
+  firstSlot String
+  lastSlot  String
+
+  /// The largest party one request can be for.
+  maxGuests Int @default(4)
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  requests ServiceRequest[]
+
+  @@unique([kind, code])
+  @@index([kind, isActive, sortOrder])
+  @@map("service_offerings")
+}
+
+enum ServiceRequestStatus {
+  /// Sent by the guest; nobody has answered yet.
+  NEW
+  CONFIRMED
+  /// The team could not offer it — fully booked, closed that day.
+  DECLINED
+  /// Withdrawn after it was confirmed, by the guest or the team.
+  CANCELLED
+}
+
+/// A guest asking for a spa treatment or a table. Nothing is held until the
+/// team confirms it — this is a request, not a booking engine.
+model ServiceRequest {
+  id String @id @default(cuid())
+
+  /// The public identity, like a booking reference: `SPA-2026-482913`,
+  /// `DIN-2026-118204`. Unique by the database, not by the generator.
+  reference String @unique
+
+  kind ServiceKind
+
+  offeringId String
+  /// Restrict: an offering with requests is deactivated, never deleted, so
+  /// the record of who asked for what survives.
+  offering   ServiceOffering @relation(fields: [offeringId], references: [id], onDelete: Restrict)
+
+  preferredDate DateTime @db.Date
+  /// `HH:MM`, one of the offering's half-hour slots.
+  preferredTime String
+  guests        Int
+
+  /// Contact details, as given. Not a `Guest` row: this person may never
+  /// stay at the hotel, and a spa visitor is not a room guest.
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+
+  notes  String?
+  locale Locale  @default(EN)
+
+  status ServiceRequestStatus @default(NEW)
+
+  /// The time the team actually confirmed, which may differ from the one
+  /// asked for. Set on confirmation.
+  confirmedTime String?
+  /// A message to the guest with the team's answer — included in the email.
+  responseNote  String?
+  respondedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, status, preferredDate])
+  @@index([email])
+  @@map("service_requests")
+}

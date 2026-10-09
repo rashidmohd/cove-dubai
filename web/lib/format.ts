@@ -111,3 +111,20 @@ export function countNights(checkIn: string, checkOut: string): number {
     new Date(`${checkIn}T00:00:00Z`).getTime();
   return Math.max(0, Math.round(ms / 86_400_000));
 }
+
+/**
+ * `19:30` as a guest reads it — `7:30 pm`, or the Arabic equivalent.
+ *
+ * The value stays `HH:MM` everywhere it is stored or sent; this is display
+ * only. Formatted in UTC on purpose: the time is already Dubai's wall clock,
+ * and must not be shifted into the reader's own zone.
+ */
+export function formatTimeOfDay(time: string, locale: Locale): string {
+  const [hours, minutes] = time.split(':').map(Number) as [number, number];
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+    numberingSystem: NUMBERING_SYSTEM,
+  }).format(new Date(Date.UTC(2024, 0, 1, hours, minutes)));
+}

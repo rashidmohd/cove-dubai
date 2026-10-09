@@ -51,7 +51,10 @@ export type AuditAction =
   | 'setting.update'
   | 'voucher.create'
   | 'voucher.update'
-  | 'voucher.delete';
+  | 'voucher.delete'
+  // Spa and dining: the answer given to a guest's request, and menu edits.
+  | `${'spa' | 'dining'}_request.${'confirmed' | 'declined' | 'cancelled'}`
+  | `${'spa' | 'dining'}_offering.${'create' | 'update' | 'delete'}`;
 
 export interface AuditEntry {
   /** Null for actions with no signed-in admin — a failed login, say. */

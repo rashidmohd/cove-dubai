@@ -12,6 +12,16 @@
  */
 
 /** Today in Dubai, as `YYYY-MM-DD`. */
+/** The time now on a clock in Dubai, `HH:MM`. */
+export function timeInDubai(): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Dubai',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date());
+}
+
 export function todayInDubai(): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Dubai',

@@ -1,0 +1,265 @@
+/**
+ * Spa and dining request pages — the menu on one side, the form on the other.
+ *
+ * Built from the Offers page's vocabulary (light surfaces, hairlines, the same
+ * type scale) rather than a new one. Logical properties throughout, so it
+ * mirrors on /ar with no direction-specific rules (`arabic-rtl`).
+ *
+ * Form controls are 16px and at least 44px tall: smaller text makes iOS zoom
+ * on focus, and smaller targets miss on a phone.
+ */
+
+.hero {
+  position: relative;
+}
+
+.intro {
+  max-width: 46ch;
+}
+
+.layoutSection {
+  padding-block-start: 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  gap: var(--space-12);
+  align-items: start;
+}
+
+/* --- The menu ------------------------------------------------------------- */
+
+.menuTitle,
+.formTitle {
+  font-family: var(--s);
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: var(--space-6);
+}
+
+.menuList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+}
+
+.menuItem {
+  padding-block: var(--space-6);
+  border-bottom: var(--border-hairline) solid rgba(28, 20, 16, 0.1);
+}
+
+.menuHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+
+.itemName {
+  font-family: var(--s);
+  font-size: 1.375rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.price {
+  font-family: var(--b);
+  font-size: 1rem;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.meta {
+  margin-top: var(--space-1);
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--bronze);
+}
+
+.body {
+  margin-top: var(--space-3);
+  font-family: var(--b);
+  font-size: 1rem;
+  line-height: var(--line-height-base);
+  color: var(--fog);
+}
+
+.itemLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: var(--space-2);
+  font-family: var(--b);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: var(--border-hairline) solid var(--bronze);
+}
+
+.itemLink:hover {
+  color: var(--bronze);
+}
+
+/* --- The form ------------------------------------------------------------- */
+
+.formColumn {
+  position: sticky;
+  top: calc(var(--space-24) + var(--space-4));
+  scroll-margin-top: var(--space-24);
+}
+
+.formCard {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  background: var(--w);
+  border: var(--border-hairline) solid rgba(196, 154, 82, 0.35);
+}
+
+.formCard > .body {
+  margin-top: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-4);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.label {
+  font-family: var(--b);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--fog);
+}
+
+.input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--b);
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--w);
+  border: var(--border-hairline) solid rgba(28, 20, 16, 0.25);
+  border-radius: 0;
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 1px;
+  border-color: var(--bronze);
+}
+
+.input:disabled {
+  color: var(--fog);
+  background: var(--linen);
+}
+
+.textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.hint {
+  font-family: var(--b);
+  font-size: 0.875rem;
+  color: var(--fog);
+}
+
+.notice,
+.error {
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--b);
+  font-size: 0.9375rem;
+  line-height: var(--line-height-base);
+}
+
+.notice {
+  color: var(--ink);
+  background: rgba(196, 154, 82, 0.12);
+  border-inline-start: 2px solid var(--bronze);
+}
+
+.error {
+  color: var(--orange);
+  background: rgba(184, 82, 40, 0.08);
+  border-inline-start: 2px solid var(--orange);
+}
+
+/* Dark, not gold: gold belongs on dark surfaces (`cove-design-system`). */
+.submit {
+  min-height: 2.75rem;
+  padding: var(--space-3) var(--space-8);
+  font-family: var(--b);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--w);
+  background: var(--ink);
+  border: var(--border-hairline) solid var(--ink);
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.submit:hover {
+  opacity: 0.88;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.submit:focus-visible,
+.itemLink:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 2px;
+}
+
+.reference {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: var(--border-hairline) solid var(--gold);
+  text-align: center;
+  font-family: var(--s);
+  font-size: 1.5rem;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+}
+
+/* --- Phones and tablets --------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+
+  /* The form first on a narrow screen: it is what the guest came to use,
+     and the menu is also in its own dropdown. */
+  .formColumn {
+    position: static;
+    order: -1;
+  }
+
+  .formCard {
+    padding: var(--space-6) var(--space-4);
+  }
+}

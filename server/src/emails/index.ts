@@ -22,9 +22,12 @@ import {
   confirmationEmail,
   hotelCancellationEmail,
   hotelNotificationEmail,
+  hotelServiceRequestEmail,
   passwordResetEmail,
+  serviceRequestEmail,
   verificationEmail,
 } from './templates.js';
+import type { ServiceRequestRecord } from '../service-requests/types.js';
 import { sendEmail } from './transport.js';
 
 /**
@@ -163,5 +166,39 @@ export async function sendAccountExistsEmail(
   await sendEmail({
     to: account.email,
     ...accountExistsEmail({ firstName: account.firstName, locale: localeOf(account), token }),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Spa and dining requests
+// ---------------------------------------------------------------------------
+
+/** The guest's acknowledgement and the team's notice, together. */
+export async function sendServiceRequestReceived(
+  request: ServiceRequestRecord,
+): Promise<void> {
+  await Promise.all([
+    sendEmail({
+      to: request.guest.email,
+      ...serviceRequestEmail(request, 'received'),
+      replyTo: config.emailHotelNotificationAddress,
+    }),
+    sendEmail({
+      to: config.emailHotelNotificationAddress,
+      ...hotelServiceRequestEmail(request),
+      replyTo: request.guest.email,
+    }),
+  ]);
+}
+
+/** The team's answer, to the guest. */
+export async function sendServiceRequestAnswer(
+  request: ServiceRequestRecord,
+): Promise<void> {
+  if (request.status === 'new') return;
+  await sendEmail({
+    to: request.guest.email,
+    ...serviceRequestEmail(request, request.status),
+    replyTo: config.emailHotelNotificationAddress,
   });
 }

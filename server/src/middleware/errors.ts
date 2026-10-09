@@ -15,6 +15,10 @@ import { ZodError } from 'zod';
 
 import { config } from '../config.js';
 import { BookingError, type BookingErrorCode } from '../booking/types.js';
+import {
+  ServiceRequestError,
+  type ServiceRequestErrorCode,
+} from '../service-requests/types.js';
 
 const STATUS_BY_CODE: Record<BookingErrorCode, number> = {
   NO_AVAILABILITY: 409,
@@ -51,6 +55,15 @@ const STATUS_BY_CODE: Record<BookingErrorCode, number> = {
   MEDIA_NOT_CONFIGURED: 503,
 };
 
+const SERVICE_STATUS_BY_CODE: Record<ServiceRequestErrorCode, number> = {
+  OFFERING_NOT_FOUND: 404,
+  OFFERING_CODE_IN_USE: 409,
+  OFFERING_IN_USE: 409,
+  INVALID_SERVICE_REQUEST: 400,
+  SERVICE_REQUEST_NOT_FOUND: 404,
+  INVALID_REQUEST_TRANSITION: 409,
+};
+
 /** Raised by routes for non-domain failures such as a bad session. */
 export class HttpError extends Error {
   constructor(
@@ -79,6 +92,17 @@ export function errorHandler(
 ): void {
   if (error instanceof BookingError) {
     res.status(STATUS_BY_CODE[error.code]).json({
+      error: {
+        code: error.code,
+        message: error.message,
+        ...(error.details ? { details: error.details } : {}),
+      },
+    });
+    return;
+  }
+
+  if (error instanceof ServiceRequestError) {
+    res.status(SERVICE_STATUS_BY_CODE[error.code]).json({
       error: {
         code: error.code,
         message: error.message,

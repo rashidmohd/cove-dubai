@@ -140,6 +140,11 @@ export function useApiErrorMessage() {
     }
     if (caught.code === 'RATE_PLAN_NOT_FOUND') return t('errors.ratePlanNotFound');
     if (caught.code === 'INVALID_RATE_PLAN') return t('errors.invalidRatePlan');
+    if (caught.code === 'OFFERING_IN_USE') return t('errors.offeringInUse');
+    if (caught.code === 'OFFERING_CODE_IN_USE') return t('errors.offeringCodeInUse');
+    if (caught.code === 'INVALID_REQUEST_TRANSITION') {
+      return t('errors.requestAlreadyAnswered');
+    }
     if (caught.code === 'CSRF_TOKEN_INVALID') return t('errors.signedOut');
 
     return caught.message;

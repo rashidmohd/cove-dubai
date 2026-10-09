@@ -87,6 +87,9 @@ export default async function DiningPage({
             {t('title')}
           </SectionHeading>
           <BodyText className={styles.intro}>{t('intro')}</BodyText>
+          <Link href="/dining/reserve" className={m.textLink}>
+            {t('reserveCta')}
+          </Link>
         </Reveal>
       </Section>
 
@@ -119,6 +122,12 @@ export default async function DiningPage({
 
             <Link href="/coming-soon" className={m.textLink}>
               {t('loom.cta')}
+            </Link>{' '}
+            <Link
+              href={{ pathname: '/dining/reserve', query: { item: 'the-loom' } }}
+              className={m.textLink}
+            >
+              {t('reserveCta')}
             </Link>
           </Reveal>
         </div>
@@ -187,7 +196,12 @@ export default async function DiningPage({
           <BodyText className={styles.privateBody}>
             {t('private.body')}
           </BodyText>
-          <Link href="/coming-soon" className={m.textLink}>
+          {/* The Chef's Table is by arrangement, so "Enquire" opens the
+              table request with it already chosen. */}
+          <Link
+            href={{ pathname: '/dining/reserve', query: { item: 'chefs-table' } }}
+            className={m.textLink}
+          >
             {t('private.cta')}
           </Link>
         </Reveal>

@@ -247,6 +247,59 @@ export interface VoucherPreview {
   price: PriceBreakdown;
 }
 
+// --- Spa and dining requests --------------------------------------------------
+
+export type ServiceKind = 'spa' | 'dining';
+
+export type ServiceRequestStatus = 'new' | 'confirmed' | 'declined' | 'cancelled';
+
+/** A spa treatment or a restaurant a guest can ask to reserve. */
+export interface ServiceOffering {
+  kind: ServiceKind;
+  code: string;
+  name: LocalizedText;
+  description: LocalizedText | null;
+  /** Spa treatments only. */
+  durationMinutes: number | null;
+  /** Spa treatments only — shown, paid at the hotel. */
+  price: number | null;
+  currency: string;
+  /** Every time a guest may ask for, `HH:MM` in Dubai time, half-hourly. */
+  slots: string[];
+  maxGuests: number;
+}
+
+export interface CreateServiceRequestInput {
+  offeringCode: string;
+  preferredDate: IsoDate;
+  preferredTime: string;
+  guests: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  notes?: string;
+  locale: Locale;
+}
+
+/** A request as the API returns it. Not a booking until the team confirms. */
+export interface ServiceRequest {
+  reference: string;
+  kind: ServiceKind;
+  offering: { code: string; name: LocalizedText };
+  preferredDate: IsoDate;
+  preferredTime: string;
+  guests: number;
+  guest: { firstName: string; lastName: string; email: string; phone: string };
+  notes: string | null;
+  locale: Locale;
+  status: ServiceRequestStatus;
+  confirmedTime: string | null;
+  responseNote: string | null;
+  respondedAt: string | null;
+  createdAt: string;
+}
+
 /** Error codes the API returns. The UI branches on these, never on prose. */
 export type ApiErrorCode =
   | 'NO_AVAILABILITY'
@@ -293,5 +346,14 @@ export type ApiErrorCode =
   | 'INVALID_TOKEN'
   /** Signed in, but bookings stay hidden until the address is confirmed. */
   | 'EMAIL_NOT_VERIFIED'
+  // --- Spa and dining requests ---------------------------------------------
+  | 'OFFERING_NOT_FOUND'
+  | 'OFFERING_CODE_IN_USE'
+  /** Guests have asked for it, so it is deactivated rather than deleted. */
+  | 'OFFERING_IN_USE'
+  /** A time it does not offer, a slot already gone, too many guests. */
+  | 'INVALID_SERVICE_REQUEST'
+  | 'SERVICE_REQUEST_NOT_FOUND'
+  | 'INVALID_REQUEST_TRANSITION'
   /** Raised by the client itself when the API cannot be reached at all. */
   | 'NETWORK_ERROR';

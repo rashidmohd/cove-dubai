@@ -30,6 +30,7 @@
  *     them.
  */
 import type { Locale, PriceBreakdown, Reservation, Stay } from '../booking/types.js';
+import type { ServiceRequestRecord } from '../service-requests/types.js';
 import { config } from '../config.js';
 
 // ---------------------------------------------------------------------------
@@ -1096,4 +1097,288 @@ export function accountExistsEmail(args: {
     secondary: { href: accountUrl('reset', args.locale, args.token), text: c.resetButton },
     smallPrint: [c.resetExpiry, c.notYou],
   });
+}
+
+// ---------------------------------------------------------------------------
+// Spa and dining requests
+// ---------------------------------------------------------------------------
+
+interface ServiceCopy {
+  spa: string;
+  dining: string;
+  receivedSubject: (reference: string) => string;
+  receivedPreheader: string;
+  receivedEyebrow: string;
+  receivedHeadline: (firstName: string) => string;
+  receivedBody: string;
+  confirmedSubject: (reference: string) => string;
+  confirmedPreheader: string;
+  confirmedEyebrow: string;
+  confirmedHeadline: (firstName: string) => string;
+  confirmedBody: string;
+  declinedSubject: (reference: string) => string;
+  declinedPreheader: string;
+  declinedEyebrow: string;
+  declinedHeadline: string;
+  declinedBody: string;
+  cancelledSubject: (reference: string) => string;
+  cancelledEyebrow: string;
+  cancelledHeadline: string;
+  cancelledBody: string;
+  noteHeading: string;
+  reference: string;
+  what: string;
+  date: string;
+  time: string;
+  askedFor: string;
+  guests: string;
+  payAtHotel: string;
+  questions: string;
+  footerReason: string;
+}
+
+const SERVICE_COPY: Record<Locale, ServiceCopy> = {
+  en: {
+    spa: 'Spa',
+    dining: 'Dining',
+    receivedSubject: (reference) => `We have your request — ${reference}`,
+    receivedPreheader: 'Our team will confirm it with you shortly.',
+    receivedEyebrow: 'Request received',
+    receivedHeadline: (firstName) => `Thank you, ${firstName}.`,
+    receivedBody:
+      'We have your request below. It is not yet confirmed: our team will check availability and reply to this address, usually within a few hours.',
+    confirmedSubject: (reference) => `Confirmed — ${reference}`,
+    confirmedPreheader: 'Your request is confirmed. We look forward to seeing you.',
+    confirmedEyebrow: 'Confirmed',
+    confirmedHeadline: (firstName) => `You are booked in, ${firstName}.`,
+    confirmedBody: 'Your request is confirmed for the time below.',
+    declinedSubject: (reference) => `About your request — ${reference}`,
+    declinedPreheader: 'We could not confirm this time.',
+    declinedEyebrow: 'Not available',
+    declinedHeadline: 'We are sorry — we cannot offer this time.',
+    declinedBody:
+      'We could not confirm the request below. Reply to this email and we will gladly suggest another time.',
+    cancelledSubject: (reference) => `Cancelled — ${reference}`,
+    cancelledEyebrow: 'Cancelled',
+    cancelledHeadline: 'Your booking has been cancelled.',
+    cancelledBody: 'The booking below is cancelled. Reply to this email if you would like another time.',
+    noteHeading: 'A note from our team',
+    reference: 'Reference',
+    what: 'Booking',
+    date: 'Date',
+    time: 'Time',
+    askedFor: 'Asked for',
+    guests: 'Guests',
+    payAtHotel: 'Nothing is charged now. You pay at the hotel.',
+    questions: 'Any questions? Simply reply to this email and our team will answer.',
+    footerReason:
+      'You are receiving this email because a request was made at Cove Dubai with this address.',
+  },
+  // Draft Arabic for the client's copywriter, like the rest of the Arabic copy.
+  ar: {
+    spa: 'السبا',
+    dining: 'المطاعم',
+    receivedSubject: (reference) => `تلقينا طلبك — ${reference}`,
+    receivedPreheader: 'سيؤكده فريقنا معك قريباً.',
+    receivedEyebrow: 'تم استلام الطلب',
+    receivedHeadline: (firstName) => `شكراً لك، ${firstName}.`,
+    receivedBody:
+      'تلقينا طلبك أدناه. لم يُؤكَّد بعد: سيتحقق فريقنا من التوفر ويرد على هذا العنوان، عادةً خلال ساعات قليلة.',
+    confirmedSubject: (reference) => `تم التأكيد — ${reference}`,
+    confirmedPreheader: 'تم تأكيد طلبك. نتطلع إلى رؤيتك.',
+    confirmedEyebrow: 'تم التأكيد',
+    confirmedHeadline: (firstName) => `تم حجزك، ${firstName}.`,
+    confirmedBody: 'تم تأكيد طلبك للموعد أدناه.',
+    declinedSubject: (reference) => `بخصوص طلبك — ${reference}`,
+    declinedPreheader: 'لم نتمكن من تأكيد هذا الموعد.',
+    declinedEyebrow: 'غير متاح',
+    declinedHeadline: 'نعتذر — لا يمكننا توفير هذا الموعد.',
+    declinedBody: 'لم نتمكن من تأكيد الطلب أدناه. رُدّ على هذه الرسالة وسنقترح موعداً آخر بكل سرور.',
+    cancelledSubject: (reference) => `تم الإلغاء — ${reference}`,
+    cancelledEyebrow: 'تم الإلغاء',
+    cancelledHeadline: 'تم إلغاء حجزك.',
+    cancelledBody: 'تم إلغاء الحجز أدناه. رُدّ على هذه الرسالة إن رغبت في موعد آخر.',
+    noteHeading: 'رسالة من فريقنا',
+    reference: 'المرجع',
+    what: 'الحجز',
+    date: 'التاريخ',
+    time: 'الوقت',
+    askedFor: 'الموعد المطلوب',
+    guests: 'الضيوف',
+    payAtHotel: 'لا يُحصَّل أي مبلغ الآن. يتم الدفع في الفندق.',
+    questions: 'هل لديك أي استفسار؟ يكفي الرد على هذه الرسالة وسيجيبك فريقنا.',
+    footerReason: 'تصلك هذه الرسالة لأن طلباً تم في كوف دبي باستخدام هذا العنوان.',
+  },
+};
+
+/** `19:30` as the guest reads it: `7:30 pm`, or the Arabic equivalent. */
+function formatTime(time: string, locale: Locale): string {
+  const [hours, minutes] = time.split(':').map(Number) as [number, number];
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(2024, 0, 1, hours, minutes)));
+}
+
+function requestRows(request: ServiceRequestRecord, locale: Locale): Row[] {
+  const copy = SERVICE_COPY[locale];
+  const confirmed = request.status === 'confirmed' && request.confirmedTime;
+  return [
+    { label: copy.what, value: `${copy[request.kind]} · ${request.offering.name[locale]}` },
+    { label: copy.date, value: formatDate(request.preferredDate, locale) },
+    {
+      label: confirmed ? copy.time : copy.askedFor,
+      value: formatTime(confirmed ? request.confirmedTime! : request.preferredTime, locale),
+    },
+    { label: copy.guests, value: String(request.guests) },
+  ];
+}
+
+type GuestRequestEmail = 'received' | 'confirmed' | 'declined' | 'cancelled';
+
+/** The guest's email for each stage of a spa or dining request. */
+export function serviceRequestEmail(
+  request: ServiceRequestRecord,
+  stage: GuestRequestEmail,
+): RenderedEmail {
+  const locale = request.locale;
+  const copy = SERVICE_COPY[locale];
+  const l = look(locale);
+  const firstName = request.guest.firstName;
+
+  const words = {
+    received: {
+      subject: copy.receivedSubject(request.reference),
+      preheader: copy.receivedPreheader,
+      eyebrow: copy.receivedEyebrow,
+      headline: copy.receivedHeadline(firstName),
+      body: copy.receivedBody,
+    },
+    confirmed: {
+      subject: copy.confirmedSubject(request.reference),
+      preheader: copy.confirmedPreheader,
+      eyebrow: copy.confirmedEyebrow,
+      headline: copy.confirmedHeadline(firstName),
+      body: copy.confirmedBody,
+    },
+    declined: {
+      subject: copy.declinedSubject(request.reference),
+      preheader: copy.declinedPreheader,
+      eyebrow: copy.declinedEyebrow,
+      headline: copy.declinedHeadline,
+      body: copy.declinedBody,
+    },
+    cancelled: {
+      subject: copy.cancelledSubject(request.reference),
+      preheader: copy.cancelledBody,
+      eyebrow: copy.cancelledEyebrow,
+      headline: copy.cancelledHeadline,
+      body: copy.cancelledBody,
+    },
+  }[stage];
+
+  const rows = requestRows(request, locale);
+  const note =
+    stage !== 'received' && request.responseNote
+      ? notice(
+          `<strong>${escapeHtml(copy.noteHeading)}</strong><br><span dir="auto">${escapeMultiline(
+            request.responseNote,
+          )}</span>`,
+          l,
+        )
+      : '';
+
+  const body = `
+    ${eyebrow(words.eyebrow, l)}
+    ${headline(words.headline, l)}
+    ${paragraph(words.body, l)}
+    ${referenceBlock(request.reference, l)}
+    ${rowsTable(rows, l)}
+    ${note}
+    ${stage === 'declined' || stage === 'cancelled' ? '' : paragraph(copy.payAtHotel, l, FOG)}
+    ${ruled(paragraph(copy.questions, l))}
+    ${signOff(l)}
+  `;
+
+  const text = [
+    words.eyebrow.toUpperCase(),
+    words.headline,
+    '',
+    words.body,
+    '',
+    `${copy.reference}: ${request.reference}`,
+    ...textRows(rows),
+    ...(stage !== 'received' && request.responseNote
+      ? ['', `${copy.noteHeading}:`, request.responseNote]
+      : []),
+    '',
+    ...(stage === 'declined' || stage === 'cancelled' ? [] : [copy.payAtHotel, '']),
+    copy.questions,
+    '',
+    COPY[locale].signOff,
+    COPY[locale].hotelName,
+  ].join('\n');
+
+  return {
+    subject: words.subject,
+    html: layout({
+      l,
+      title: words.subject,
+      preheader: words.preheader,
+      body,
+      footerText: copy.footerReason,
+    }),
+    text,
+  };
+}
+
+/**
+ * The team's notice of a new request. In English, like the booking notices —
+ * read by staff — with the contact details as links so a reply or a call is
+ * one tap.
+ */
+export function hotelServiceRequestEmail(request: ServiceRequestRecord): RenderedEmail {
+  const l = look('en');
+  const name = `${request.guest.firstName} ${request.guest.lastName}`;
+  const area = request.kind === 'spa' ? 'Spa' : 'Dining';
+  const subject = `${area} request — ${request.reference} · ${name} · ${formatDate(
+    request.preferredDate,
+    'en',
+  )} ${request.preferredTime}`;
+
+  const rows: Row[] = [
+    ...requestRows(request, 'en'),
+    { label: 'Guest', value: name },
+    { label: 'Email', value: request.guest.email },
+    { label: 'Phone', value: request.guest.phone },
+    { label: 'Language', value: request.locale === 'ar' ? 'Arabic' : 'English' },
+  ];
+
+  const body = `
+    ${eyebrow(`New ${area.toLowerCase()} request · website`, l)}
+    ${headline(name, l)}
+    <p style="margin:-8px 0 16px;font-family:${SERIF};font-size:18px;letter-spacing:2px;color:${BRONZE};">${escapeHtml(request.reference)}</p>
+    ${paragraph('Not yet confirmed. Answer it in the admin panel — the guest is emailed your answer.', l)}
+    ${rowsTable(rows, l)}
+    ${
+      request.notes
+        ? notice(`<strong>Guest's note</strong><br><span dir="auto">${escapeMultiline(request.notes)}</span>`, l)
+        : ''
+    }
+  `;
+
+  const text = [
+    `NEW ${area.toUpperCase()} REQUEST`,
+    `${name} — ${request.reference}`,
+    '',
+    ...textRows(rows),
+    ...(request.notes ? ['', "Guest's note:", request.notes] : []),
+  ].join('\n');
+
+  return {
+    subject,
+    html: layout({ l, title: subject, preheader: subject, body, footerReason: false }),
+    text,
+  };
 }

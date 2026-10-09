@@ -21,7 +21,10 @@ import rateLimit from 'express-rate-limit';
 import { auditContextOf, recordAudit } from '../auth/audit.js';
 import { getBookingProvider } from '../booking/index.js';
 import { today } from '../booking/dates.js';
-import { sendCancellationConfirmation } from '../emails/index.js';
+import {
+  sendCancellationConfirmation,
+  sendServiceRequestAnswer,
+} from '../emails/index.js';
 import { prisma } from '../db/prisma.js';
 import { currentAdmin, requireAdmin, requireRole } from '../middleware/auth.js';
 import { requireCsrfToken } from '../middleware/csrf.js';
@@ -33,6 +36,22 @@ import {
 } from '../media/storage.js';
 import { mediaUploadsEnabled } from '../config.js';
 import { BookingError } from '../booking/types.js';
+import {
+  createOffering,
+  deleteOffering,
+  listAdminOfferings,
+  listRequests,
+  respondToRequest,
+  updateOffering,
+} from '../service-requests/store.js';
+import {
+  createOfferingSchema,
+  respondToRequestSchema,
+  serviceKindSchema,
+  serviceReferenceSchema,
+  serviceRequestFilterSchema,
+  updateOfferingSchema,
+} from './service-requests.schemas.js';
 import { bookingReferenceSchema } from './schemas.js';
 import {
   auditLogFilterSchema,
@@ -752,6 +771,122 @@ adminRouter.delete(
       action: 'voucher.delete',
       entityType: 'voucher',
       entityId: code.toUpperCase(),
+    });
+
+    res.json({ ok: true });
+  }),
+);
+
+// ---------------------------------------------------------------------------
+// Spa and dining requests
+//
+// Answering requests is open to STAFF: the spa and restaurant teams are not
+// pricing administrators. Editing the menu — names, prices, hours — is
+// ADMIN-only, like every other public-facing price. Every write is audited.
+// ---------------------------------------------------------------------------
+
+adminRouter.get(
+  '/:kind(spa|dining)/requests',
+  asyncRoute(async (req, res) => {
+    const kind = serviceKindSchema.parse(req.params.kind);
+    const filter = serviceRequestFilterSchema.parse(req.query);
+    res.json(await listRequests(kind, filter));
+  }),
+);
+
+/** Confirm (with a time), decline, or cancel — and email the guest the answer. */
+adminRouter.patch(
+  '/:kind(spa|dining)/requests/:reference',
+  asyncRoute(async (req, res) => {
+    const kind = serviceKindSchema.parse(req.params.kind);
+    const reference = serviceReferenceSchema.parse(req.params.reference);
+    const answer = respondToRequestSchema.parse(req.body);
+
+    const request = await respondToRequest(reference, answer);
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: `${kind}_request.${answer.status}`,
+      entityType: `${kind}_request`,
+      entityId: reference,
+      details: {
+        confirmedTime: request.confirmedTime,
+        ...(answer.responseNote ? { responseNote: answer.responseNote } : {}),
+      },
+    });
+
+    res.json({ request });
+    void sendServiceRequestAnswer(request);
+  }),
+);
+
+adminRouter.get(
+  '/:kind(spa|dining)/offerings',
+  asyncRoute(async (req, res) => {
+    const kind = serviceKindSchema.parse(req.params.kind);
+    res.json({ offerings: await listAdminOfferings(kind) });
+  }),
+);
+
+adminRouter.post(
+  '/:kind(spa|dining)/offerings',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const kind = serviceKindSchema.parse(req.params.kind);
+    const draft = createOfferingSchema.parse(req.body);
+    const offering = await createOffering(kind, draft);
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: `${kind}_offering.create`,
+      entityType: `${kind}_offering`,
+      entityId: offering.code,
+      details: { price: offering.price, firstSlot: draft.firstSlot, lastSlot: draft.lastSlot },
+    });
+
+    res.status(201).json({ offering });
+  }),
+);
+
+adminRouter.patch(
+  '/:kind(spa|dining)/offerings/:code',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const kind = serviceKindSchema.parse(req.params.kind);
+    const code = String(req.params.code);
+    const changes = updateOfferingSchema.parse(req.body);
+    const offering = await updateOffering(kind, code, changes);
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: `${kind}_offering.update`,
+      entityType: `${kind}_offering`,
+      entityId: code,
+      details: {
+        changed: Object.keys(changes).filter(
+          (key) => changes[key as keyof typeof changes] !== undefined,
+        ),
+        ...(changes.price !== undefined ? { priceTo: offering.price } : {}),
+      },
+    });
+
+    res.json({ offering });
+  }),
+);
+
+adminRouter.delete(
+  '/:kind(spa|dining)/offerings/:code',
+  requireRole('ADMIN'),
+  asyncRoute(async (req, res) => {
+    const kind = serviceKindSchema.parse(req.params.kind);
+    const code = String(req.params.code);
+    await deleteOffering(kind, code);
+
+    await recordAudit({
+      ...auditContextOf(req),
+      action: `${kind}_offering.delete`,
+      entityType: `${kind}_offering`,
+      entityId: code,
     });
 
     res.json({ ok: true });

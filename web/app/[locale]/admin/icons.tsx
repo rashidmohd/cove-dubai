@@ -102,6 +102,30 @@ export function VouchersIcon(props: IconProps) {
   );
 }
 
+/** Lucide `flower-2` — for the spa. */
+export function SpaIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1" />
+      <circle cx="12" cy="8" r="2" />
+      <path d="M12 10v12" />
+      <path d="M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z" />
+      <path d="M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z" />
+    </Icon>
+  );
+}
+
+/** Lucide `utensils` — for restaurant tables. */
+export function DiningIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+      <path d="M7 2v20" />
+      <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+    </Icon>
+  );
+}
+
 /** Lucide `tag` — a price ticket, for rates and offers. */
 export function RatesIcon(props: IconProps) {
   return (

@@ -19,7 +19,9 @@ import {
   Section,
   SectionHeading,
   SectionLabel,
+  marketingStyles as m,
 } from '@/components/marketing';
+import { Link } from '@/i18n/navigation';
 import { isLocale } from '@/i18n/routing';
 import { propertyPhoto } from '@/lib/media';
 import type { Photograph, PropertyPhotoName } from '@/lib/media';
@@ -76,6 +78,9 @@ export default async function WellnessPage({
             {t('title')}
           </SectionHeading>
           <BodyText className={styles.intro}>{t('intro')}</BodyText>
+          <Link href="/spa" className={m.textLink}>
+            {t('spaCta')}
+          </Link>
         </Reveal>
       </Section>
 
