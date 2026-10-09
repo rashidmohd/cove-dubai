@@ -1353,7 +1353,9 @@ the migrations (history recorded with `prisma migrate resolve --applied`, no dat
   `db-backups/cove-<timestamp>.json` beside the repo. Never pass a database that holds data as
   `--shadow-database-url`.
 
-> ⚠️ **Found while building accounts, not yet fixed:** `GET /api/reservations/:reference` is public and returns the
-> guest's name, email and phone to anyone with a reference. References are 6 random digits per year and reads are
-> limited to 120/min per IP, so they can be guessed. The cancel page is its only guest caller and already holds
-> the cancellation token — requiring that token for the lookup would close it.
+> ✅ **Fixed 9 Oct 2026:** `GET /api/reservations/:reference` used to return the guest's name, email and phone to
+> anyone with a reference (6 random digits a year, guessable at 120 reads/min per IP). It now requires the
+> cancellation token from the emailed link and answers a missing or wrong token exactly like an unknown
+> reference. The cancel page already had the token. One side effect: once a booking is cancelled its token is
+> burned, so reopening the same link shows "not valid, may already have been used" rather than the booking.
+> Tests: `server/tests/reservation-lookup.test.ts`.

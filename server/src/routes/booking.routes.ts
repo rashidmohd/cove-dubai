@@ -9,6 +9,7 @@
  * If a route in this file ever needs to import Prisma, the design has gone
  * wrong — the provider interface should grow a method instead.
  */
+import { timingSafeEqual } from 'node:crypto';
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
@@ -22,6 +23,7 @@ import {
   availabilityQuerySchema,
   bookingReferenceSchema,
   cancelReservationSchema,
+  reservationLookupSchema,
   createReservationSchema,
   rateQuerySchema,
   voucherPreviewSchema,
@@ -54,6 +56,13 @@ const readRateLimit = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
 });
+
+/** Constant-time, and false rather than a throw on a length mismatch. */
+function tokensMatch(provided: string, expected: string): boolean {
+  const a = Buffer.from(provided, 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 export const bookingRouter = Router();
 
@@ -137,18 +146,30 @@ bookingRouter.post(
 );
 
 /**
- * Look up a booking by its reference.
+ * Look up a booking by its reference — **with the token from the emailed link**.
  *
- * The reference is the guest's own identifier, but it is not a secret strong
- * enough to authorise changes — so this returns the booking for display, while
- * cancelling additionally requires the token from the confirmation email.
+ * The reference alone is not enough. It is six random digits per year, printed
+ * on confirmations and shared freely, and the response carries the guest's
+ * name, email and phone; a reference-only lookup let anyone guess their way
+ * to strangers' contact details. The one guest caller, the cancellation page,
+ * already holds the token from the same link, so it costs it nothing.
+ *
+ * A missing or wrong token answers exactly like an unknown reference, so the
+ * endpoint does not confirm which references exist. Once a booking is
+ * cancelled its token is burned and the link stops working here too.
  */
 bookingRouter.get(
   '/reservations/:reference',
   readRateLimit,
   asyncRoute(async (req, res) => {
     const reference = bookingReferenceSchema.parse(req.params.reference);
-    const reservation = await getBookingProvider().getReservation(reference);
+    const { token } = reservationLookupSchema.parse(req.query);
+
+    const expected = await getBookingProvider().getCancellationToken(reference);
+    const reservation =
+      expected && tokensMatch(token, expected)
+        ? await getBookingProvider().getReservation(reference)
+        : null;
 
     if (!reservation) {
       throw new HttpError(

@@ -137,6 +137,11 @@ export const bookingReferenceSchema = z
   .toUpperCase()
   .regex(BOOKING_REFERENCE_PATTERN, 'Not a valid booking reference.');
 
+/** The emailed link's token, which a booking lookup now requires. */
+export const reservationLookupSchema = z.object({
+  token: z.string().trim().min(1).max(200),
+});
+
 export const cancelReservationSchema = z.object({
   /** Proves the requester holds the emailed cancellation link. */
   token: z.string().trim().min(1).max(200),

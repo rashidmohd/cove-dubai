@@ -63,10 +63,10 @@ export function CancelFlow({ locale }: { locale: Locale }) {
 
     let cancelled = false;
 
-    // Read-only: shows the guest what they are about to cancel. The reference
-    // alone is enough to look up, but not to cancel.
+    // Read-only: shows the guest what they are about to cancel. The lookup
+    // needs the token too — a reference alone would expose a guest's details.
     bookingApi
-      .getReservation(reference)
+      .getReservation(reference, token)
       .then((found) => {
         if (cancelled) return;
         setReservation(found);

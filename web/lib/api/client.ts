@@ -226,9 +226,13 @@ export const bookingApi = {
     return data.preview;
   },
 
-  async getReservation(reference: string): Promise<Reservation> {
+  /**
+   * A booking, for the cancellation page. Needs the token from the emailed
+   * link — the reference alone is not enough to see a guest's details.
+   */
+  async getReservation(reference: string, token: string): Promise<Reservation> {
     const data = await request<{ reservation: Reservation }>(
-      `/api/reservations/${encodeURIComponent(reference)}`,
+      `/api/reservations/${encodeURIComponent(reference)}?${query({ token })}`,
       { cache: 'no-store' },
     );
     return data.reservation;
