@@ -132,3 +132,67 @@
 .calDayToday {
   outline: 0.5px solid var(--bronze);
 }
+
+/* --- Touch screens and phones --------------------------------------------- */
+
+/* Days a fingertip can hit: 44px tall (WCAG 2.5.5). Seven of them across fill
+   the row on any phone, so only the height needs saying. The month arrows get
+   the same treatment — they are pressed more than any single day. */
+@media (pointer: coarse) {
+  /* A tap that lands while the sheet is opening must not start a text
+     selection across the month name and weekdays. */
+  .calendar {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .calDay {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .calNav {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
+/*
+ * On a phone, a sheet from the bottom of the screen instead of a 272px popover.
+ *
+ * Hung from its field, the popover was narrower than the thumb-friendly grid
+ * needs and could open half off screen; as a sheet it is full width, sits where
+ * the thumb already is, and does not depend on where the field happens to be
+ * scrolled. Still the same element, so the callers' close-on-outside-tap and
+ * Escape handling keep working unchanged.
+ *
+ * `[role='dialog']` lifts the specificity above a caller's own positioning
+ * class (the home search centres its popover with a transform, which would
+ * push a fixed sheet half off screen).
+ */
+@media (max-width: 700px) {
+  .calendar[role='dialog'] {
+    position: fixed;
+    inset-inline: 0;
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    transform: none;
+    max-height: 85dvh;
+    padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+    border: none;
+    border-block-start: 0.5px solid rgba(28, 20, 16, 0.12);
+    box-shadow: 0 -12px 32px rgba(28, 20, 16, 0.14);
+    /* Above the site nav (300) and the reserve flow's pinned action row. */
+    z-index: 400;
+  }
+
+  .calMonth {
+    font-size: 1rem;
+  }
+
+  .calDays {
+    gap: 2px;
+  }
+}

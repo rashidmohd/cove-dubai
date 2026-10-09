@@ -58,6 +58,16 @@
   width: 100%;
 }
 
+/* On a phone the search's calendar opens as a sheet over the whole screen, but
+   it lives inside this block, whose z-index caps it below the slideshow's pause
+   button — which then sat on the last row of days. Lifted only while a
+   calendar is open, so the hero's layering is otherwise untouched. */
+@media (max-width: 700px) {
+  .inner:has([role='dialog']) {
+    z-index: 4;
+  }
+}
+
 .eyebrow {
   font-size: 0.8125rem;
   letter-spacing: var(--tracking-wide);

@@ -230,3 +230,17 @@
 :global([lang='ar']) .legend {
   font-size: 0.8125rem;
 }
+
+/* Touch screens: 16px so iOS does not zoom into the age selects on focus, and
+   44px counter buttons — the reliable fingertip size (WCAG 2.5.5). Keyed on the
+   pointer, not the width, so an iPad gets it too. */
+@media (pointer: coarse) {
+  .select {
+    font-size: 1rem;
+  }
+
+  .counterBtn {
+    width: 44px;
+    height: 44px;
+  }
+}

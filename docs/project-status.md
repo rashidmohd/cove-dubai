@@ -1340,6 +1340,13 @@ the discount-code field came *after* "Confirm reservation".
 - **E2E updated** (`reserve`, `room-led`, `voucher` specs) for the extra step — **not yet run**: Playwright's
   bundled browser is not installed on the dev machine (`npx playwright install`). Verified by hand-driven
   Playwright scripts against system Chrome instead.
-- **Still open from the review:** inputs at 15px make iOS zoom on focus (should be 16px); the guest counter buttons
-  are 26px and calendar days ~32px (target 44px); the calendar is a 272px popover rather than a phone sheet.
+- ~~**Still open from the review**~~ — **fixed 9 Oct 2026**, CSS only:
+  - On touch screens (`pointer: coarse`, so iPads too) every booking input, select and textarea is 16px, so iOS
+    no longer zooms on focus; guest counter buttons, calendar days and month arrows are 44px.
+  - On phones (≤700px) the calendar — reserve flow and home search alike — is a full-width sheet from the bottom
+    of the screen instead of a 272px popover. Outside tap and Escape still close it. Two knock-ons fixed: the
+    home search bar's `backdrop-filter` trapped the fixed sheet inside the bar, so the blur is off on phones (the
+    bar is slightly more opaque instead); and the hero's pause button sat over the last row of days, so the
+    hero content is lifted above it while a calendar is open.
+  - Checked in Chrome's iPhone emulation (390px, touch) in EN and AR.
 - **Pre-existing lint error** in `ReserveFlow.tsx`: `react-hooks/set-state-in-effect` on the voucher-reset effect.

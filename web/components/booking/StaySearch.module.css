@@ -315,6 +315,22 @@
   }
 }
 
+/*
+ * Phones: no blur behind the bar on a photograph.
+ *
+ * A `backdrop-filter` makes the bar the containing block for anything
+ * `position: fixed` inside it — so the calendar, which becomes a full-width
+ * sheet at the bottom of the screen on phones, was trapped inside the bar
+ * instead. Slightly more opaque in exchange, which only raises the measured
+ * contrast the comment on `.dark` depends on.
+ */
+@media (max-width: 700px) {
+  .dark {
+    backdrop-filter: none;
+    background: rgba(24, 14, 6, 0.9);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .submit {
     transition: none;

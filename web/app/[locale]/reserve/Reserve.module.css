@@ -1918,3 +1918,28 @@
 .roomTimes {
   color: var(--bronze);
 }
+
+/* --- Touch screens --------------------------------------------------------
+ *
+ * Keyed on the pointer, not the width: an iPad at desktop width has the same
+ * fingers and the same zoom rule as a phone.
+ *
+ *   - iOS zooms the page on focus into any field set below 16px, and leaves it
+ *     zoomed — the guest then pans around their own booking form. 1rem stops
+ *     it; the discount-code field was already there.
+ *   - 44px is the smallest target a fingertip hits reliably (WCAG 2.5.5, Apple
+ *     HIG). The counter's 26px squares were the smallest controls in the flow
+ *     and the ones pressed most, several times per booking.
+ */
+@media (pointer: coarse) {
+  .input,
+  .textarea,
+  .select {
+    font-size: 1rem;
+  }
+
+  .counterBtn {
+    width: 44px;
+    height: 44px;
+  }
+}
