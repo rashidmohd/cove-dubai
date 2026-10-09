@@ -249,6 +249,22 @@ export function useBookingState(locale: Locale) {
     }));
   }, []);
 
+  /**
+   * Fill in guest details from somewhere else — a signed-in account — without
+   * overwriting anything already there. A field the guest has typed into, or
+   * that came back from saved progress, is theirs and is left alone.
+   */
+  const fillGuest = useCallback((details: Partial<GuestForm>) => {
+    setState((current) => {
+      const guest = { ...current.guest };
+      for (const key of Object.keys(details) as (keyof GuestForm)[]) {
+        const value = details[key]?.trim();
+        if (value && !guest[key].trim()) guest[key] = value;
+      }
+      return { ...current, guest };
+    });
+  }, []);
+
   const clear = useCallback(() => {
     setState(initialBookingState);
     try {
@@ -258,5 +274,5 @@ export function useBookingState(locale: Locale) {
     }
   }, []);
 
-  return { state, update, updateGuest, clear, restored, locale };
+  return { state, update, updateGuest, fillGuest, clear, restored, locale };
 }

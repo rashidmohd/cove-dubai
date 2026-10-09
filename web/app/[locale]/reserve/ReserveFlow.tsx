@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { accountApi } from '@/lib/api/account-client';
 import { ApiError, bookingApi } from '@/lib/api/client';
 import type {
   AvailableRoomType,
@@ -94,8 +95,49 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
   const tPhoto = useTranslations('photos');
   const tRooms = useTranslations('rooms');
 
-  const { state, update, updateGuest, clear, restored } =
+  const { state, update, updateGuest, fillGuest, clear, restored } =
     useBookingState(locale);
+
+  /**
+   * The signed-in member's email, when their details were filled in from their
+   * account — so the form can say so. Null for everyone else.
+   */
+  const [memberEmail, setMemberEmail] = useState<string | null>(null);
+
+  // A signed-in member should not have to type their name and email again.
+  // Filled once progress is restored, so saved entries win; only empty fields
+  // are touched. The phone comes from their latest booking, since an account
+  // does not hold one — and only for a confirmed address, which is the only
+  // case the API will list bookings for. Signed out is the ordinary case and
+  // fails quietly: booking never needs an account.
+  useEffect(() => {
+    if (!restored) return;
+    let live = true;
+
+    accountApi
+      .getSession()
+      .then(async (account) => {
+        if (!live) return;
+        fillGuest({
+          firstName: account.firstName,
+          lastName: account.lastName,
+          email: account.email,
+        });
+        setMemberEmail(account.email);
+
+        if (!account.emailVerified) return;
+        const [latest] = await accountApi.listReservations();
+        if (live && latest?.guest.phone) fillGuest({ phone: latest.guest.phone });
+      })
+      .catch(() => {
+        // Not signed in, or the account service is unreachable: the guest
+        // types their details as before.
+      });
+
+    return () => {
+      live = false;
+    };
+  }, [restored, fillGuest]);
 
   const [rooms, setRooms] = useState<AvailableRoomType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -967,6 +1009,7 @@ export function ReserveFlow({ locale }: { locale: Locale }) {
             specialRequests={state.specialRequests}
             submitting={loading}
             onChangeGuest={updateGuest}
+            memberEmail={memberEmail}
             onChangeRequests={(value) => update({ specialRequests: value })}
             onBack={() => goToStep(3)}
             onSubmit={submitBooking}

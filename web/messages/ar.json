@@ -119,7 +119,9 @@
       "specialRequests": "طلبات خاصة",
       "specialRequestsHint": "أي شيء ينبغي أن نعرفه قبل وصولك.",
       "confirm": "تأكيد الحجز",
-      "submitting": "جارٍ التأكيد…"
+      "submitting": "جارٍ التأكيد…",
+      "filledFromAccount": "ملأنا بياناتك من حسابك. غيّر ما يختلف في هذه الإقامة.",
+      "differentEmail": "لن يظهر هذا الحجز في حسابك، لأنه يستخدم بريداً إلكترونياً مختلفاً عن {email}."
     },
     "summary": {
       "title": "إقامتك",

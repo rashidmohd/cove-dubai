@@ -119,7 +119,9 @@
       "specialRequests": "Special requests",
       "specialRequestsHint": "Anything we should know before you arrive.",
       "confirm": "Confirm reservation",
-      "submitting": "Confirming…"
+      "submitting": "Confirming…",
+      "filledFromAccount": "We've filled in your details from your account. Change anything that's different for this stay.",
+      "differentEmail": "This booking will not appear in your account, because it uses a different email from {email}."
     },
     "summary": {
       "title": "Your stay",

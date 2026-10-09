@@ -1919,6 +1919,17 @@
   color: var(--bronze);
 }
 
+/* Shown above the guest form when it was filled in from a signed-in account. */
+.memberNote {
+  margin-bottom: 1.5rem;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background: rgba(196, 154, 82, 0.12);
+  border-inline-start: 2px solid var(--bronze);
+}
+
 /* --- Touch screens --------------------------------------------------------
  *
  * Keyed on the pointer, not the width: an iPad at desktop width has the same

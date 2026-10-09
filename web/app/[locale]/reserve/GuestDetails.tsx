@@ -27,6 +27,12 @@ interface GuestDetailsProps {
   onSubmit: () => void;
   /** The total, shown in the action row a phone pins to the screen's foot. */
   barTotal?: ReactNode;
+  /**
+   * Set when the details were filled in from a signed-in account. The form
+   * says so, and warns if the email has been changed — the booking would then
+   * not appear under the account, which matches bookings by email.
+   */
+  memberEmail?: string | null;
 }
 
 type FieldErrors = Partial<Record<keyof GuestForm, string>>;
@@ -40,6 +46,7 @@ export function GuestDetails({
   onBack,
   onSubmit,
   barTotal,
+  memberEmail = null,
 }: GuestDetailsProps) {
   const t = useTranslations('reserve.step3');
   const tReserve = useTranslations('reserve');
@@ -86,6 +93,14 @@ export function GuestDetails({
     // A real <form>, so Enter submits and browsers offer autofill — both of
     // which the mockup's div-and-button markup loses.
     <form onSubmit={handleSubmit} noValidate>
+      {memberEmail ? (
+        <p className={styles.memberNote} role="status">
+          {guest.email.trim().toLowerCase() === memberEmail.toLowerCase()
+            ? t('filledFromAccount')
+            : t('differentEmail', { email: memberEmail })}
+        </p>
+      ) : null}
+
       <div className={styles.formRow}>
         <Field
           id="firstName"
