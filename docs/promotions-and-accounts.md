@@ -78,7 +78,7 @@ Recorded so they are not re-litigated later. Each is reversible, but each has a 
   Per-guest limits would need a rule about what identifies a guest, given emails are not unique.
 - ~~Do offers need a dedicated page?~~ Decided 18 Aug 2026: their own page, in the nav.
 - ~~Should a guest account be offered during booking?~~ Decided 9 Oct 2026: a separate sign-up page only, for now.
-- Should the nav's **Members** link go to `/account`? It still points at the coming-soon page.
+- ~~Should the nav's Members link go to `/account`?~~ Yes — done 9 Oct 2026.
 
 ---
 
@@ -176,8 +176,7 @@ Decisions taken here:
 ### 3 · Guest accounts — **done 9 Oct 2026**
 
 Sign-up is a separate page only (decided 9 Oct 2026): nothing in the booking flow offers an account, and booking
-never requires one. Linked from the footer as **Your bookings**. The nav's **Members** link still goes to the
-coming-soon page — pointing it at `/account` is the client's call.
+never requires one. Linked from the nav as **Members** and from the footer as **Your bookings**.
 
 | Piece | Where |
 |---|---|
