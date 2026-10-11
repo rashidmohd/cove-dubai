@@ -170,7 +170,7 @@ const COPY: Record<Locale, Copy> = {
     headlineConfirmed: (firstName) => `نتطلع إلى استقبالك، ${firstName}.`,
     headlineCancelled: 'تم إلغاء حجزك.',
     confirmedIntro:
-      'شكراً لاختيارك كوف دبي. غرفتك محجوزة للتواريخ أدناه، وكل ما تحتاجه لإقامتك موجود في هذه الرسالة.',
+      'شكراً لاختيارك كوڤ دبي. غرفتك محجوزة للتواريخ أدناه، وكل ما تحتاجه لإقامتك موجود في هذه الرسالة.',
     cancelledIntro:
       'بناءً على طلبك، ألغينا الحجز أدناه. لم يُحصَّل أي مبلغ، ولا يلزمك القيام بأي إجراء آخر.',
     reference: 'رقم الحجز',
@@ -197,9 +197,9 @@ const COPY: Record<Locale, Copy> = {
     questions: 'هل لديك أي استفسار قبل وصولك؟ يكفي الرد على هذه الرسالة وسيجيبك فريقنا.',
     questionsAfterCancel: 'هل لديك أي استفسار؟ يكفي الرد على هذه الرسالة وسيجيبك فريقنا.',
     signOff: 'مع أطيب التحيات،',
-    hotelName: 'كوف دبي',
+    hotelName: 'كوڤ دبي',
     address: 'الرقة، ديرة، دبي، الإمارات العربية المتحدة',
-    footerReason: 'تصلك هذه الرسالة لأن حجزاً تم في كوف دبي باستخدام هذا العنوان.',
+    footerReason: 'تصلك هذه الرسالة لأن حجزاً تم في كوڤ دبي باستخدام هذا العنوان.',
     nights: (count) =>
       count === 1 ? 'ليلة واحدة' : count === 2 ? 'ليلتان' : count <= 10 ? `${count} ليالٍ` : `${count} ليلة`,
     adults: (count) =>
@@ -946,7 +946,7 @@ const ACCOUNT_COPY: Record<Locale, AccountCopy> = {
   // Draft Arabic for the client's copywriter, like the rest of the Arabic copy.
   ar: {
     verifySubject: 'تأكيد عنوان بريدك الإلكتروني',
-    verifyPreheader: 'نقرة واحدة لتأكيد حسابك في كوف دبي.',
+    verifyPreheader: 'نقرة واحدة لتأكيد حسابك في كوڤ دبي.',
     verifyEyebrow: 'حسابك',
     verifyHeadline: (firstName) => `أهلاً بك، ${firstName}.`,
     verifyBody:
@@ -954,7 +954,7 @@ const ACCOUNT_COPY: Record<Locale, AccountCopy> = {
     verifyButton: 'تأكيد بريدي الإلكتروني',
     verifyExpiry: 'يعمل الرابط مرة واحدة، خلال الساعات الثماني والأربعين القادمة.',
     resetSubject: 'إعادة تعيين كلمة المرور',
-    resetPreheader: 'رابط لاختيار كلمة مرور جديدة لحسابك في كوف دبي.',
+    resetPreheader: 'رابط لاختيار كلمة مرور جديدة لحسابك في كوڤ دبي.',
     resetEyebrow: 'حسابك',
     resetHeadline: 'اختر كلمة مرور جديدة.',
     resetBody:
@@ -968,7 +968,7 @@ const ACCOUNT_COPY: Record<Locale, AccountCopy> = {
       'حاول أحدهم — على الأرجح أنت — إنشاء حساب جديد بعنوان البريد الإلكتروني هذا. يوجد حساب بالفعل، لذا لم يتغير شيء. سجّل الدخول كالمعتاد، أو اختر كلمة مرور جديدة إن كنت قد نسيتها.',
     signInButton: 'تسجيل الدخول',
     notYou: 'إن لم تكن أنت، يمكنك تجاهل هذه الرسالة. حسابك وكلمة مرورك لم يتغيرا.',
-    footerReason: 'تصلك هذه الرسالة لأن حساباً في كوف دبي يستخدم هذا العنوان.',
+    footerReason: 'تصلك هذه الرسالة لأن حساباً في كوڤ دبي يستخدم هذا العنوان.',
   },
 };
 
@@ -1207,7 +1207,7 @@ const SERVICE_COPY: Record<Locale, ServiceCopy> = {
     guests: 'الضيوف',
     payAtHotel: 'لا يُحصَّل أي مبلغ الآن. يتم الدفع في الفندق.',
     questions: 'هل لديك أي استفسار؟ يكفي الرد على هذه الرسالة وسيجيبك فريقنا.',
-    footerReason: 'تصلك هذه الرسالة لأن طلباً تم في كوف دبي باستخدام هذا العنوان.',
+    footerReason: 'تصلك هذه الرسالة لأن طلباً تم في كوڤ دبي باستخدام هذا العنوان.',
   },
 };
 

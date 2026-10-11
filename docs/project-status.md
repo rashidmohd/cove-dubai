@@ -1137,7 +1137,7 @@ this does not replace that review, it gives the reviewer a complete starting poi
   writes `AED` as **درهم** in Arabic, so booking prices (which carry the API's ISO code) match the marketing pages.
 
 > ⚠️ **For the copywriter's review first:** the brand lines (hero, dining and about headlines, the chef's quote,
-> press quotes), the venue names (ذا لوم / ذا أتيليه / جناح كوف — transliterated, not translated), and the
+> press quotes), the venue names (ذا لوم / ذا أتيليه / جناح كوڤ — transliterated, not translated), and the
 > person names (أمارا سليمان). Gendered forms follow the English: the chef is written masculine, the head of
 > design feminine.
 

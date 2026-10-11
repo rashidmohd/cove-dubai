@@ -72,7 +72,7 @@ const ROOM_TYPES = [
   {
     code: 'cove-suite',
     nameEn: 'The Cove Suite',
-    nameAr: 'جناح كوف',
+    nameAr: 'جناح كوڤ',
     categoryEn: 'Signature',
     categoryAr: 'سيغنتشر',
     descriptionEn:
@@ -443,7 +443,7 @@ async function main() {
  */
 const SERVICE_OFFERINGS = [
   // --- Spa (placeholders) ---
-  { kind: 'SPA', code: 'signature-massage', nameEn: 'Cove Signature Massage', nameAr: 'تدليك كوف المميز',
+  { kind: 'SPA', code: 'signature-massage', nameEn: 'Cove Signature Massage', nameAr: 'تدليك كوڤ المميز',
     descriptionEn: 'Full-body massage with warm oils, at a pace set by you.',
     descriptionAr: 'تدليك كامل للجسم بالزيوت الدافئة، بالإيقاع الذي تختاره.',
     durationMinutes: 60, priceAed: '450', firstSlot: '10:00', lastSlot: '20:00', maxGuests: 2, sortOrder: 1 },
